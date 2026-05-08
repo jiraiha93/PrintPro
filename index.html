@@ -44,7 +44,15 @@
         // =====================================================================
         // REEMPLAZA 'null' CON TU CONFIGURACIÓN DE FIREBASE PARA ACTIVAR LA NUBE REAL.
         // Ejemplo: const FIREBASE_PROD_CONFIG = { apiKey: "AIza...", projectId: "mi-printpro", ... };
-        const FIREBASE_PROD_CONFIG = null; 
+        const FIREBASE_PROD_CONFIG = const firebaseConfig = {
+  apiKey: "AIzaSyDI8ymBiBXFwDkL1vQoP8WCjJFwpgFObs0",
+  authDomain: "cotizador-pro-9ec69.firebaseapp.com",
+  projectId: "cotizador-pro-9ec69",
+  storageBucket: "cotizador-pro-9ec69.firebasestorage.app",
+  messagingSenderId: "690349119743",
+  appId: "1:690349119743:web:41530227ef8053e076d4ca",
+  measurementId: "G-WGB6N9F8TC"
+}; 
         
         // Configuración de entorno de pruebas (No tocar)
         const envFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
