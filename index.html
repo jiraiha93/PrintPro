@@ -41,8 +41,15 @@
         import { getFirestore, collection, doc, setDoc, onSnapshot, query, deleteDoc } from 'https://esm.sh/firebase@10.8.0/firestore';
 
         // --- CONFIGURACIÓN GLOBAL FIREBASE ---
-        const firebaseConfigObj = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
-        let app, auth, db, appId = 'default-app-id';
+        const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "tu-proyecto.firebaseapp.com",
+  projectId: "tu-proyecto",
+  storageBucket: "tu-proyecto.appspot.com",
+  messagingSenderId: "12345...",
+  appId: "1:123:web:abc..."
+};
+const app = initializeApp(firebaseConfig);
 
         if (firebaseConfigObj) {
             app = initializeApp(firebaseConfigObj);
