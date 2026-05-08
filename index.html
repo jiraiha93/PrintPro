@@ -42,17 +42,16 @@
         // =====================================================================
         // 🚀 CONFIGURACIÓN DE BASE DE DATOS EN LA NUBE (FIREBASE) - PRODUCCIÓN
         // =====================================================================
-        // REEMPLAZA 'null' CON TU CONFIGURACIÓN DE FIREBASE PARA ACTIVAR LA NUBE REAL.
-        // Ejemplo: const FIREBASE_PROD_CONFIG = { apiKey: "AIza...", projectId: "mi-printpro", ... };
-        const FIREBASE_PROD_CONFIG = const firebaseConfig = {
-        apiKey: "AIzaSyDI8ymBiBXFwDkL1vQoP8WCjJFwpgFObs0",
-        authDomain: "cotizador-pro-9ec69.firebaseapp.com",
-        projectId: "cotizador-pro-9ec69",
-        storageBucket: "cotizador-pro-9ec69.firebasestorage.app",
-        messagingSenderId: "690349119743",
-        appId: "1:690349119743:web:41530227ef8053e076d4ca",
-        measurementId: "G-WGB6N9F8TC"
-        }; 
+        // Aquí insertamos tu configuración exacta de Firebase, corrigiendo la sintaxis
+        const FIREBASE_PROD_CONFIG = {
+          apiKey: "AIzaSyDI8ymBiBXFwDkL1vQoP8WCjJFwpgFObs0",
+          authDomain: "cotizador-pro-9ec69.firebaseapp.com",
+          projectId: "cotizador-pro-9ec69",
+          storageBucket: "cotizador-pro-9ec69.firebasestorage.app",
+          messagingSenderId: "690349119743",
+          appId: "1:690349119743:web:41530227ef8053e076d4ca",
+          measurementId: "G-WGB6N9F8TC"
+        };
         
         // Configuración de entorno de pruebas (No tocar)
         const envFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
@@ -129,6 +128,7 @@
                 }
               } catch (e) { 
                   console.error("Error Auth Firebase", e); 
+                  // Si no habilitaste "Autenticación Anónima", fallará aquí.
                   setLoadingData(false); 
               }
             };
@@ -286,7 +286,6 @@
         // COMPONENTES PRINCIPALES (Pantallas)
         // ==========================================
 
-        // NUEVO: Componente Indicador de Estado
         function ConnectionIndicator({ isConnectedToCloud, darkTheme = false }) {
             return (
                 <div className={`mt-6 p-3 rounded-xl flex items-center gap-3 text-xs font-bold transition-all shadow-sm
@@ -300,7 +299,7 @@
                     </div>
                     <div>
                         <p className="uppercase tracking-wider opacity-80 text-[10px]">Estado del Sistema</p>
-                        <p>{isConnectedToCloud ? 'Sincronización Activa (Nube)' : 'Modo Local (Sin sincronización)'}</p>
+                        <p>{isConnectedToCloud ? 'Sincronización Activa (Nube)' : 'Modo Local (Revisa reglas Firestore)'}</p>
                     </div>
                 </div>
             );
@@ -335,10 +334,9 @@
                   <h1 className="text-4xl font-bold mb-4 z-10">PrintPro</h1>
                   <p className="text-blue-100 text-lg z-10 mb-8">Plataforma VIP de cotizaciones.</p>
                   
-                  {/* Información en el Login sobre la base de datos */}
                   <div className="mt-auto bg-blue-700/50 p-4 rounded-xl border border-blue-500/50 text-sm flex gap-3">
                       <Cloud className="shrink-0" />
-                      <p>{isConnectedToCloud ? 'Conectado a la nube. Los clientes verán la información en tiempo real.' : 'Modo Local. Configura Firebase para conectar en tiempo real.'}</p>
+                      <p>{isConnectedToCloud ? 'Conectado a la nube. Los clientes verán la información en tiempo real.' : 'Modo Local. Configura Autenticación y Base de Datos en Firebase.'}</p>
                   </div>
                 </div>
                 <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
