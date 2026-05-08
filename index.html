@@ -42,7 +42,6 @@
         // =====================================================================
         // 🚀 CONFIGURACIÓN DE BASE DE DATOS EN LA NUBE (FIREBASE) - PRODUCCIÓN
         // =====================================================================
-        // Aquí insertamos tu configuración exacta de Firebase, corrigiendo la sintaxis
         const FIREBASE_PROD_CONFIG = {
           apiKey: "AIzaSyDI8ymBiBXFwDkL1vQoP8WCjJFwpgFObs0",
           authDomain: "cotizador-pro-9ec69.firebaseapp.com",
@@ -53,10 +52,7 @@
           measurementId: "G-WGB6N9F8TC"
         };
         
-        // Configuración de entorno de pruebas (No tocar)
         const envFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
-        
-        // Determinar qué configuración usar (Producción tiene prioridad)
         const activeConfig = FIREBASE_PROD_CONFIG || envFirebaseConfig;
         
         let app, auth, db;
@@ -81,7 +77,6 @@
             try { window.localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.error("Error saving local", e); }
         };
 
-        // --- DATOS SIMULADOS INICIALES ---
         const USUARIOS_BASE = [
           { id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123', nombre: 'Administrador Principal' },
           { id: 'VIP001', rol: 'CLIENTE', username: 'omega', password: '123', nombre: 'Corporativo Omega', contacto: 'Lic. Ana Reyes', telefono: '9999-0001', descuentoGlobal: 10 },
@@ -110,25 +105,30 @@
           const [impuestoGlobal, setImpuestoGlobal] = useState(() => loadLocal('impuestoGlobal', 15)); 
           const [loadingData, setLoadingData] = useState(true);
           const [isConnectedToCloud, setIsConnectedToCloud] = useState(false);
+          const [firebaseError, setFirebaseError] = useState(''); // NUEVO: Control detallado de errores
 
           // 1. INICIALIZAR AUTENTICACIÓN FIREBASE
           useEffect(() => {
             if (!auth) { 
                 setLoadingData(false); 
                 setIsConnectedToCloud(false);
+                setFirebaseError('Configuración inválida o no detectada.');
                 return; 
             } 
             const initAuth = async () => {
               try {
-                // Usa Custom Token si estamos en el entorno de IA, sino Anonymous para la nube del cliente
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !FIREBASE_PROD_CONFIG) {
                   await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                   await signInAnonymously(auth);
                 }
               } catch (e) { 
-                  console.error("Error Auth Firebase", e); 
-                  // Si no habilitaste "Autenticación Anónima", fallará aquí.
+                  console.error("Error Auth Firebase:", e); 
+                  if(e.code === 'auth/operation-not-allowed') {
+                      setFirebaseError('Habilita "Anónimo" en Firebase Authentication.');
+                  } else {
+                      setFirebaseError('Error de Autenticación: ' + e.message);
+                  }
                   setLoadingData(false); 
               }
             };
@@ -136,6 +136,7 @@
             const unsub = onAuthStateChanged(auth, (user) => {
                 setUserDb(user);
                 setIsConnectedToCloud(!!user);
+                if(user) setFirebaseError(''); // Limpia el error si logra conectar
             });
             return () => unsub();
           }, []);
@@ -144,19 +145,30 @@
           useEffect(() => {
             if (!db || !userDb) { setLoadingData(false); return; }
 
-            const basePath = 'public'; // Estructura unificada
+            const basePath = 'public'; 
             
+            // NUEVO: Función manejadora de errores de Firestore para identificar problemas de Reglas
+            const handleDbError = (err) => {
+                console.error("Firestore Error:", err);
+                if (err.code === 'permission-denied') {
+                    setFirebaseError('Permisos denegados. Aplica las reglas en Firestore.');
+                } else {
+                    setFirebaseError('Error DB: ' + err.message);
+                }
+                setIsConnectedToCloud(false); // Fuerza a modo local visualmente
+            };
+
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), 
-              (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
+              (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, handleDbError);
             
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), 
-              (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
+              (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, handleDbError);
             
             const unsubUsu = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'usuarios'), 
-              (snap) => { if (!snap.empty) setUsuarios(snap.docs.map(d => d.data())); else dbGuardarLista('usuarios', usuarios); }, console.error);
+              (snap) => { if (!snap.empty) setUsuarios(snap.docs.map(d => d.data())); else dbGuardarLista('usuarios', usuarios); }, handleDbError);
             
             const unsubOrd = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'ordenes'), 
-              (snap) => { if (!snap.empty) setOrdenes(snap.docs.map(d => d.data())); }, console.error);
+              (snap) => { if (!snap.empty) setOrdenes(snap.docs.map(d => d.data())); }, handleDbError);
             
             const unsubConf = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'config'), 
               (snap) => { 
@@ -165,7 +177,7 @@
                     setMargenGanancia(configDoc.data().margenGanancia || 40); 
                     setImpuestoGlobal(configDoc.data().impuestoGlobal !== undefined ? configDoc.data().impuestoGlobal : 15);
                 }
-              }, console.error);
+              }, handleDbError);
 
             setLoadingData(false);
             return () => { unsubCat(); unsubTec(); unsubUsu(); unsubOrd(); unsubConf(); };
@@ -174,12 +186,14 @@
           // --- HELPERS DE BASE DE DATOS ---
           const dbGuardar = async (coleccion, id, data) => {
             if (db && isConnectedToCloud) {
-                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data);
+                try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); } 
+                catch (e) { console.error("Error guardando:", e); }
             }
           };
           const dbEliminar = async (coleccion, id) => {
             if (db && isConnectedToCloud) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id));
+                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id)); }
+                catch (e) { console.error("Error eliminando:", e); }
             }
           };
           const dbGuardarLista = async (coleccion, lista) => {
@@ -211,7 +225,6 @@
              else { const newOrders = ordenes.filter(o => o.id !== id); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
           }
 
-          // --- ACCIONES ADMIN SINCRONIZADAS ---
           const adminSetCatalogo = (nuevoCatalogo) => {
             if(isConnectedToCloud) {
                 const idsActuales = nuevoCatalogo.map(c => c.id);
@@ -249,7 +262,7 @@
           );
 
           if (!usuarioActual) {
-            return <PantallaLogin usuarios={usuarios} onLogin={setUsuarioActual} onRegister={registrarUsuario} isConnectedToCloud={isConnectedToCloud} />;
+            return <PantallaLogin usuarios={usuarios} onLogin={setUsuarioActual} onRegister={registrarUsuario} isConnectedToCloud={isConnectedToCloud} errorMessage={firebaseError} />;
           }
 
           if (usuarioActual.rol === 'ADMIN') {
@@ -265,6 +278,7 @@
                 onEliminarOrden={handleEliminarOrden}
                 onLogout={() => setUsuarioActual(null)} 
                 isConnectedToCloud={isConnectedToCloud}
+                errorMessage={firebaseError}
               />
             );
           }
@@ -278,6 +292,7 @@
               onActualizarOrden={handleActualizarOrden}
               onLogout={() => setUsuarioActual(null)} 
               isConnectedToCloud={isConnectedToCloud}
+              errorMessage={firebaseError}
             />
           );
         }
@@ -286,26 +301,26 @@
         // COMPONENTES PRINCIPALES (Pantallas)
         // ==========================================
 
-        function ConnectionIndicator({ isConnectedToCloud, darkTheme = false }) {
+        function ConnectionIndicator({ isConnectedToCloud, darkTheme = false, errorMessage = '' }) {
             return (
                 <div className={`mt-6 p-3 rounded-xl flex items-center gap-3 text-xs font-bold transition-all shadow-sm
                     ${isConnectedToCloud 
                         ? (darkTheme ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') 
                         : (darkTheme ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200')}
                 `}>
-                    <div className="relative flex h-3 w-3">
+                    <div className="relative flex h-3 w-3 shrink-0">
                       {isConnectedToCloud && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
                       <span className={`relative inline-flex rounded-full h-3 w-3 ${isConnectedToCloud ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                     </div>
                     <div>
                         <p className="uppercase tracking-wider opacity-80 text-[10px]">Estado del Sistema</p>
-                        <p>{isConnectedToCloud ? 'Sincronización Activa (Nube)' : 'Modo Local (Revisa reglas Firestore)'}</p>
+                        <p>{isConnectedToCloud ? 'Sincronización Activa (Nube)' : (errorMessage || 'Modo Local (Desconectado)')}</p>
                     </div>
                 </div>
             );
         }
 
-        function PantallaLogin({ usuarios, onLogin, onRegister, isConnectedToCloud }) {
+        function PantallaLogin({ usuarios, onLogin, onRegister, isConnectedToCloud, errorMessage }) {
           const [modo, setModo] = useState('LOGIN'); 
           const [username, setUsername] = useState('');
           const [password, setPassword] = useState('');
@@ -336,7 +351,7 @@
                   
                   <div className="mt-auto bg-blue-700/50 p-4 rounded-xl border border-blue-500/50 text-sm flex gap-3">
                       <Cloud className="shrink-0" />
-                      <p>{isConnectedToCloud ? 'Conectado a la nube. Los clientes verán la información en tiempo real.' : 'Modo Local. Configura Autenticación y Base de Datos en Firebase.'}</p>
+                      <p>{isConnectedToCloud ? 'Conectado a la nube. Los clientes verán la información en tiempo real.' : (errorMessage || 'Modo Local. Configura Autenticación y Base de Datos en Firebase.')}</p>
                   </div>
                 </div>
                 <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
@@ -362,7 +377,7 @@
           );
         }
 
-        function PortalClienteVIP({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, ordenes, onCrearOrden, onActualizarOrden, onLogout, isConnectedToCloud }) {
+        function PortalClienteVIP({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, ordenes, onCrearOrden, onActualizarOrden, onLogout, isConnectedToCloud, errorMessage }) {
           const [vista, setVista] = useState('NUEVA_COTIZACION'); 
           return (
             <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row fade-in">
@@ -377,7 +392,7 @@
                   <MenuBtn icon={FileText} label="Mis Órdenes" active={vista === 'HISTORIAL'} onClick={() => setVista('HISTORIAL')} />
                 </nav>
                 
-                <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={false} />
+                <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={false} errorMessage={errorMessage} />
                 <button onClick={onLogout} className="flex items-center gap-2 text-slate-500 hover:text-red-500 mt-6 p-2 font-medium transition-colors"><LogOut size={20} /> Salir</button>
               </aside>
               <main className="flex-1 p-8 overflow-y-auto bg-slate-50">
@@ -759,7 +774,7 @@
             )
         }
 
-        function PanelAdmin({ ordenes, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, setConfigGlobal, usuarios, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud }) {
+        function PanelAdmin({ ordenes, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, setConfigGlobal, usuarios, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud, errorMessage }) {
           const [vista, setVista] = useState('DASHBOARD'); 
           const ordenesValidas = ordenes.filter(o => o.estado !== 'Cancelada por Cliente');
           const ingresosProyectados = ordenesValidas.reduce((sum, o) => sum + o.total, 0);
@@ -774,7 +789,7 @@
                   <MenuBtn icon={ShoppingBag} label="Órdenes General" active={vista === 'ORDENES'} onClick={() => setVista('ORDENES')} dark />
                   <MenuBtn icon={Package} label="Catálogo & Lógica" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} dark />
                 </nav>
-                <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
+                <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} errorMessage={errorMessage} />
                 <button onClick={onLogout} className="flex items-center gap-2 text-slate-500 hover:text-white mt-6 p-2 transition-colors"><LogOut size={20} /> Salir</button>
               </aside>
               <main className="flex-1 p-8 overflow-y-auto bg-slate-900 relative">
