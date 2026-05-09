@@ -110,13 +110,11 @@
           const [mensajesGlobales, setMensajesGlobales] = useState(() => loadLocal('mensajes', MENSAJES_BASE)); 
           const [margenGanancia, setMargenGanancia] = useState(() => loadLocal('margenGanancia', 40)); 
           const [impuestoGlobal, setImpuestoGlobal] = useState(() => loadLocal('impuestoGlobal', 15)); 
-          // NUEVO: Estado para Tarifas Preferenciales de Volumen
           const [descuentosVolumen, setDescuentosVolumen] = useState(() => loadLocal('descuentosVol', DESCUENTOS_VOL_BASE));
           
           const [loadingData, setLoadingData] = useState(true);
           const [isConnectedToCloud, setIsConnectedToCloud] = useState(false);
 
-          // NUEVO: Sistema de notificaciones Global (Toasts)
           const [toastInfo, setToastInfo] = useState(null);
 
           const showToast = (message, type = 'success') => {
@@ -147,7 +145,12 @@
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
             const unsubUsu = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'usuarios'), (snap) => { if (!snap.empty) setUsuarios(snap.docs.map(d => d.data())); else dbGuardarLista('usuarios', usuarios); }, console.error);
-            const unsubOrd = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'ordenes'), (snap) => { if (!snap.empty) setOrdenes(snap.docs.map(d => d.data())); }, console.error);
+            
+            // CORRECCIÓN 1: Quitar validación if (!snap.empty) en órdenes. Esto permite que cuando quede 0 elementos, se refleje la lista vacía real localmente.
+            const unsubOrd = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'ordenes'), (snap) => { 
+                setOrdenes(snap.docs.map(d => d.data())); 
+            }, console.error);
+            
             const unsubConf = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'config'), (snap) => { 
                 const configDoc = snap.docs.find(d => d.id === 'general');
                 if (configDoc) { 
@@ -209,7 +212,6 @@
             showToast('Configuración de técnicas guardada');
           };
           
-          // MODIFICADO: Ahora guarda también la estructura dinámica de descuentos
           const adminSetConfiguracionGlobal = (nuevoMargen, nuevoImpuesto, nuevosDescuentos) => {
             if(isConnectedToCloud) dbGuardar('config', 'general', { margenGanancia: nuevoMargen, impuestoGlobal: nuevoImpuesto, descuentosVolumen: nuevosDescuentos });
             else { 
@@ -229,7 +231,6 @@
           
           return (
              <>
-                 {/* COMPONENTE GLOBAL DE TOAST */}
                  {toastInfo && (
                     <div className="fixed bottom-6 right-6 z-[9999] slide-up">
                         <div className={`px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 text-white font-bold max-w-sm ${toastInfo.type === 'error' ? 'bg-red-600' : 'bg-slate-800 border-l-4 border-emerald-500'}`}>
@@ -297,8 +298,12 @@
             <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl flex fade-in">
                 <div className="w-1/2 bg-blue-600 p-12 text-white flex-col justify-center hidden md:flex relative">
-                  <Printer size={64} className="mb-6 z-10" /><h1 className="text-4xl font-bold mb-4 z-10">PrintPro</h1><p className="text-blue-100 text-lg z-10 mb-8">Plataforma VIP de cotizaciones.</p>
-                  <div className="mt-auto bg-blue-700/50 p-4 rounded-xl border border-blue-500/50 text-sm flex gap-3"><Cloud className="shrink-0" /><p>{isConnectedToCloud ? 'Conectado a la nube. Los clientes verán la información en tiempo real.' : 'Modo Local. Configura Autenticación y Base de Datos en Firebase.'}</p></div>
+                  <Printer size={64} className="mb-6 z-10" />
+                  
+                  {/* CORRECCIÓN 3: Ajuste de textos principales y adición de Powered By */}
+                  <h1 className="text-4xl font-bold mb-1 z-10">PrintPro</h1>
+                  <p className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-6 z-10">Powered By IMPAK Print Lab</p>
+                  <p className="text-blue-100 text-lg z-10 mb-8">Plataforma VIP de cotizaciones.</p>
                 </div>
                 <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
                   <h2 className="text-2xl font-bold text-slate-800 mb-2">{modo === 'LOGIN' ? 'Acceso al Sistema' : 'Crear Cuenta'}</h2>
@@ -362,6 +367,11 @@
           const [cantidad, setCantidad] = useState(50);
           const [comentario, setComentario] = useState(''); 
           const [errorValidacion, setErrorValidacion] = useState('');
+          
+          // CORRECCIÓN 4: Estados para la gestión de cargos adicionales en la orden.
+          const [tieneCargoExtra, setTieneCargoExtra] = useState(false);
+          const [nombreCargoExtra, setNombreCargoExtra] = useState('Flete / Envío');
+          const [valorCargoExtra, setValorCargoExtra] = useState(0);
 
           const productoSeleccionado = catalogo.find(c => c.id === itemSelect);
           const tecnicasPermitidas = useMemo(() => {
@@ -382,7 +392,6 @@
             const costoBaseProd = proveeCliente ? 0 : productoSeleccionado.costoBase;
             const costoProdTotal = costoBaseProd * cantidad;
             let subtotalProducto = costoProdTotal * (1 + (margenGanancia / 100));
-            // MODIFICADO: Respetar si el producto cobra impuesto (por defecto asumimos true si no está definido para compatibilidad)
             const aplicaImpProd = productoSeleccionado.cobraImpuesto !== false;
             let impuestoProducto = aplicaImpProd ? subtotalProducto * (impuestoGlobal / 100) : 0;
             
@@ -400,18 +409,16 @@
               const subtotalVentaApp = costoProduccionApp * (1 + (margenGanancia / 100));
               subtotalTecnicas += subtotalVentaApp;
               
-              // MODIFICADO: Respetar si la técnica cobra impuesto
               const aplicaImpTec = tec.cobraImpuesto !== false;
               if (aplicaImpTec) impuestoTecnicas += subtotalVentaApp * (impuestoGlobal / 100);
             });
 
             let subtotalGlobal = subtotalProducto + subtotalTecnicas;
             
-            // MODIFICADO: Lógica Dinámica de Descuento por Volumen
             let descuentoVol = 0;
             let tierActivo = null;
             if (descuentosVolumen && descuentosVolumen.length > 0) {
-                const tiers = [...descuentosVolumen].sort((a,b) => b.min - a.min); // Ordenar de mayor a menor
+                const tiers = [...descuentosVolumen].sort((a,b) => b.min - a.min);
                 for (let t of tiers) {
                     if (cantidad >= t.min) { descuentoVol = t.pct / 100; tierActivo = t; break; }
                 }
@@ -423,13 +430,19 @@
             let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
             let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
+            // Inyección del Costo Extra / Cargo si está activo.
+            if (tieneCargoExtra) {
+                totalFinal += (Number(valorCargoExtra) || 0);
+            }
+
             return { 
                 subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, 
                 impuestos: impuestoTotalFinal, total: totalFinal, unitario: totalFinal / cantidad, 
                 minRequerido, tierActivo,
+                cargoExtra: tieneCargoExtra ? { nombre: nombreCargoExtra, valor: (Number(valorCargoExtra) || 0) } : null,
                 valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0 
             };
-          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen]);
+          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen, tieneCargoExtra, nombreCargoExtra, valorCargoExtra]);
 
           useEffect(() => { if (cotizacion && cantidad < cotizacion.minRequerido) setErrorValidacion(`La técnica requiere un mínimo de ${cotizacion.minRequerido} pzas.`); else setErrorValidacion(''); }, [cantidad, cotizacion]);
 
@@ -443,6 +456,7 @@
             onGuardar({
               id: `ORD-${Math.floor(Math.random() * 10000)}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre,
               proveeCliente, detalles: detalleApps, tecnicasEstructuradas: tecnicasDetalle, comentario: comentario, cantidad, fecha: new Date().toLocaleDateString(),
+              cargoExtra: cotizacion.cargoExtra,
               precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, estado: 'Pendiente', 
             });
           };
@@ -516,21 +530,42 @@
                           <input type="number" min="1" value={cantidad} onChange={(e) => setCantidad(Number(e.target.value))} className="w-full p-4 rounded-xl border-2 border-blue-200 text-2xl font-bold focus:border-blue-600 outline-none transition-colors" />
                           {errorValidacion && <p className="text-red-500 text-sm mt-2 flex items-center gap-1"><AlertCircle size={14}/> {errorValidacion}</p>}
                         </div>
+
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
+                            <label className="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer">
+                                <input type="checkbox" checked={tieneCargoExtra} onChange={e => setTieneCargoExtra(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded" />
+                                <span className="flex items-center gap-2"><Package size={16}/> Añadir Cargo Extra (Flete, Empaque, etc.)</span>
+                            </label>
+                            {tieneCargoExtra && (
+                                <div className="flex gap-4 fade-in mt-4 border-t border-slate-200 pt-3">
+                                    <div className="flex-1">
+                                        <label className="text-xs text-slate-500 font-bold block mb-1">Concepto</label>
+                                        <input type="text" value={nombreCargoExtra} onChange={e => setNombreCargoExtra(e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 text-sm bg-white" placeholder="Ej. Envío Terrestre" />
+                                    </div>
+                                    <div className="w-32">
+                                        <label className="text-xs text-slate-500 font-bold block mb-1">Costo (L)</label>
+                                        <input type="number" min="0" value={valorCargoExtra} onChange={e => setValorCargoExtra(Number(e.target.value))} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 text-sm font-mono bg-white" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><MessageSquare size={16}/> Notas para el Taller (Opcional)</label>
-                            <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm" rows="3" placeholder="Ej: Favor usar logo en color azul marino..."></textarea>
+                            <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm bg-white" rows="3" placeholder="Ej: Favor usar logo en color azul marino..."></textarea>
                             <p className="text-right text-xs text-slate-400 mt-1">{comentario.length}/250</p>
                         </div>
+
                         <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
                           <p className="text-sm text-emerald-800 font-bold">Descuentos Dinámicos Activos:</p>
                           <ul className="text-xs text-emerald-600 list-disc pl-4 mt-1 space-y-1">
                             {cliente.descuentoGlobal > 0 && <li>Cliente VIP: -{cliente.descuentoGlobal}%</li>}
-                            {/* MODIFICADO: Render de tier activo basado en configuración global */}
                             {cotizacion.tierActivo && <li>Tarifa por Volumen (+{cotizacion.tierActivo.min}u): -{cotizacion.tierActivo.pct}%</li>}
                             {cliente.descuentoGlobal === 0 && !cotizacion.tierActivo && <li className="list-none text-slate-500 italic">No hay descuentos aplicables en este volumen.</li>}
                           </ul>
                         </div>
                       </div>
+
                       <div className="flex-1 bg-slate-900 text-white p-6 rounded-3xl flex flex-col justify-between shadow-lg">
                         <div>
                           <h4 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Resumen Financiero</h4>
@@ -538,6 +573,9 @@
                             <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
                             {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
                             <div className="flex justify-between"><span>Impuestos:</span> <span>L {cotizacion.impuestos.toFixed(2)}</span></div>
+                            {cotizacion.cargoExtra && (
+                                <div className="flex justify-between text-amber-400 font-medium"><span>{cotizacion.cargoExtra.nombre}:</span> <span>L {cotizacion.cargoExtra.valor.toFixed(2)}</span></div>
+                            )}
                           </div>
                         </div>
                         <div className="border-t border-slate-700 mt-6 pt-4">
@@ -599,8 +637,28 @@
 
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
             const esCancelada = orden.estado === 'Cancelada por Cliente';
+            
+            // CORRECCIÓN 2: Uso de CustomModal para generar un popup de confirmación elegante en vez del antiguo confirm() nativo.
+            const [modalConfirmacion, setModalConfirmacion] = useState(null);
+
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
+                    
+                    {/* Renderización del modal de confirmación en capas superiores */}
+                    {modalConfirmacion && (
+                        <CustomModal 
+                            config={{
+                                titulo: modalConfirmacion.titulo,
+                                esConfirmacion: true,
+                                mensaje: modalConfirmacion.mensaje,
+                                submitLabel: modalConfirmacion.submitLabel,
+                                campos: [],
+                                onSubmit: modalConfirmacion.onConfirm
+                            }}
+                            onClose={() => setModalConfirmacion(null)}
+                        />
+                    )}
+
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] print-area">
                         <div className="hidden print:block p-6 border-b border-slate-200 mb-4 text-center">
                             <h1 className="text-3xl font-bold text-blue-600 mb-2">PrintPro</h1>
@@ -657,6 +715,9 @@
                                     <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
                                         <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
                                         <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
+                                        {orden.cargoExtra && (
+                                            <div className="flex justify-between text-amber-600 font-semibold border-t border-slate-100 pt-1"><span>{orden.cargoExtra.nombre}:</span> <span>L {orden.cargoExtra.valor.toFixed(2)}</span></div>
+                                        )}
                                         <div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2">
                                             <span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span>
                                         </div>
@@ -664,7 +725,6 @@
                                 </div>
                             </div>
 
-                            {/* MODIFICADO: Notas para el taller visualmente destacadas */}
                             {orden.comentario && (
                                 <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm print-bg-slate-50">
                                     <h4 className="text-sm font-black text-amber-800 mb-2 flex items-center gap-2 uppercase tracking-wide"><MessageSquare size={16}/> Notas Relevantes / Para el Taller</h4>
@@ -681,8 +741,10 @@
                         <div className="bg-slate-50 p-6 border-t border-slate-200 flex flex-wrap justify-end gap-3 no-print">
                             <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center gap-2"><Printer size={18}/> Imprimir</button>
                             <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cerrar</button>
-                            {isClient && !esCancelada && <button onClick={() => { if(confirm('¿Seguro que deseas cancelar esta cotización?')) onCancelar(); }} className="px-5 py-2.5 rounded-xl font-bold bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center gap-2"><Trash2 size={18}/> Cancelar Orden</button>}
-                            {!isClient && <button onClick={() => { if(confirm('¿Eliminar permanentemente del sistema?')) onEliminarAdmin(); }} className="px-5 py-2.5 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"><Trash2 size={18}/> Eliminar Base Datos</button>}
+                            
+                            {/* Botones rediseñados para activar el CustomModal de confirmación en lugar del confirm nativo */}
+                            {isClient && !esCancelada && <button onClick={() => setModalConfirmacion({ titulo: 'Cancelar Orden', mensaje: '¿Seguro que deseas cancelar tu orden de forma permanente?', submitLabel: 'Sí, Cancelar', onConfirm: onCancelar })} className="px-5 py-2.5 rounded-xl font-bold bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center gap-2"><Trash2 size={18}/> Cancelar Orden</button>}
+                            {!isClient && <button onClick={() => setModalConfirmacion({ titulo: 'Eliminar Orden del Sistema', mensaje: 'Se eliminará permanentemente de tu base de datos. El cliente ya no la podrá visualizar. ¿Continuar?', submitLabel: 'Eliminar Orden', onConfirm: onEliminarAdmin })} className="px-5 py-2.5 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"><Trash2 size={18}/> Eliminar de BD</button>}
                         </div>
                     </div>
                 </div>
@@ -791,7 +853,6 @@
         // GESTIÓN JERÁRQUICA (CATÁLOGO Y TÉCNICAS) Y TARIFAS
         // ==========================================
         
-        // NUEVO: Modal explicativo de la Ficha Técnica y Fórmulas
         function ModalFichaTecnica({ onClose }) {
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
@@ -838,7 +899,6 @@
             );
         }
 
-        // NUEVO: Componente exclusivo para configurar las tarifas y los descuentos
         function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
             const [margen, setMargen] = useState(margenActual);
             const [impuesto, setImpuesto] = useState(impuestoActual);
@@ -850,7 +910,7 @@
 
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl">
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-lg shadow-2xl">
                         <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><Settings size={20}/> Tarifas Globales</h3>
                         <p className="text-slate-400 text-sm mb-6">Configura tus márgenes y la estructura automática de descuentos.</p>
                         
@@ -900,11 +960,10 @@
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
 
-          // MODIFICADO: Agregada compatibilidad de la cajita de impuestos (Boolean)
           const handleCrearProducto = () => {
             setModalConfig({
               titulo: "Nuevo Producto Base", 
-              valoresIniciales: { costoBase: 0, tecnicasRecomendadas: [], cobraImpuesto: true }, // Default: Cobra Impuesto
+              valoresIniciales: { costoBase: 0, tecnicasRecomendadas: [], cobraImpuesto: true },
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
@@ -923,7 +982,6 @@
           const handleEditarProducto = (prod) => {
             setModalConfig({
               titulo: "Editar Producto", 
-              // Consideramos true por defecto para docs viejos que no lo tengan
               valoresIniciales: { nombre: prod.nombre, costoBase: prod.costoBase, tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false },
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
@@ -953,7 +1011,6 @@
               } 
           });
 
-          // NUEVO: Permite editar el nombre e impuesto de la técnica ya existente
           const handleEditarTecnicaBase = () => {
               if(!tecActual) return;
               setModalConfig({
@@ -1091,7 +1148,8 @@
           const handleCheckboxGroup = (fieldId, value, checked) => { const currentArr = form[fieldId] || []; if (checked) setForm({...form, [fieldId]: [...currentArr, value]}); else setForm({...form, [fieldId]: currentArr.filter(v => v !== value)}); };
 
           return (
-            <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
+            // Aumentado z-index a z-[60] para evitar conflictos con el modal detalle en z-50
+            <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-[60] fade-in p-4">
               <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-md shadow-2xl">
                 <h3 className="text-xl font-bold text-white mb-6">{config.titulo}</h3>
                 <form onSubmit={handleSubmit} className="space-y-5">
@@ -1102,7 +1160,6 @@
                         
                         {c.type === 'file' ? <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, c.id)} className="text-white text-sm" /> 
                          : c.type === 'checkboxGroup' ? <div className="space-y-2">{c.options.map(opt => <label key={opt.value} className="flex gap-2 text-white text-sm"><input type="checkbox" checked={(form[c.id] || []).includes(opt.value)} onChange={(e) => handleCheckboxGroup(c.id, opt.value, e.target.checked)} className="accent-blue-500" /> {opt.label}</label>)}</div>
-                         /* MODIFICADO: Soporte para campos Boolean en CustomModal */
                          : c.type === 'boolean' ? (
                              <label className="flex items-center gap-3 text-white text-sm font-bold cursor-pointer mt-2 bg-slate-900 p-3 rounded-xl border border-slate-700 hover:border-blue-500 transition-colors">
                                  <input type="checkbox" checked={!!form[c.id]} onChange={e => setForm({...form, [c.id]: e.target.checked})} className="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 focus:ring-2" />
@@ -1114,7 +1171,14 @@
                       </div>
                     ))
                   )}
-                  <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-700"><button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 transition-colors">Cancelar</button><button type="submit" className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:scale-105 ${config.esConfirmacion ? 'bg-red-600 shadow-red-600/20' : 'bg-blue-600 shadow-blue-600/20'}`}>{config.esConfirmacion ? 'Sí, Eliminar' : 'Guardar'}</button></div>
+                  <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-700">
+                      <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 transition-colors">Cancelar</button>
+                      
+                      {/* Adaptación del botón para mensajes personalizados pasados por parámetro */}
+                      <button type="submit" className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:scale-105 ${config.esConfirmacion ? 'bg-red-600 shadow-red-600/20' : 'bg-blue-600 shadow-blue-600/20'}`}>
+                          {config.submitLabel || (config.esConfirmacion ? 'Sí, Eliminar' : 'Guardar')}
+                      </button>
+                  </div>
                 </form>
               </div>
             </div>
