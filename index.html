@@ -146,7 +146,6 @@
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
             const unsubUsu = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'usuarios'), (snap) => { if (!snap.empty) setUsuarios(snap.docs.map(d => d.data())); else dbGuardarLista('usuarios', usuarios); }, console.error);
             
-            // CORRECCIÓN 1: Quitar validación if (!snap.empty) en órdenes. Esto permite que cuando quede 0 elementos, se refleje la lista vacía real localmente.
             const unsubOrd = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'ordenes'), (snap) => { 
                 setOrdenes(snap.docs.map(d => d.data())); 
             }, console.error);
@@ -299,8 +298,6 @@
               <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl flex fade-in">
                 <div className="w-1/2 bg-blue-600 p-12 text-white flex-col justify-center hidden md:flex relative">
                   <Printer size={64} className="mb-6 z-10" />
-                  
-                  {/* CORRECCIÓN 3: Ajuste de textos principales y adición de Powered By */}
                   <h1 className="text-4xl font-bold mb-1 z-10">PrintPro</h1>
                   <p className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-6 z-10">Powered By IMPAK Print Lab</p>
                   <p className="text-blue-100 text-lg z-10 mb-8">Plataforma VIP de cotizaciones.</p>
@@ -604,7 +601,6 @@
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
             const esCancelada = orden.estado === 'Cancelada por Cliente';
             
-            // CORRECCIÓN 2: Uso de CustomModal para generar un popup de confirmación elegante en vez del antiguo confirm() nativo.
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
 
             return (
@@ -835,7 +831,16 @@
         // GESTIÓN JERÁRQUICA (CATÁLOGO Y TÉCNICAS) Y TARIFAS
         // ==========================================
         
-        function ModalFichaTecnica({ onClose }) {
+        // CREADO: Componente que faltaba y causaba el "White Screen of Death" al no estar definido
+        function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
+            const [margen, setMargen] = useState(margenActual || 0);
+            const [impuesto, setImpuesto] = useState(impuestoActual || 0);
+            const [descuentos, setDescuentos] = useState(descuentosActuales || []);
+
+            const addTier = () => setDescuentos([...descuentos, { id: `desc_${Date.now()}`, min: 100, pct: 5 }]);
+            const updateTier = (id, field, value) => setDescuentos(descuentos.map(d => d.id === id ? { ...d, [field]: Number(value) } : d));
+            const removeTier = (id) => setDescuentos(descuentos.filter(d => d.id !== id));
+
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
                     <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl">
@@ -873,6 +878,64 @@
                         <div className="flex justify-end gap-3 mt-4">
                             <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button>
                             <button onClick={() => { onSave(margen, impuesto, descuentos); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Tarifas</button>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
+
+        // CORREGIDO: Rediseñado para mostrar la info real sin romper la app por variables no declaradas.
+        function ModalFichaTecnica({ onClose }) {
+            return (
+                <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-3xl shadow-2xl text-slate-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white flex items-center gap-2"><Calculator size={24} className="text-blue-400"/> Guía Detallada de Fórmulas</h3>
+                                <p className="text-slate-400 text-sm mt-1">Así es como el cotizador calcula matemáticamente los precios.</p>
+                            </div>
+                            <button onClick={onClose} className="text-slate-400 hover:text-white bg-slate-700 p-2 rounded-full"><X size={20}/></button>
+                        </div>
+                        
+                        <div className="space-y-6 text-sm">
+                            <div className="bg-slate-900 p-5 rounded-xl border border-blue-500/30 shadow-inner">
+                                <h4 className="font-bold text-blue-400 text-base mb-2 flex items-center gap-2"><span className="bg-blue-500/20 px-2 py-0.5 rounded text-xs">Paso 1</span> Precio de Venta del Producto</h4>
+                                <p className="mb-2">El sistema toma el <strong>Costo Base</strong> de tu catálogo y lo multiplica por la cantidad. Luego, a ese subtotal de costo, le añade el <strong>Margen General (%)</strong> que definiste para darte el precio de venta final de las prendas.</p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800">
+                                    <p>Costo Total = Costo Base × Cantidad</p>
+                                    <p>Precio de Venta Prendas = Costo Total × (1 + [Margen / 100])</p>
+                                </div>
+                                <p className="mt-2 text-xs text-slate-500 italic">* Nota: Si marcas "Traigo mis artículos", el costo base de la prenda pasa a ser 0.</p>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-emerald-500/30 shadow-inner">
+                                <h4 className="font-bold text-emerald-400 text-base mb-2 flex items-center gap-2"><span className="bg-emerald-500/20 px-2 py-0.5 rounded text-xs">Paso 2</span> Precio de Personalización (Técnicas)</h4>
+                                <p className="mb-2">Cada técnica tiene Costos Fijos (Setups que se cobran 1 sola vez sin importar cuántas camisas sean, como revelados o matrices) y Costos Variables (que se multiplican por unidad, como tinta). <strong>A la suma de estos costos también se le aplica tu Margen General.</strong></p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800 space-y-1">
+                                    <p>Costo Fijo Total = Suma de todos los Setups</p>
+                                    <p>Costo Variable Total = Suma de variables × Cantidad</p>
+                                    <p>Precio de Venta Técnica = (Costo Fijo Total + Costo Variable Total) × (1 + [Margen / 100])</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-amber-500/30 shadow-inner">
+                                <h4 className="font-bold text-amber-400 text-base mb-2 flex items-center gap-2"><span className="bg-amber-500/20 px-2 py-0.5 rounded text-xs">Paso 3</span> Cascada de Descuentos (VIP + Volumen)</h4>
+                                <p className="mb-2">Si el cliente compra mucho (ej. 10% OFF por volumen) y además es VIP (ej. 10% OFF), el sistema <strong>NO suma</strong> 10+10=20%. En su lugar, aplica un descuento "en cascada" secuencial para proteger tus finanzas.</p>
+                                <div className="bg-slate-950 p-3 rounded text-xs border border-slate-800 text-slate-300">
+                                    <p>Subtotal Bruto = Precio de Venta Prendas + Precio de Venta Técnicas</p>
+                                    <p className="mt-1 font-mono text-amber-400">Total con Descuento = Subtotal Bruto × (1 - % Volumen) × (1 - % VIP)</p>
+                                    <p className="mt-2 text-[10px] text-slate-500">Ejemplo ilustrativo: L 1,000 con 10% Vol y 10% VIP = (1000 × 0.90) = 900. Luego (900 × 0.90) = L 810 Finales.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-purple-500/30 shadow-inner">
+                                <h4 className="font-bold text-purple-400 text-base mb-2 flex items-center gap-2"><span className="bg-purple-500/20 px-2 py-0.5 rounded text-xs">Paso 4</span> Impuestos (ISV)</h4>
+                                <p className="mb-2">El impuesto global (ej. 15%) se calcula <strong>después de aplicar los descuentos</strong> y solo sobre los ítems del catálogo o técnicas que tengan activada la casilla "Suma Impuesto".</p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end mt-8 border-t border-slate-700 pt-4">
+                            <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg">Entendido, cerrar guía</button>
                         </div>
                     </div>
                 </div>
@@ -963,7 +1026,10 @@
           return (
             <div className="max-w-6xl space-y-8 relative fade-in">
               {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+              
+              {/* CORREGIDO: Se asegura que el modal cargue los datos reales usando los props correctamente */}
               {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} onSave={setConfigGlobal} onClose={()=>setShowTarifasModal(false)} />}
+              
               {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
               
               <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
