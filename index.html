@@ -97,8 +97,8 @@
         const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15 }, { id: 'd2', min: 100, pct: 8 }, { id: 'd3', min: 50, pct: 4 }];
         
-        const ESTADOS_DISPONIBLES = ['Pendiente', 'Cotización enviada', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado'];
-        const MENSAJES_BASE = { bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', promo: 'Aprovecha nuestras tarifas preferenciales automatizadas.', whatsappTemplate: '¡Hola! Te comparto los detalles de tu orden #{ID} por un total de L {TOTAL}. Quedamos a tu disposición.' };
+        const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado'];
+        const MENSAJES_BASE = { bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', promo: 'Aprovecha nuestras tarifas preferenciales automatizadas.', whatsappTemplate: '¡Hola! Te comparto los detalles, orden #{ID} por un total de L {TOTAL}. Quedamos a disposición.' };
 
         function App() {
           const [userDb, setUserDb] = useState(null); 
@@ -367,11 +367,6 @@
           const [cantidad, setCantidad] = useState(50);
           const [comentario, setComentario] = useState(''); 
           const [errorValidacion, setErrorValidacion] = useState('');
-          
-          // CORRECCIÓN 4: Estados para la gestión de cargos adicionales en la orden.
-          const [tieneCargoExtra, setTieneCargoExtra] = useState(false);
-          const [nombreCargoExtra, setNombreCargoExtra] = useState('Flete / Envío');
-          const [valorCargoExtra, setValorCargoExtra] = useState(0);
 
           const productoSeleccionado = catalogo.find(c => c.id === itemSelect);
           const tecnicasPermitidas = useMemo(() => {
@@ -430,19 +425,13 @@
             let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
             let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
-            // Inyección del Costo Extra / Cargo si está activo.
-            if (tieneCargoExtra) {
-                totalFinal += (Number(valorCargoExtra) || 0);
-            }
-
             return { 
                 subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, 
                 impuestos: impuestoTotalFinal, total: totalFinal, unitario: totalFinal / cantidad, 
                 minRequerido, tierActivo,
-                cargoExtra: tieneCargoExtra ? { nombre: nombreCargoExtra, valor: (Number(valorCargoExtra) || 0) } : null,
                 valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0 
             };
-          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen, tieneCargoExtra, nombreCargoExtra, valorCargoExtra]);
+          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen]);
 
           useEffect(() => { if (cotizacion && cantidad < cotizacion.minRequerido) setErrorValidacion(`La técnica requiere un mínimo de ${cotizacion.minRequerido} pzas.`); else setErrorValidacion(''); }, [cantidad, cotizacion]);
 
@@ -456,8 +445,7 @@
             onGuardar({
               id: `ORD-${Math.floor(Math.random() * 10000)}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre,
               proveeCliente, detalles: detalleApps, tecnicasEstructuradas: tecnicasDetalle, comentario: comentario, cantidad, fecha: new Date().toLocaleDateString(),
-              cargoExtra: cotizacion.cargoExtra,
-              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, estado: 'Pendiente', 
+              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, estado: 'Cotización enviada', 
             });
           };
 
@@ -531,25 +519,6 @@
                           {errorValidacion && <p className="text-red-500 text-sm mt-2 flex items-center gap-1"><AlertCircle size={14}/> {errorValidacion}</p>}
                         </div>
 
-                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-sm">
-                            <label className="flex items-center gap-3 text-sm font-bold text-slate-700 cursor-pointer">
-                                <input type="checkbox" checked={tieneCargoExtra} onChange={e => setTieneCargoExtra(e.target.checked)} className="w-5 h-5 accent-blue-600 rounded" />
-                                <span className="flex items-center gap-2"><Package size={16}/> Añadir Cargo Extra (Flete, Empaque, etc.)</span>
-                            </label>
-                            {tieneCargoExtra && (
-                                <div className="flex gap-4 fade-in mt-4 border-t border-slate-200 pt-3">
-                                    <div className="flex-1">
-                                        <label className="text-xs text-slate-500 font-bold block mb-1">Concepto</label>
-                                        <input type="text" value={nombreCargoExtra} onChange={e => setNombreCargoExtra(e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 text-sm bg-white" placeholder="Ej. Envío Terrestre" />
-                                    </div>
-                                    <div className="w-32">
-                                        <label className="text-xs text-slate-500 font-bold block mb-1">Costo (L)</label>
-                                        <input type="number" min="0" value={valorCargoExtra} onChange={e => setValorCargoExtra(Number(e.target.value))} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 text-sm font-mono bg-white" />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><MessageSquare size={16}/> Notas para el Taller (Opcional)</label>
                             <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm bg-white" rows="3" placeholder="Ej: Favor usar logo en color azul marino..."></textarea>
@@ -573,9 +542,6 @@
                             <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
                             {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
                             <div className="flex justify-between"><span>Impuestos:</span> <span>L {cotizacion.impuestos.toFixed(2)}</span></div>
-                            {cotizacion.cargoExtra && (
-                                <div className="flex justify-between text-amber-400 font-medium"><span>{cotizacion.cargoExtra.nombre}:</span> <span>L {cotizacion.cargoExtra.valor.toFixed(2)}</span></div>
-                            )}
                           </div>
                         </div>
                         <div className="border-t border-slate-700 mt-6 pt-4">
@@ -715,9 +681,6 @@
                                     <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
                                         <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
                                         <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
-                                        {orden.cargoExtra && (
-                                            <div className="flex justify-between text-amber-600 font-semibold border-t border-slate-100 pt-1"><span>{orden.cargoExtra.nombre}:</span> <span>L {orden.cargoExtra.valor.toFixed(2)}</span></div>
-                                        )}
                                         <div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2">
                                             <span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span>
                                         </div>
@@ -756,6 +719,7 @@
         // ==========================================
         function GestionUsuarios({ usuarios, onActualizarUsuario, onEliminarUsuario }) {
             const [modalUsuario, setModalUsuario] = useState(null);
+            const [modalConfirmacion, setModalConfirmacion] = useState(null);
 
             const handleEditar = (user) => {
                 setModalUsuario({
@@ -776,12 +740,30 @@
 
             const handleEliminar = (id, nombre, rol) => {
                 if(rol === 'ADMIN') { alert("No puedes eliminar al administrador principal desde aquí."); return; }
-                if(confirm(`¿Estás seguro que deseas eliminar permanentemente al usuario "${nombre}"? Perderá acceso al sistema.`)) { onEliminarUsuario(id); }
+                setModalConfirmacion({
+                    titulo: 'Eliminar Usuario',
+                    mensaje: `¿Estás seguro que deseas eliminar permanentemente al usuario "${nombre}"? Perderá acceso al sistema.`,
+                    submitLabel: 'Sí, Eliminar',
+                    onConfirm: () => onEliminarUsuario(id)
+                });
             };
 
             return (
                 <div className="max-w-6xl mx-auto space-y-4 fade-in">
                     {modalUsuario && <CustomModal config={modalUsuario} onClose={() => setModalUsuario(null)} />}
+                    {modalConfirmacion && (
+                        <CustomModal 
+                            config={{
+                                titulo: modalConfirmacion.titulo,
+                                esConfirmacion: true,
+                                mensaje: modalConfirmacion.mensaje,
+                                submitLabel: modalConfirmacion.submitLabel,
+                                campos: [],
+                                onSubmit: modalConfirmacion.onConfirm
+                            }}
+                            onClose={() => setModalConfirmacion(null)}
+                        />
+                    )}
                     <h2 className="text-2xl font-bold text-white mb-6">Gestión de Accesos y Usuarios</h2>
                     <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto">
                         <table className="w-full text-left text-sm min-w-full">
@@ -856,61 +838,7 @@
         function ModalFichaTecnica({ onClose }) {
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-bold text-white flex items-center gap-3"><BookOpen size={28} className="text-blue-400"/> Ficha Técnica y Fórmulas</h3>
-                            <button onClick={onClose} className="text-slate-400 hover:text-white p-2 bg-slate-900 rounded-full"><X size={20}/></button>
-                        </div>
-                        
-                        <div className="space-y-6 text-slate-300 text-sm leading-relaxed">
-                            <div className="bg-slate-900 p-5 rounded-xl border border-slate-700 border-l-4 border-l-blue-500 shadow-inner">
-                                <h4 className="font-bold text-blue-400 text-base mb-2 flex items-center gap-2"><Calculator size={18}/> Estructura de Costos de Personalización</h4>
-                                <p className="mb-3">El cotizador divide los costos de producción (Técnicas) en dos categorías fundamentales para mantener la rentabilidad exacta según el volumen:</p>
-                                <ul className="space-y-4">
-                                    <li className="bg-slate-800 p-4 rounded-lg border border-slate-600">
-                                        <span className="font-bold text-emerald-400 flex items-center gap-2 mb-1"><Layers size={16}/> Costo Fijo (Setups)</span>
-                                        Es un costo que <strong>se suma una sola vez</strong> por toda la orden, independientemente de si el cliente solicita 10 o 1,000 unidades. <br/>
-                                        <span className="text-xs text-slate-400 italic block mt-1">Ejemplos: Revelado de mallas en serigrafía, creación de matriz/ponchado en bordado, preparación de plancha.</span>
-                                    </li>
-                                    <li className="bg-slate-800 p-4 rounded-lg border border-slate-600">
-                                        <span className="font-bold text-amber-400 flex items-center gap-2 mb-1"><TrendingUp size={16}/> Costo Variable (x Unidad)</span>
-                                        Es el costo directo de producción que <strong>se multiplica matemáticamente por la cantidad</strong> total de unidades solicitadas. <br/>
-                                        <span className="text-xs text-slate-400 italic block mt-1">Ejemplos: Tinta consumida por cada prenda, papel transfer, golpes de hilo, mano de obra directa.</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div className="bg-slate-900 p-5 rounded-xl border border-slate-700 border-l-4 border-l-purple-500 shadow-inner">
-                                <h4 className="font-bold text-purple-400 text-base mb-2">Fórmula de Cálculo Interno (Motor)</h4>
-                                <div className="font-mono bg-slate-950 p-4 rounded-lg text-[11px] sm:text-xs text-slate-400 border border-slate-800">
-                                    <p className="mb-1"><span className="text-white">Costo_Técnica</span> = Σ(Costos Fijos) + (Σ(Costos Variables) * Cantidad)</p>
-                                    <p className="mb-1"><span className="text-white">Subtotal_Base</span> = Costo_Técnica * (1 + (Margen_Global / 100))</p>
-                                    <p><span className="text-white">Impuestos_ISV</span> = Subtotal_Base * (Impuesto / 100) <span className="text-[10px] text-amber-500">*Si la técnica no es exenta</span></p>
-                                </div>
-                                <p className="mt-3 text-xs text-slate-400"><strong>Nota Importante:</strong> Los descuentos automáticos por volumen o los descuentos por perfil VIP del cliente se aplican <strong>al final de toda la ecuación</strong> sobre el Subtotal y el Impuesto, garantizando que el descuento fluya sobre el costo final de venta.</p>
-                            </div>
-                        </div>
-
-                        <div className="flex justify-end mt-8 pt-4 border-t border-slate-700">
-                            <button onClick={onClose} className="px-8 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg shadow-blue-600/20 transition-transform hover:scale-105">Entendido</button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
-            const [margen, setMargen] = useState(margenActual);
-            const [impuesto, setImpuesto] = useState(impuestoActual);
-            const [descuentos, setDescuentos] = useState(descuentosActuales || []);
-            
-            const addTier = () => setDescuentos([...descuentos, { id: `d_${Date.now()}`, min: 0, pct: 0 }]);
-            const removeTier = (id) => setDescuentos(descuentos.filter(d => d.id !== id));
-            const updateTier = (id, field, val) => setDescuentos(descuentos.map(d => d.id === id ? { ...d, [field]: Number(val) } : d));
-
-            return (
-                <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-lg shadow-2xl">
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl">
                         <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2"><Settings size={20}/> Tarifas Globales</h3>
                         <p className="text-slate-400 text-sm mb-6">Configura tus márgenes y la estructura automática de descuentos.</p>
                         
@@ -1234,8 +1162,8 @@
 
         function EstadoBadge({ estado }) {
           const colores = {
-              'Pendiente': 'bg-slate-100 text-slate-700 border-slate-200',
               'Cotización enviada': 'bg-sky-100 text-sky-700 border-sky-200',
+              'Pendiente': 'bg-slate-100 text-slate-700 border-slate-200',
               'Aprobado / En producción': 'bg-indigo-100 text-indigo-700 border-indigo-200',
               'Control de calidad': 'bg-purple-100 text-purple-700 border-purple-200',
               'Listo para envío': 'bg-teal-100 text-teal-700 border-teal-200',
