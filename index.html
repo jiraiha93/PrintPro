@@ -98,7 +98,14 @@
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15 }, { id: 'd2', min: 100, pct: 8 }, { id: 'd3', min: 50, pct: 4 }];
         
         const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado'];
-        const MENSAJES_BASE = { bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', promo: 'Aprovecha nuestras tarifas preferenciales automatizadas.', whatsappTemplate: '¡Hola! Te comparto los detalles, orden #{ID} por un total de L {TOTAL}. Quedamos a disposición.' };
+        
+        // [MODIFICACIÓN] Se añade 'whatsappNumero' vacío por defecto para asegurar la retrocompatibilidad
+        const MENSAJES_BASE = { 
+            bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', 
+            promo: 'Aprovecha nuestras tarifas preferenciales automatizadas.', 
+            whatsappTemplate: '¡Hola! Te comparto los detalles, orden #{ID} por un total de L {TOTAL}. Quedamos a disposición.',
+            whatsappNumero: '' 
+        };
 
         function App() {
           const [userDb, setUserDb] = useState(null); 
@@ -559,10 +566,20 @@
           const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
           if (ordenes.length === 0) return <div className="text-center py-20 fade-in"><p className="text-slate-400">No hay cotizaciones registradas.</p></div>;
           
+          // [MODIFICACIÓN SEGURA] Se actualiza para soportar un número de teléfono específico si existe en mensajesGlobales
           const handleShare = (orden) => {
              let template = mensajesGlobales?.whatsappTemplate || "Hola, te envío los detalles de la orden {ID} por L {TOTAL}";
              let msj = template.replace(/{ID}/g, orden.id).replace(/{TOTAL}/g, orden.total.toFixed(2));
-             window.open(`https://wa.me/?text=${encodeURIComponent(msj)}`, '_blank');
+             
+             // Extraer el teléfono, limpiándolo para que solo contenga números (por si el admin pone + o espacios)
+             let telefonoEmpresa = mensajesGlobales?.whatsappNumero ? mensajesGlobales.whatsappNumero.replace(/[^0-9]/g, '') : '';
+             
+             // Si el admin configuró un teléfono, lo dirige directo. Si no, mantiene el comportamiento genérico de WhatsApp
+             let waUrl = telefonoEmpresa 
+                ? `https://wa.me/${telefonoEmpresa}?text=${encodeURIComponent(msj)}`
+                : `https://wa.me/?text=${encodeURIComponent(msj)}`;
+
+             window.open(waUrl, '_blank');
              if(showToast) showToast('Abriendo WhatsApp...');
           };
 
@@ -812,10 +829,20 @@
 
                         <div className="bg-slate-900 p-5 rounded-xl border border-slate-700">
                             <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2 mb-4"><Share2 size={20}/> Plantilla de WhatsApp</h3>
-                            <div>
-                                <label className="block text-sm font-bold text-slate-400 mb-2">Plantilla al Compartir Cotización</label>
-                                <p className="text-xs text-slate-500 mb-3">Usa <code className="text-emerald-300 bg-slate-800 px-1 py-0.5 rounded">{`{ID}`}</code> para el número de cotización y <code className="text-emerald-300 bg-slate-800 px-1 py-0.5 rounded">{`{TOTAL}`}</code> para el precio final.</p>
-                                <textarea value={form.whatsappTemplate || ''} onChange={(e) => setForm({...form, whatsappTemplate: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500 resize-none h-24" placeholder="Ej. Hola, te comparto los detalles de tu orden {ID} por un total de L {TOTAL}."></textarea>
+                            <div className="space-y-4">
+                                
+                                {/* [MODIFICACIÓN SEGURA] Se añade el campo para el Número de WhatsApp dentro del Admin */}
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-400 mb-2">Número de WhatsApp de la Empresa (Opcional)</label>
+                                    <p className="text-xs text-slate-500 mb-2">Ingresa el número con el código de país (sin el símbolo + o espacios) para que los clientes se dirijan directamente al chat de la empresa. Ej: <span className="text-emerald-400">50499990000</span>. Si se deja en blanco, el cliente elegirá a quién enviarlo manualmente.</p>
+                                    <input type="text" value={form.whatsappNumero || ''} onChange={(e) => setForm({...form, whatsappNumero: e.target.value.replace(/[^0-9]/g, '')})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500" placeholder="Ej. 50499990000" />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-400 mb-2">Plantilla al Compartir Cotización</label>
+                                    <p className="text-xs text-slate-500 mb-3">Usa <code className="text-emerald-300 bg-slate-800 px-1 py-0.5 rounded">{`{ID}`}</code> para el número de cotización y <code className="text-emerald-300 bg-slate-800 px-1 py-0.5 rounded">{`{TOTAL}`}</code> para el precio final.</p>
+                                    <textarea value={form.whatsappTemplate || ''} onChange={(e) => setForm({...form, whatsappTemplate: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500 resize-none h-24" placeholder="Ej. Hola, te comparto los detalles de tu orden {ID} por un total de L {TOTAL}."></textarea>
+                                </div>
                             </div>
                         </div>
 
