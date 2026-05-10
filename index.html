@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PrintPro - Cotizador VIP (Cloud Ready)</title>
     
-    <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Babel Standalone -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
@@ -63,8 +61,7 @@
         // 🚀 CONFIGURACIÓN DE BASE DE DATOS EN LA NUBE (FIREBASE)
         // =====================================================================
         const FIREBASE_PROD_CONFIG = {
-          // TODO: PEGA TU NUEVA API KEY EN LA SIGUIENTE LÍNEA
-          apiKey: "AIzaSyA_Xhl948W9g8vpxLdWzCFacnya8AURoXc", 
+          apiKey: "AIzaSyA_Xhl948W9g8vpxLdWzCFacnya8AURoXc",
           authDomain: "cotizador-pro-9ec69.firebaseapp.com",
           projectId: "cotizador-pro-9ec69",
           storageBucket: "cotizador-pro-9ec69.firebasestorage.app",
@@ -100,7 +97,6 @@
         
         const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado'];
         
-        // [MODIFICACIÓN] Se añade 'whatsappNumero' vacío por defecto para asegurar la retrocompatibilidad
         const MENSAJES_BASE = { 
             bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', 
             promo: 'Aprovecha nuestras tarifas preferenciales automatizadas.', 
@@ -139,7 +135,11 @@
                 } else {
                   await signInAnonymously(auth);
                 }
-              } catch (e) { console.error("Error Auth Firebase", e); setLoadingData(false); }
+              } catch (e) { 
+                // MODIFICACIÓN SENIOR: Logueo de error ampliado para facilitar el debugging de conexión
+                console.error("⛔ Error de Autenticación Firebase. Motivos comunes: 1) Autenticación Anónima desactivada en consola Firebase. 2) Credenciales incorrectas. Detalle:", e); 
+                setLoadingData(false); 
+              }
             };
             initAuth();
             const unsub = onAuthStateChanged(auth, (user) => { setUserDb(user); setIsConnectedToCloud(!!user); });
@@ -567,15 +567,12 @@
           const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
           if (ordenes.length === 0) return <div className="text-center py-20 fade-in"><p className="text-slate-400">No hay cotizaciones registradas.</p></div>;
           
-          // [MODIFICACIÓN SEGURA] Se actualiza para soportar un número de teléfono específico si existe en mensajesGlobales
           const handleShare = (orden) => {
              let template = mensajesGlobales?.whatsappTemplate || "Hola, te envío los detalles de la orden {ID} por L {TOTAL}";
              let msj = template.replace(/{ID}/g, orden.id).replace(/{TOTAL}/g, orden.total.toFixed(2));
              
-             // Extraer el teléfono, limpiándolo para que solo contenga números (por si el admin pone + o espacios)
              let telefonoEmpresa = mensajesGlobales?.whatsappNumero ? mensajesGlobales.whatsappNumero.replace(/[^0-9]/g, '') : '';
              
-             // Si el admin configuró un teléfono, lo dirige directo. Si no, mantiene el comportamiento genérico de WhatsApp
              let waUrl = telefonoEmpresa 
                 ? `https://wa.me/${telefonoEmpresa}?text=${encodeURIComponent(msj)}`
                 : `https://wa.me/?text=${encodeURIComponent(msj)}`;
@@ -618,13 +615,10 @@
 
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
             const esCancelada = orden.estado === 'Cancelada por Cliente';
-            
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
 
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
-                    
-                    {/* Renderización del modal de confirmación en capas superiores */}
                     {modalConfirmacion && (
                         <CustomModal 
                             config={{
@@ -719,7 +713,6 @@
                             <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center gap-2"><Printer size={18}/> Imprimir</button>
                             <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cerrar</button>
                             
-                            {/* Botones rediseñados para activar el CustomModal de confirmación en lugar del confirm nativo */}
                             {isClient && !esCancelada && <button onClick={() => setModalConfirmacion({ titulo: 'Cancelar Orden', mensaje: '¿Seguro que deseas cancelar tu orden de forma permanente?', submitLabel: 'Sí, Cancelar', onConfirm: onCancelar })} className="px-5 py-2.5 rounded-xl font-bold bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center gap-2"><Trash2 size={18}/> Cancelar Orden</button>}
                             {!isClient && <button onClick={() => setModalConfirmacion({ titulo: 'Eliminar Orden del Sistema', mensaje: 'Se eliminará permanentemente de tu base de datos. El cliente ya no la podrá visualizar. ¿Continuar?', submitLabel: 'Eliminar Orden', onConfirm: onEliminarAdmin })} className="px-5 py-2.5 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"><Trash2 size={18}/> Eliminar de BD</button>}
                         </div>
@@ -832,7 +825,6 @@
                             <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2 mb-4"><Share2 size={20}/> Plantilla de WhatsApp</h3>
                             <div className="space-y-4">
                                 
-                                {/* [MODIFICACIÓN SEGURA] Se añade el campo para el Número de WhatsApp dentro del Admin */}
                                 <div>
                                     <label className="block text-sm font-bold text-slate-400 mb-2">Número de WhatsApp de la Empresa (Opcional)</label>
                                     <p className="text-xs text-slate-500 mb-2">Ingresa el número con el código de país (sin el símbolo + o espacios) para que los clientes se dirijan directamente al chat de la empresa. Ej: <span className="text-emerald-400">50499990000</span>. Si se deja en blanco, el cliente elegirá a quién enviarlo manualmente.</p>
@@ -859,7 +851,6 @@
         // GESTIÓN JERÁRQUICA (CATÁLOGO Y TÉCNICAS) Y TARIFAS
         // ==========================================
         
-        // CREADO: Componente que faltaba y causaba el "White Screen of Death" al no estar definido
         function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
             const [margen, setMargen] = useState(margenActual || 0);
             const [impuesto, setImpuesto] = useState(impuestoActual || 0);
@@ -912,7 +903,6 @@
             )
         }
 
-        // CORREGIDO: Rediseñado para mostrar la info real sin romper la app por variables no declaradas.
         function ModalFichaTecnica({ onClose }) {
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
@@ -1055,7 +1045,6 @@
             <div className="max-w-6xl space-y-8 relative fade-in">
               {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
               
-              {/* CORREGIDO: Se asegura que el modal cargue los datos reales usando los props correctamente */}
               {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} onSave={setConfigGlobal} onClose={()=>setShowTarifasModal(false)} />}
               
               {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
@@ -1170,7 +1159,6 @@
           const handleCheckboxGroup = (fieldId, value, checked) => { const currentArr = form[fieldId] || []; if (checked) setForm({...form, [fieldId]: [...currentArr, value]}); else setForm({...form, [fieldId]: currentArr.filter(v => v !== value)}); };
 
           return (
-            // Aumentado z-index a z-[60] para evitar conflictos con el modal detalle en z-50
             <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-[60] fade-in p-4">
               <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-md shadow-2xl">
                 <h3 className="text-xl font-bold text-white mb-6">{config.titulo}</h3>
@@ -1195,8 +1183,6 @@
                   )}
                   <div className="flex justify-end gap-3 mt-8 pt-4 border-t border-slate-700">
                       <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 transition-colors">Cancelar</button>
-                      
-                      {/* Adaptación del botón para mensajes personalizados pasados por parámetro */}
                       <button type="submit" className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:scale-105 ${config.esConfirmacion ? 'bg-red-600 shadow-red-600/20' : 'bg-blue-600 shadow-blue-600/20'}`}>
                           {config.submitLabel || (config.esConfirmacion ? 'Sí, Eliminar' : 'Guardar')}
                       </button>
