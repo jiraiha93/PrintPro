@@ -3,235 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PrintPro - Sistema de Gestión</title>
-    <!-- Tailwind CSS para el diseño -->
+    <title>PrintPro - Sistema Integral</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); }
-        .loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
-        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .sidebar-item { transition: all 0.2s; border-radius: 12px; margin-bottom: 4px; }
+        .sidebar-item.active { background-color: #1e293b; color: white; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); border: 1px solid #e2e8f0; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .loader-ring { border-top-color: #3b82f6; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="text-slate-800">
 
-    <!-- Pantalla de Carga Inicial -->
-    <div id="initial-loader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white">
-        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-        <h2 class="text-xl font-semibold text-slate-700">Iniciando PrintPro...</h2>
+    <!-- Pantalla de Carga -->
+    <div id="app-loader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white">
+        <div class="loader-ring border-4 border-slate-200 h-16 w-16 rounded-full mb-4"></div>
+        <p class="text-slate-500 font-medium animate-pulse">Sincronizando con la nube...</p>
     </div>
 
-    <!-- Navegación -->
-    <nav class="bg-slate-900 text-white p-4 sticky top-0 z-40 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <div class="bg-blue-600 p-1.5 rounded-lg">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                </div>
-                <span class="text-2xl font-bold tracking-tight">PrintPro</span>
-            </div>
-            <div id="user-info" class="hidden sm:flex items-center space-x-4">
-                <span id="user-name" class="text-sm font-medium text-slate-300">Cargando usuario...</span>
-                <button onclick="cerrarSesion()" class="bg-slate-800 hover:bg-red-900 px-3 py-1.5 rounded-md text-xs transition-colors">Cerrar Sesión</button>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Contenido Principal -->
-    <main class="container mx-auto p-4 md:p-8 max-w-6xl">
+    <div id="app-container" class="flex h-screen overflow-hidden opacity-0 transition-opacity duration-500">
         
-        <!-- Header de Bienvenida -->
-        <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-                <h1 class="text-3xl font-extrabold text-slate-900">Panel de Control</h1>
-                <p class="text-slate-500 mt-1">Gestiona tus cotizaciones y pedidos en tiempo real.</p>
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-slate-400 flex flex-col border-r border-slate-800">
+            <div class="p-6 flex items-center space-x-3 text-white">
+                <div class="bg-blue-600 p-2 rounded-xl">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                </div>
+                <span class="text-xl font-bold tracking-tight">PrintPro <span class="text-blue-500 text-xs">VIP</span></span>
             </div>
-            <div class="flex space-x-2">
-                <button onclick="showSection('nueva-cotizacion')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-semibold shadow-md transition-all flex items-center space-x-2">
-                    <span>+ Nueva Cotización</span>
+
+            <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto custom-scrollbar" id="nav-menu">
+                <button onclick="navigate('PANEL')" data-view="PANEL" class="sidebar-item active w-full flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    <span class="font-medium">Panel Principal</span>
                 </button>
-            </div>
-        </header>
+                <button onclick="navigate('COTIZACIONES')" data-view="COTIZACIONES" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="font-medium">Cotizaciones</span>
+                </button>
+                <button onclick="navigate('CATALOGO')" data-view="CATALOGO" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                    <span class="font-medium">Catálogo</span>
+                </button>
+                <button onclick="navigate('USUARIOS')" data-view="USUARIOS" class="sidebar-item w-full flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span class="font-medium">Usuarios</span>
+                </button>
+            </nav>
 
-        <!-- Secciones -->
-        <section id="section-home" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <!-- Stats Rapidos -->
-            <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
-                <p class="text-sm text-slate-500 font-medium">Cotizaciones Activas</p>
-                <h3 id="stat-active" class="text-3xl font-bold text-slate-800 mt-1">0</h3>
-            </div>
-            <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-amber-500">
-                <p class="text-sm text-slate-500 font-medium">En Producción</p>
-                <h3 id="stat-prod" class="text-3xl font-bold text-slate-800 mt-1">0</h3>
-            </div>
-            <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-emerald-500">
-                <p class="text-sm text-slate-500 font-medium">Entregadas</p>
-                <h3 id="stat-done" class="text-3xl font-bold text-slate-800 mt-1">0</h3>
-            </div>
-        </section>
-
-        <!-- Lista de Cotizaciones -->
-        <div class="glass-card rounded-2xl shadow-sm overflow-hidden mb-12">
-            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
-                <h2 class="font-bold text-slate-800 text-lg">Historial Reciente</h2>
-                <button class="text-blue-600 text-sm font-semibold hover:underline">Ver todo</button>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold">
-                        <tr>
-                            <th class="px-6 py-4">ID / Proyecto</th>
-                            <th class="px-6 py-4">Estado</th>
-                            <th class="px-6 py-4">Fecha</th>
-                            <th class="px-6 py-4">Total</th>
-                            <th class="px-6 py-4 text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="cotizaciones-tbody" class="divide-y divide-slate-100">
-                        <!-- Se llena con JS -->
-                    </tbody>
-                </table>
-                <div id="no-data" class="p-12 text-center hidden">
-                    <div class="text-slate-300 mb-2">
-                        <svg class="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <div class="p-4 border-t border-slate-800">
+                <div class="bg-slate-800/50 rounded-xl p-4 flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-xs" id="avatar-initial">A</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white truncate" id="side-username">Admin</p>
+                        <p class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Nivel Pro</p>
                     </div>
-                    <p class="text-slate-500">No hay cotizaciones registradas todavía.</p>
                 </div>
             </div>
-        </div>
+        </aside>
 
-    </main>
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            
+            <!-- Top Bar -->
+            <header class="h-16 bg-white border-b flex items-center justify-between px-8">
+                <h2 id="view-title" class="text-xl font-bold text-slate-800">Panel Principal</h2>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showNewCotizacion()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-blue-200 transition-all">
+                        + Nueva Cotización
+                    </button>
+                </div>
+            </header>
 
-    <!-- Modales / Overlays -->
-    <div id="modal-notif" class="fixed bottom-4 right-4 z-50 transform translate-y-20 transition-transform duration-300">
-        <div class="bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center space-x-3">
-            <span id="notif-text">Acción realizada con éxito</span>
+            <!-- Dinamic Content Area -->
+            <div id="main-content" class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <!-- Se inyecta por JS -->
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Modales -->
+    <div id="modal-container" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col transform transition-all duration-300 scale-95 opacity-0" id="modal-content">
+            <!-- Contenido dinámico del modal -->
         </div>
     </div>
 
-    <!-- Firebase y Lógica del Sistema -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, query, onSnapshot, orderBy, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, addDoc, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Configuración de Firebase (Se inyecta automáticamente en el entorno)
+        // CONFIGURACIÓN
         const firebaseConfig = JSON.parse(window.__firebase_config || '{}');
-        const appId = window.__app_id || 'printpro-default';
+        const appId = window.__app_id || 'printpro-prod';
         
-        let app, auth, db;
+        let db, auth, currentUser;
+        let dataStore = {
+            cotizaciones: [],
+            usuarios: [],
+            catalogo: [],
+            currentView: 'PANEL'
+        };
 
-        // Inicializar Aplicación
+        // INICIO
         async function init() {
             try {
-                app = initializeApp(firebaseConfig);
+                const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                // Autenticación Anónima si no hay sesión
                 await signInAnonymously(auth);
-
+                
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        document.getElementById('user-info').classList.remove('hidden');
-                        document.getElementById('user-name').innerText = `ID: ${user.uid.substring(0, 8)}`;
-                        cargarDatos(user.uid);
+                        currentUser = user;
+                        document.getElementById('side-username').innerText = user.uid.substring(0, 8);
+                        document.getElementById('avatar-initial').innerText = user.uid[0].toUpperCase();
+                        syncData();
                     }
-                    // Ocultar loader inicial
-                    document.getElementById('initial-loader').classList.add('hidden');
                 });
-            } catch (error) {
-                console.error("Error iniciando la App:", error);
-                // Si falla Firebase por config vacía, mostramos la UI de todas formas para no dejar la pantalla en blanco
-                document.getElementById('initial-loader').classList.add('hidden');
-                mockData(); 
+            } catch (e) {
+                console.error("Error en arranque:", e);
+                // Si falla Firebase, permitir ver la UI con mocks para que no quede en blanco
+                document.getElementById('app-loader').remove();
+                document.getElementById('app-container').classList.remove('opacity-0');
+                renderView();
             }
         }
 
-        // Cargar Datos desde Firestore (Siguiendo la Regla 1 y 2)
-        function cargarDatos(uid) {
-            const cotizacionesRef = collection(db, 'artifacts', appId, 'public', 'data', 'cotizaciones');
-            
-            // Usamos onSnapshot para tiempo real (Regla 2: Sin filtros complejos para evitar errores de índice)
-            onSnapshot(cotizacionesRef, (snapshot) => {
-                const cotizaciones = [];
-                snapshot.forEach(doc => {
-                    cotizaciones.push({ id: doc.id, ...doc.data() });
-                });
-                
-                actualizarInterfaz(cotizaciones);
-            }, (error) => {
-                console.warn("Error en Firestore (posiblemente reglas):", error);
-                mockData();
+        // SINCRONIZACIÓN FIREBASE
+        function syncData() {
+            if (!currentUser) return;
+
+            const path = (coll) => collection(db, 'artifacts', appId, 'public', 'data', coll);
+
+            // Escuchar Cotizaciones
+            onSnapshot(path('cotizaciones'), (snap) => {
+                dataStore.cotizaciones = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                if(dataStore.currentView === 'PANEL' || dataStore.currentView === 'COTIZACIONES') renderView();
+                document.getElementById('app-loader').remove();
+                document.getElementById('app-container').classList.remove('opacity-0');
+            });
+
+            // Escuchar Catálogo
+            onSnapshot(path('catalogo'), (snap) => {
+                dataStore.catalogo = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                if(dataStore.currentView === 'CATALOGO') renderView();
             });
         }
 
-        function actualizarInterfaz(datos) {
-            const tbody = document.getElementById('cotizaciones-tbody');
-            const noData = document.getElementById('no-data');
+        // SISTEMA DE NAVEGACIÓN
+        window.navigate = (view) => {
+            dataStore.currentView = view;
             
-            if (datos.length === 0) {
-                tbody.innerHTML = '';
-                noData.classList.remove('hidden');
-                return;
+            // UI Sidebar
+            document.querySelectorAll('.sidebar-item').forEach(el => {
+                el.classList.remove('active');
+                if(el.dataset.view === view) el.classList.add('active');
+            });
+
+            document.getElementById('view-title').innerText = 
+                view === 'PANEL' ? 'Panel Principal' :
+                view === 'COTIZACIONES' ? 'Historial de Cotizaciones' :
+                view === 'CATALOGO' ? 'Catálogo de Productos' : 'Gestión de Usuarios';
+
+            renderView();
+        };
+
+        // RENDERIZADO DE VISTAS
+        function renderView() {
+            const container = document.getElementById('main-content');
+            const view = dataStore.currentView;
+
+            if (view === 'PANEL') {
+                const total = dataStore.cotizaciones.length;
+                const pendientes = dataStore.cotizaciones.filter(c => c.estado === 'Pendiente').length;
+                const terminados = dataStore.cotizaciones.filter(c => c.estado === 'Finalizado / Entregado').length;
+
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
+                            <p class="text-slate-500 text-sm font-medium">Cotizaciones Totales</p>
+                            <h3 class="text-3xl font-bold mt-1">${total}</h3>
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-amber-500">
+                            <p class="text-slate-500 text-sm font-medium">Pendientes de Aprobación</p>
+                            <h3 class="text-3xl font-bold mt-1">${pendientes}</h3>
+                        </div>
+                        <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+                            <p class="text-slate-500 text-sm font-medium">Entregas Exitosas</p>
+                            <h3 class="text-3xl font-bold mt-1">${terminados}</h3>
+                        </div>
+                    </div>
+
+                    <div class="glass-card rounded-2xl overflow-hidden shadow-sm">
+                        <div class="p-6 border-b flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800">Actividad Reciente</h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead class="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold">
+                                    <tr>
+                                        <th class="px-6 py-4">Proyecto</th>
+                                        <th class="px-6 py-4">Estado</th>
+                                        <th class="px-6 py-4">Total</th>
+                                        <th class="px-6 py-4">Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    ${dataStore.cotizaciones.slice(0, 5).map(c => `
+                                        <tr class="hover:bg-slate-50/50">
+                                            <td class="px-6 py-4 font-semibold text-slate-700">${c.proyecto}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-2 py-1 rounded-full text-[10px] font-bold ${getEstadoClase(c.estado)}">
+                                                    ${c.estado}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 font-bold">$${c.total || 0}</td>
+                                            <td class="px-6 py-4 text-xs text-slate-400">${c.fecha || 'Hoy'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
             }
 
-            noData.classList.add('hidden');
-            tbody.innerHTML = datos.map(item => `
-                <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-6 py-4">
-                        <div class="font-bold text-slate-800">${item.proyecto || 'S/N'}</div>
-                        <div class="text-xs text-slate-400">#${item.id.substring(0,6)}</div>
-                    </td>
-                    <td class="px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-100 text-blue-700 border border-blue-200">
-                            ${item.estado || 'Pendiente'}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 text-sm text-slate-500">
-                        ${item.fecha || 'Reciente'}
-                    </td>
-                    <td class="px-6 py-4 font-bold text-slate-900">
-                        $${item.total || '0.00'}
-                    </td>
-                    <td class="px-6 py-4 text-center">
-                        <button class="text-slate-400 hover:text-blue-600 p-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            if (view === 'COTIZACIONES') {
+                container.innerHTML = `
+                    <div class="glass-card rounded-2xl shadow-sm p-4 mb-6 flex gap-4">
+                        <input type="text" placeholder="Buscar por cliente o proyecto..." class="flex-1 bg-slate-100 border-none rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                        <select class="bg-slate-100 border-none rounded-xl px-4 py-2 text-sm outline-none">
+                            <option>Todos los estados</option>
+                            <option>Pendiente</option>
+                            <option>En producción</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4">
+                        ${dataStore.cotizaciones.map(c => `
+                            <div class="glass-card p-5 rounded-2xl flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
+                                <div class="flex items-center space-x-4">
+                                    <div class="bg-slate-100 p-3 rounded-xl text-slate-400">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800">${c.proyecto}</h4>
+                                        <p class="text-xs text-slate-500">${c.cliente || 'Consumidor Final'} • ${c.id.substring(0,8)}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-black text-slate-900">$${c.total}</div>
+                                    <span class="text-[10px] font-bold uppercase ${getEstadoClase(c.estado)}">${c.estado}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
 
-            // Actualizar Stats
-            document.getElementById('stat-active').innerText = datos.length;
-            document.getElementById('stat-prod').innerText = datos.filter(d => d.estado === 'Producción').length;
-            document.getElementById('stat-done').innerText = datos.filter(d => d.estado === 'Finalizado').length;
+            if (view === 'CATALOGO') {
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${dataStore.catalogo.map(p => `
+                            <div class="glass-card rounded-2xl overflow-hidden hover:scale-[1.02] transition-transform">
+                                <div class="h-40 bg-slate-200 relative">
+                                    ${p.url ? `<img src="${p.url}" class="w-full h-full object-cover">` : `<div class="flex items-center justify-center h-full text-slate-400 uppercase font-black">${p.nombre}</div>`}
+                                </div>
+                                <div class="p-5">
+                                    <h4 class="font-bold text-lg text-slate-800">${p.nombre}</h4>
+                                    <p class="text-sm text-slate-500 mb-4">${p.descripcion || 'Sin descripción'}</p>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-blue-600 font-bold">$${p.precioUnitario} <small class="text-slate-400">base</small></span>
+                                        <button class="bg-slate-100 hover:bg-slate-200 p-2 rounded-lg text-slate-600 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
         }
 
-        // Datos de ejemplo en caso de que Firestore no esté listo o falle
-        function mockData() {
-            const fake = [
-                { id: 'COT001', proyecto: 'Folletos Inmobiliaria', estado: 'Producción', fecha: '12 Mayo', total: '150.00' },
-                { id: 'COT002', proyecto: 'Tarjetas VIP', estado: 'Pendiente', fecha: '11 Mayo', total: '45.00' },
-                { id: 'COT003', proyecto: 'Vinil Decorativo', estado: 'Finalizado', fecha: '10 Mayo', total: '320.00' }
-            ];
-            actualizarInterfaz(fake);
+        // FUNCIONES DE SOPORTE UI
+        function getEstadoClase(estado) {
+            const map = {
+                'Pendiente': 'bg-amber-100 text-amber-700',
+                'Cotización enviada': 'bg-sky-100 text-sky-700',
+                'En producción': 'bg-indigo-100 text-indigo-700',
+                'Finalizado / Entregado': 'bg-emerald-100 text-emerald-700',
+                'Cancelado': 'bg-red-100 text-red-700'
+            };
+            return map[estado] || 'bg-slate-100 text-slate-600';
         }
 
-        // Notificaciones visuales
-        window.showNotif = (text) => {
-            const el = document.getElementById('modal-notif');
-            document.getElementById('notif-text').innerText = text;
-            el.classList.remove('translate-y-20');
-            setTimeout(() => el.classList.add('translate-y-20'), 3000);
+        window.showNewCotizacion = () => {
+            const modal = document.getElementById('modal-container');
+            const content = document.getElementById('modal-content');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+
+            content.innerHTML = `
+                <div class="p-6 border-b flex justify-between items-center bg-slate-50">
+                    <h3 class="text-xl font-bold text-slate-800">Nueva Cotización</h3>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="p-8 overflow-y-auto custom-scrollbar space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 uppercase">Nombre del Proyecto</label>
+                            <input id="form-proyecto" type="text" placeholder="Ej: Tarjetas Personales" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 uppercase">Cliente</label>
+                            <input id="form-cliente" type="text" placeholder="Nombre o Empresa" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Producto</label>
+                        <select id="form-producto" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                            ${dataStore.catalogo.map(p => `<option value="${p.id}">${p.nombre}</option>`).join('') || '<option disabled>Sin productos en catálogo</option>'}
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-500 uppercase">Cantidad</label>
+                            <input id="form-cantidad" type="number" value="100" class="w-full bg-slate-100 border-none rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="space-y-1 col-span-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase">Precio Estimado</label>
+                            <div class="w-full bg-blue-50 text-blue-700 font-black rounded-xl px-4 py-3 text-2xl flex items-center">
+                                $ <span id="form-preview-total">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6 bg-slate-50 border-t flex justify-end">
+                    <button onclick="closeModal()" class="px-6 py-3 text-slate-500 font-bold hover:text-slate-700 mr-2">Cancelar</button>
+                    <button id="btn-save-cot" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all">
+                        Guardar Cotización
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('btn-save-cot').onclick = async () => {
+                const proyecto = document.getElementById('form-proyecto').value;
+                const cliente = document.getElementById('form-cliente').value;
+                const total = Math.floor(Math.random() * 500) + 100; // Simulación de cálculo
+
+                if(!proyecto) return alert("Ponle nombre al proyecto");
+
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'cotizaciones'), {
+                    proyecto,
+                    cliente,
+                    total,
+                    estado: 'Pendiente',
+                    fecha: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
+                    timestamp: new Date().getTime()
+                });
+
+                closeModal();
+                navigate('COTIZACIONES');
+            };
         };
 
-        window.cerrarSesion = () => {
-            auth.signOut().then(() => location.reload());
+        window.closeModal = () => {
+            const modal = document.getElementById('modal-container');
+            const content = document.getElementById('modal-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
         };
 
-        // Iniciar todo
+        // Inicializar
         window.onload = init;
 
     </script>
