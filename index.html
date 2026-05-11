@@ -54,7 +54,7 @@
         } from 'https://esm.sh/lucide-react@0.292.0';
         
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, collection, doc, setDoc, onSnapshot, query, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
         // =====================================================================
@@ -87,6 +87,10 @@
         const loadLocal = (key, fallback) => { try { const item = window.localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch (e) { return fallback; } };
         const saveLocal = (key, value) => { try { window.localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.error("Error saving local", e); } };
 
+        // Funciones para manejar la sesión de forma independiente por pestaña
+        const loadSession = (key, fallback) => { try { const item = window.sessionStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch (e) { return fallback; } };
+        const saveSession = (key, value) => { try { window.sessionStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.error("Error saving session", e); } };
+
         const USUARIOS_BASE = [
           { id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' },
           { id: 'VIP001', rol: 'CLIENTE', username: 'omega', password: '123', nombre: 'Corporativo Omega', contacto: 'Lic. Ana Reyes', telefono: '9999-0001', descuentoGlobal: 10 },
@@ -108,7 +112,7 @@
         function App() {
           const [userDb, setUserDb] = useState(null); 
           const [usuarios, setUsuarios] = useState(() => loadLocal('usuarios', USUARIOS_BASE));
-          const [usuarioActual, setUsuarioActual] = useState(() => loadLocal('sesionActiva', null)); 
+          const [usuarioActual, setUsuarioActual] = useState(() => loadSession('sesionActiva', null)); 
           const [ordenes, setOrdenes] = useState(() => loadLocal('ordenes', []));
           const [catalogo, setCatalogo] = useState(() => loadLocal('catalogo', CATALOGO_BASE));
           const [tecnicas, setTecnicas] = useState(() => loadLocal('tecnicas', TECNICAS_BASE)); 
@@ -128,14 +132,17 @@
           };
 
           useEffect(() => {
-              if (usuarioActual) saveLocal('sesionActiva', usuarioActual);
-              else window.localStorage.removeItem('sesionActiva');
+              if (usuarioActual) saveSession('sesionActiva', usuarioActual);
+              else window.sessionStorage.removeItem('sesionActiva');
           }, [usuarioActual]);
 
           useEffect(() => {
             if (!auth) { setLoadingData(false); setIsConnectedToCloud(false); return; } 
             const initAuth = async () => {
               try {
+                // Configuramos la persistencia de Firebase para que sea SOLO en esta pestaña
+                await setPersistence(auth, browserSessionPersistence);
+
                 if (!auth.currentUser) {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token && !FIREBASE_PROD_CONFIG) {
                       await signInWithCustomToken(auth, __initial_auth_token);
