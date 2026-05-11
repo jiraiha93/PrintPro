@@ -91,7 +91,8 @@
           { id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' },
           { id: 'VIP001', rol: 'CLIENTE', username: 'omega', password: '123', nombre: 'Corporativo Omega', contacto: 'Lic. Ana Reyes', telefono: '9999-0001', descuentoGlobal: 10 },
         ];
-        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
+        // Cambio 1: Integración del campo de detalles en el catálogo base inicial
+        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
         const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15 }, { id: 'd2', min: 100, pct: 8 }, { id: 'd3', min: 50, pct: 4 }];
         
@@ -512,7 +513,12 @@
                               {prod.imagenUrl ? <img src={prod.imagenUrl} alt={prod.nombre} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-400" size={32} />}
                               {prod.cobraImpuesto === false && <span className="absolute bottom-1 right-1 bg-amber-400 text-[9px] font-bold px-1 rounded shadow-sm text-amber-900" title="Exento de Impuestos">EX</span>}
                           </div>
-                          <div className="flex-1 flex flex-col justify-between w-full"><p className="font-bold text-slate-700 text-sm mb-2">{prod.nombre}</p>{nombresTecnicas && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mt-auto line-clamp-1">Acepta: {nombresTecnicas}</span>}</div>
+                          <div className="flex-1 flex flex-col justify-between w-full">
+                            <p className="font-bold text-slate-700 text-sm mb-1">{prod.nombre}</p>
+                            {/* Cambio 2: Mostramos los detalles del producto visualmente al cliente */}
+                            {prod.detalles && <p className="text-[10px] text-slate-500 line-clamp-2 mb-2 leading-tight" title={prod.detalles}>{prod.detalles}</p>}
+                            {nombresTecnicas && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mt-auto line-clamp-1">Acepta: {nombresTecnicas}</span>}
+                          </div>
                         </button>
                       )})}
                     </div>
@@ -1006,20 +1012,22 @@
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
 
+          // Cambio 3: Agregar la configuración del campo `detalles` al formulario de crear y actualizar el objeto.
           const handleCrearProducto = () => {
             setModalConfig({
               titulo: "Nuevo Producto Base", 
-              valoresIniciales: { costoBase: 0, tecnicasRecomendadas: [], cobraImpuesto: true },
+              valoresIniciales: { costoBase: 0, detalles: '', tecnicasRecomendadas: [], cobraImpuesto: true },
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
+                  { id: 'detalles', label: 'Detalles (Material, medidas...):', type: 'textarea', maxLength: 250 }, // << Nuevo campo añadido
                   { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' },
                   { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
               onSubmit: (datos) => { 
                   if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) {
-                      setCatalogo([...catalogo, { id: `PROD_${Date.now()}`, nombre: datos.nombre, tipo: 'General', costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [], cobraImpuesto: !!datos.cobraImpuesto }]); 
+                      setCatalogo([...catalogo, { id: `PROD_${Date.now()}`, nombre: datos.nombre, detalles: datos.detalles || '', tipo: 'General', costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [], cobraImpuesto: !!datos.cobraImpuesto }]); 
                   }
               }
             });
@@ -1028,16 +1036,17 @@
           const handleEditarProducto = (prod) => {
             setModalConfig({
               titulo: "Editar Producto", 
-              valoresIniciales: { nombre: prod.nombre, costoBase: prod.costoBase, tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false },
+              valoresIniciales: { nombre: prod.nombre, costoBase: prod.costoBase, detalles: prod.detalles || '', tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false },
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'costoBase', label: 'Costo (L):', type: 'number' }, 
+                  { id: 'detalles', label: 'Detalles (Material, medidas...):', type: 'textarea', maxLength: 250 }, // << Nuevo campo añadido
                   { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' },
                   { id: 'imagenUrl', label: 'Cambiar Imagen:', type: 'file' } 
               ],
               onSubmit: (datos) => { 
-                  const editado = { ...prod, nombre: datos.nombre || prod.nombre, costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto }; 
+                  const editado = { ...prod, nombre: datos.nombre || prod.nombre, costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, detalles: datos.detalles !== undefined ? datos.detalles : prod.detalles, tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto }; 
                   setCatalogo(catalogo.map(p => p.id === prod.id ? editado : p)); 
               }
             });
@@ -1205,6 +1214,7 @@
                       <div key={c.id}>
                         {c.type !== 'boolean' && <label className="block text-sm font-bold text-slate-400 mb-2">{c.label}</label>}
                         
+                        {/* Cambio 4: Adición de soporte para input de tipo 'textarea' y validación visual de caracteres */}
                         {c.type === 'file' ? <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, c.id)} className="text-white text-sm" /> 
                          : c.type === 'checkboxGroup' ? <div className="space-y-2">{c.options.map(opt => <label key={opt.value} className="flex gap-2 text-white text-sm"><input type="checkbox" checked={(form[c.id] || []).includes(opt.value)} onChange={(e) => handleCheckboxGroup(c.id, opt.value, e.target.checked)} className="accent-blue-500" /> {opt.label}</label>)}</div>
                          : c.type === 'boolean' ? (
@@ -1212,6 +1222,22 @@
                                  <input type="checkbox" checked={!!form[c.id]} onChange={e => setForm({...form, [c.id]: e.target.checked})} className="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 focus:ring-2" />
                                  {c.label}
                              </label>
+                         )
+                         : c.type === 'textarea' ? (
+                             <div className="relative">
+                                 <textarea 
+                                     maxLength={c.maxLength} 
+                                     value={form[c.id] !== undefined ? form[c.id] : ''} 
+                                     className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors resize-none h-24 text-sm" 
+                                     onChange={e => setForm({...form, [c.id]: e.target.value})} 
+                                     placeholder={c.placeholder || ''} 
+                                 />
+                                 {c.maxLength && (
+                                     <p className="text-right text-xs text-slate-500 mt-1">
+                                         {(form[c.id] || '').length}/{c.maxLength}
+                                     </p>
+                                 )}
+                             </div>
                          )
                          : <input required={c.id!=='imagenUrl'} type={c.type} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors" onChange={e => setForm({...form, [c.id]: e.target.value})} />
                         }
