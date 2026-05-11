@@ -120,7 +120,10 @@
           const [descuentosVolumen, setDescuentosVolumen] = useState(() => loadLocal('descuentosVol', DESCUENTOS_VOL_BASE));
           
           const [loadingData, setLoadingData] = useState(true);
-          const [isConnectedToCloud, setIsConnectedToCloud] = useState(false);
+          
+          // FIX SENIOR: isConnectedToCloud ahora se basa en la correcta inicialización de la app (app && auth),
+          // no en si un usuario ya inició sesión. Así permitimos que el login fluya.
+          const [isConnectedToCloud, setIsConnectedToCloud] = useState(!!app && !!auth);
 
           const [toastInfo, setToastInfo] = useState(null);
 
@@ -135,7 +138,12 @@
           }, [usuarioActual]);
 
           useEffect(() => {
-            if (!auth) { setLoadingData(false); setIsConnectedToCloud(false); return; } 
+            if (!auth) { 
+                setLoadingData(false); 
+                setIsConnectedToCloud(false); 
+                return; 
+            } 
+            
             const initAuth = async () => {
               try {
                 await setPersistence(auth, browserSessionPersistence);
@@ -148,9 +156,12 @@
               }
             };
             initAuth();
+            
             const unsub = onAuthStateChanged(auth, (user) => { 
                 setUserDb(user); 
-                setIsConnectedToCloud(!!user); 
+                // FIX SENIOR: Eliminada la línea setIsConnectedToCloud(!!user)
+                // Esta línea bloqueaba el login porque pasaba el estado de conexión a false
+                // cuando no había sesión activa.
                 if(!user) { setUsuarioActual(null); }
             });
             return () => unsub();
@@ -314,7 +325,7 @@
                     ${isConnectedToCloud ? (darkTheme ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') : (darkTheme ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200')}
                 `}>
                     <div className="relative flex h-3 w-3">{isConnectedToCloud && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}<span className={`relative inline-flex rounded-full h-3 w-3 ${isConnectedToCloud ? 'bg-emerald-500' : 'bg-amber-500'}`}></span></div>
-                    <div><p className="uppercase tracking-wider opacity-80 text-[10px]">Estado del Sistema</p><p>{isConnectedToCloud ? 'Sincronización Activa (Nube)' : 'Modo Local (Revisa reglas Firestore)'}</p></div>
+                    <div><p className="uppercase tracking-wider opacity-80 text-[10px]">Estado del Sistema</p><p>{isConnectedToCloud ? 'Sincronización Activa (Nube)' : 'Modo Local (Sin Nube)'}</p></div>
                 </div>
             );
         }
