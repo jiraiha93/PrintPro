@@ -725,16 +725,104 @@
             const [modalUsuario, setModalUsuario] = useState(null);
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
 
-            const handleCrearPerfil = () => setModalUsuario({ titulo: `Vincular Nuevo Cliente`, mensaje: `IMPORTANTE: Primero crea la cuenta en tu consola de Firebase Authentication y copia el "User UID".`, valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0 }, campos: [ { id: 'id', label: 'Firebase User UID:', type: 'text' }, { id: 'nombre', label: 'Nombre de Empresa:', type: 'text' }, { id: 'telefono', label: 'Teléfono:', type: 'text' }, { id: 'descuentoGlobal', label: 'Descuento VIP (%):', type: 'number' } ], onSubmit: (datos) => { onActualizarUsuario({ id: datos.id.trim(), rol: 'CLIENTE', nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal) }); } });
-            const handleEditar = (user) => setModalUsuario({ titulo: `Editar Perfil: ${user.nombre}`, valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0 }, campos: [ { id: 'nombre', label: 'Nombre de Empresa:', type: 'text' }, { id: 'telefono', label: 'Teléfono:', type: 'text' }, { id: 'descuentoGlobal', label: 'Descuento VIP (%):', type: 'number' } ], onSubmit: (datos) => { onActualizarUsuario({ ...user, nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal) }); } });
-            const handleEliminar = (id, nombre, rol) => { if(rol === 'ADMIN') return alert("No puedes eliminar al administrador principal desde aquí."); setModalConfirmacion({ titulo: 'Eliminar Perfil', mensaje: `¿Eliminar el perfil de "${nombre}"?`, submitLabel: 'Sí, Eliminar Perfil', onConfirm: () => onEliminarUsuario(id) }); };
+            const handleCrearPerfil = () => {
+                setModalUsuario({
+                    titulo: `Vincular Nuevo Cliente`,
+                    mensaje: `IMPORTANTE: Primero crea la cuenta en tu consola de Firebase Authentication y copia el "User UID".`,
+                    valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0 },
+                    campos: [
+                        { id: 'id', label: 'Firebase User UID:', type: 'text' },
+                        { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
+                        { id: 'telefono', label: 'Teléfono:', type: 'text' },
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' }
+                    ],
+                    onSubmit: (datos) => {
+                        onActualizarUsuario({ id: datos.id.trim(), rol: 'CLIENTE', nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal) });
+                    }
+                });
+            };
+
+            const handleEditar = (user) => {
+                setModalUsuario({
+                    titulo: `Editar Perfil: ${user.nombre}`,
+                    valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0 },
+                    campos: [
+                        { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
+                        { id: 'telefono', label: 'Teléfono:', type: 'text' },
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' }
+                    ],
+                    onSubmit: (datos) => {
+                        onActualizarUsuario({ ...user, nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal) });
+                    }
+                });
+            };
+
+            const handleEliminar = (id, nombre, rol) => {
+                if(rol === 'ADMIN') return alert("No puedes eliminar al administrador principal desde aquí.");
+                setModalConfirmacion({
+                    titulo: 'Eliminar Perfil',
+                    mensaje: `¿Eliminar el perfil de "${nombre}"?`,
+                    submitLabel: 'Sí, Eliminar Perfil',
+                    onConfirm: () => onEliminarUsuario(id)
+                });
+            };
 
             return (
                 <div className="max-w-6xl mx-auto space-y-4 fade-in">
                     {modalUsuario && <CustomModal config={modalUsuario} onClose={() => setModalUsuario(null)} />}
                     {modalConfirmacion && <CustomModal config={{ titulo: modalConfirmacion.titulo, esConfirmacion: true, mensaje: modalConfirmacion.mensaje, submitLabel: modalConfirmacion.submitLabel, campos: [], onSubmit: modalConfirmacion.onConfirm }} onClose={() => setModalConfirmacion(null)} />}
-                    <div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-bold text-white mb-1">Perfiles de Clientes</h2></div><button onClick={handleCrearPerfil} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg"><Plus size={20}/> Vincular Cliente</button></div>
-                    <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto"><table className="w-full text-left text-sm min-w-full"><thead><tr className="border-b border-slate-700 text-slate-400"><th className="pb-3">Cliente</th><th className="pb-3">UID</th><th className="pb-3">Rol & VIP</th><th className="pb-3 text-right">Acciones</th></tr></thead><tbody className="divide-y divide-slate-700/50">{usuarios.map(u => (<tr key={u.id} className="hover:bg-slate-700/30 transition-colors"><td className="py-4"><p className="text-white font-bold">{u.nombre}</p></td><td className="py-4 font-mono text-xs text-slate-400">{u.id}</td><td className="py-4">{u.rol}</td><td className="py-4 text-right"><button onClick={() => handleEditar(u)} className="text-blue-400 p-2"><Edit3 size={16}/></button><button onClick={() => handleEliminar(u.id, u.nombre, u.rol)} className="text-red-400 p-2"><Trash2 size={16}/></button></td></tr>))}</tbody></table></div>
+                    
+                    <div className="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-1">Perfiles de Clientes</h2>
+                            <p className="text-sm text-slate-400">Vincula los perfiles de los usuarios que ya registraste en Firebase Auth.</p>
+                        </div>
+                        <button onClick={handleCrearPerfil} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105">
+                            <Plus size={20}/> Vincular Cliente
+                        </button>
+                    </div>
+                    
+                    <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto">
+                        <table className="w-full text-left text-sm min-w-full">
+                            <thead>
+                                <tr className="border-b border-slate-700 text-slate-400">
+                                    <th className="pb-3 font-semibold">Cliente</th>
+                                    <th className="pb-3 font-semibold">Firebase UID</th>
+                                    <th className="pb-3 font-semibold">Rol & VIP</th>
+                                    <th className="pb-3 font-semibold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {usuarios.map(u => (
+                                    <tr key={u.id} className="hover:bg-slate-700/30 transition-colors">
+                                        <td className="py-4">
+                                            <p className="text-white font-bold">{u.nombre}</p>
+                                            <p className="text-slate-400 text-xs mt-1">Tel: {u.telefono || 'N/D'}</p>
+                                        </td>
+                                        <td className="py-4">
+                                            <div className="bg-slate-900 inline-block p-2 rounded-lg border border-slate-700 text-xs font-mono text-slate-400">{u.id}</div>
+                                        </td>
+                                        <td className="py-4">
+                                            {u.rol === 'ADMIN' ? (
+                                                <span className="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold">ADMINISTRADOR</span>
+                                            ) : (
+                                                <div>
+                                                    <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold">CLIENTE</span>
+                                                    {u.descuentoGlobal > 0 && <p className="text-emerald-400 text-xs font-bold mt-2">VIP: -{u.descuentoGlobal}% OFF</p>}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button onClick={() => handleEditar(u)} className="text-blue-400 hover:text-blue-300 p-2 rounded bg-slate-900 hover:bg-slate-700 transition" title="Editar Perfil"><Edit3 size={16}/></button>
+                                                <button onClick={() => handleEliminar(u.id, u.nombre, u.rol)} className="text-red-400 hover:text-red-300 p-2 rounded bg-slate-900 hover:bg-slate-700 transition" title="Eliminar Perfil"><Trash2 size={16}/></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             );
         }
