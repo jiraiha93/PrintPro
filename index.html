@@ -44,7 +44,7 @@
     <div id="root"></div>
 
     <script type="text/babel" data-type="module">
-        import React, { useState, useMemo, useEffect } from 'https://esm.sh/react@18.2.0';
+        import React, { useState, useMemo, useEffect, useRef } from 'https://esm.sh/react@18.2.0';
         import ReactDOM from 'https://esm.sh/react-dom@18.2.0/client';
         
         import { 
@@ -315,7 +315,8 @@
                   <Printer size={64} className="mb-6 z-10" />
                   <h1 className="text-4xl font-bold mb-1 z-10">PrintPro</h1>
                   <p className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-6 z-10">Powered By IMPAK Print Lab</p>
-                  <p className="text-blue-100 text-lg z-10 mb-8">Cotizador VIP de Servicios de Personalización, Estampado e Impresión Profesional.</p>
+                  {/* MODIFICACIÓN: Texto original restaurado */}
+                  <p className="text-blue-100 text-lg z-10 mb-8">Cotizador VIP de Servicios de Personalización, Estampado e Impresión Profesional, Todo-en-uno.</p>
                 </div>
                 <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
                   <h2 className="text-2xl font-bold text-slate-800 mb-2">Acceso Seguro</h2>
@@ -326,6 +327,8 @@
                     <input required type="password" placeholder="Contraseña" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500" />
                     <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-bold p-4 rounded-xl hover:bg-slate-800 mt-4 transition-colors disabled:opacity-70">{loading ? 'Verificando...' : 'Ingresar'}</button>
                   </form>
+                  {/* MODIFICACIÓN: Texto inferior original restaurado */}
+                  <p className="text-slate-500 w-full mt-6 text-sm tracking-wide text-center">Acceso exclusivo por invitación. ¿No tienes cuenta? Contacta a tu proveedor de servicios.</p>
                 </div>
               </div>
             </div>
@@ -337,7 +340,6 @@
           
           return (
             <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row fade-in">
-              {/* MODIFICACIÓN: Aside Sticky y con flexbox para empujar el estado abajo siempre */}
               <aside className="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10 no-print md:h-screen md:sticky md:top-0">
                 <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
                     <div className="flex items-center gap-3 text-blue-600 mb-8"><Printer size={32} /><span className="text-xl font-bold">PrintPro</span></div>
@@ -350,7 +352,6 @@
                     <MenuBtn icon={FileText} label="Mis Órdenes" active={vista === 'HISTORIAL'} onClick={() => setVista('HISTORIAL')} />
                     </nav>
                 </div>
-                {/* MODIFICACIÓN: Área fijada en la parte inferior */}
                 <div className="p-6 bg-slate-50 border-t border-slate-200 mt-auto">
                     <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={false} />
                     <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-red-200"><LogOut size={18} /> Cerrar Sesión</button>
@@ -363,7 +364,6 @@
                         <Bell size={28} className="shrink-0 mt-1 text-blue-200" />
                         <div>
                             {mensajesGlobales.bienvenida && <h2 className="font-bold text-lg">{mensajesGlobales.bienvenida}</h2>}
-                            {/* MODIFICACIÓN: Texto promocional como "Aviso" */}
                             {mensajesGlobales.promo && <p className="text-blue-100 text-sm mt-2 font-medium bg-white/10 p-3 rounded-xl border border-white/20 leading-relaxed">{mensajesGlobales.promo}</p>}
                         </div>
                     </div>
@@ -388,12 +388,10 @@
           const [comentario, setComentario] = useState(''); 
           const [errorValidacion, setErrorValidacion] = useState('');
 
-          // MODIFICACIÓN: Estados de Paginación y Búsqueda
           const [busqueda, setBusqueda] = useState('');
           const [itemsPorPagina, setItemsPorPagina] = useState(10);
           const [paginaActual, setPaginaActual] = useState(1);
 
-          // Resetear página al buscar o cambiar el límite
           useEffect(() => { setPaginaActual(1); }, [busqueda, itemsPorPagina]);
 
           const catalogoFiltrado = useMemo(() => {
@@ -485,7 +483,6 @@
                       <button onClick={() => setProveeCliente(false)} className={`flex-1 p-4 rounded-xl border-2 font-bold transition-colors ${!proveeCliente ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:border-blue-300'}`}>Incluir artículos del catálogo</button>
                     </div>
 
-                    {/* MODIFICACIÓN: Buscador y Filtro Paginación */}
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
                         <div className="relative w-full md:w-96">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -500,7 +497,8 @@
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                    {/* MODIFICACIÓN: Ajuste de grid-cols a 5 en tamaño xl para que encajen perfectamente 10 productos (2 filas) */}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {catalogoPaginado.map(prod => {
                         const nombresTecnicas = Array.isArray(prod.tecnicasRecomendadas) && prod.tecnicasRecomendadas.length > 0 ? prod.tecnicasRecomendadas.map(id => tecnicas.find(t=>t.id===id)?.nombre).filter(Boolean).join(', ') : ''; 
                         return (
@@ -519,7 +517,6 @@
                       {catalogoPaginado.length === 0 && <div className="col-span-full py-10 text-center text-slate-400 font-medium">No se encontraron artículos que coincidan con tu búsqueda.</div>}
                     </div>
 
-                    {/* MODIFICACIÓN: Controles de paginación */}
                     {totalPaginas > 1 && (
                         <div className="flex items-center justify-center gap-4 mt-8">
                             <button disabled={paginaActual === 1} onClick={() => setPaginaActual(p => p - 1)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 disabled:opacity-50 transition-colors"><ChevronLeft size={20} className="text-slate-600"/></button>
@@ -574,6 +571,14 @@
                           {errorValidacion && <p className="text-red-500 text-sm mt-2 flex items-center gap-1"><AlertCircle size={14}/> {errorValidacion}</p>}
                         </div>
 
+                        {/* MODIFICACIÓN: Aviso visual de Exento de Impuesto si aplica */}
+                        {productoSeleccionado.cobraImpuesto === false && (
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex items-center gap-3 text-amber-800">
+                                <Info size={20} className="shrink-0" />
+                                <p className="text-sm font-bold">Has seleccionado un artículo que está marcado como Exento de ISV.</p>
+                            </div>
+                        )}
+
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><MessageSquare size={16}/> Notas para el Taller (Opcional)</label>
                             <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm bg-white" rows="3" placeholder="Ej: Favor usar logo en color azul marino..."></textarea>
@@ -596,7 +601,10 @@
                           <div className="space-y-2 text-sm text-slate-300">
                             <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
                             {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
-                            <div className="flex justify-between"><span>Impuestos:</span> <span>L {cotizacion.impuestos.toFixed(2)}</span></div>
+                            <div className="flex justify-between">
+                                <span>Impuestos:</span> 
+                                <span>L {cotizacion.impuestos.toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                         <div className="border-t border-slate-700 mt-6 pt-4">
@@ -613,7 +621,6 @@
           );
         }
 
-        // Componente de Utilidad para ModalDetalle y HistorialOrdenes se mantienen igual (código acortado por brevedad pero sin alterar funcionalidad).
         function HistorialOrdenes({ ordenes, onActualizarOrden, onEliminarOrden, isClient = false, cliente = null, mensajesGlobales, showToast }) {
           const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
           if (ordenes.length === 0) return <div className="text-center py-20 fade-in"><p className="text-slate-400">No hay cotizaciones registradas.</p></div>;
@@ -658,7 +665,6 @@
           );
         }
 
-        // [ModalDetalleOrden no fue modificado estructuralmente porque es estable, omitido por brevedad se incluye igual]
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
             const esCancelada = orden.estado === 'Cancelada por Cliente';
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
@@ -776,8 +782,63 @@
             return ( <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4"><div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl"><h3 className="text-xl font-bold text-white mb-6">Tarifas Globales</h3><div className="flex gap-4 mb-6"><div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700"><label className="text-sm font-bold text-emerald-400 block mb-2">Margen General (%)</label><input type="number" value={margen} onChange={e=>setMargen(Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-emerald-500" /></div><div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700"><label className="text-sm font-bold text-amber-400 block mb-2">Impuesto Global (%)</label><input type="number" value={impuesto} onChange={e=>setImpuesto(Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-amber-500" /></div></div><div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6"><div className="flex justify-between items-center mb-4"><label className="text-sm font-bold text-blue-400">Niveles de Descuento por Volumen</label><button onClick={addTier} className="text-xs bg-blue-600 text-white px-2 py-1 rounded">+ Añadir</button></div><div className="space-y-3">{descuentos.map(d => (<div key={d.id} className="flex gap-2 items-center bg-slate-800 p-2 rounded-lg border border-slate-600"><div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Min. Pzas</label><input type="number" value={d.min} onChange={e=>updateTier(d.id, 'min', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-sm outline-none" /></div><div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Desc. (%)</label><input type="number" value={d.pct} onChange={e=>updateTier(d.id, 'pct', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-sm outline-none" /></div><button onClick={()=>removeTier(d.id)} className="mt-4 text-red-400 p-2"><Trash2 size={16}/></button></div>))}</div></div><div className="flex justify-end gap-3 mt-4"><button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button><button onClick={() => { onSave(margen, impuesto, descuentos); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Tarifas</button></div></div></div> )
         }
 
-        // [ModalFichaTecnica omitido en su detalle HTML para mantener eficiencia, su función y estilos permanecen igual]
-        function ModalFichaTecnica({ onClose }) { return ( <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4"><div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-3xl shadow-2xl text-slate-300"><div className="flex justify-between items-start mb-6"><div><h3 className="text-2xl font-bold text-white flex items-center gap-2">Guía Detallada de Fórmulas</h3></div><button onClick={onClose} className="text-slate-400 bg-slate-700 p-2 rounded-full"><X size={20}/></button></div><p className="text-sm">El sistema multiplica costos base por márgenes, suma técnicas, aplica descuentos en cascada y finalmente impuestos según la configuración elegida.</p><div className="flex justify-end mt-8 border-t border-slate-700 pt-4"><button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-white bg-blue-600">Entendido, cerrar</button></div></div></div> ) }
+        // MODIFICACIÓN: Guía Detallada Restaurada con toda su información
+        function ModalFichaTecnica({ onClose }) {
+            return (
+                <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-3xl shadow-2xl text-slate-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white flex items-center gap-2"><Calculator size={24} className="text-blue-400"/> Guía Detallada de Fórmulas</h3>
+                                <p className="text-slate-400 text-sm mt-1">Así es como el cotizador calcula matemáticamente los precios.</p>
+                            </div>
+                            <button onClick={onClose} className="text-slate-400 hover:text-white bg-slate-700 p-2 rounded-full"><X size={20}/></button>
+                        </div>
+                        
+                        <div className="space-y-6 text-sm">
+                            <div className="bg-slate-900 p-5 rounded-xl border border-blue-500/30 shadow-inner">
+                                <h4 className="font-bold text-blue-400 text-base mb-2 flex items-center gap-2"><span className="bg-blue-500/20 px-2 py-0.5 rounded text-xs">Paso 1</span> Precio de Venta del Producto</h4>
+                                <p className="mb-2">El sistema toma el <strong>Costo Base</strong> de tu catálogo y lo multiplica por la cantidad. Luego, a ese subtotal de costo, le añade el <strong>Margen General (%)</strong> que definiste para darte el precio de venta final de las prendas.</p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800">
+                                    <p>Costo Total = Costo Base × Cantidad</p>
+                                    <p>Precio de Venta Prendas = Costo Total × (1 + [Margen / 100])</p>
+                                </div>
+                                <p className="mt-2 text-xs text-slate-500 italic">* Nota: Si marcas "Traigo mis artículos", el costo base de la prenda pasa a ser 0.</p>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-emerald-500/30 shadow-inner">
+                                <h4 className="font-bold text-emerald-400 text-base mb-2 flex items-center gap-2"><span className="bg-emerald-500/20 px-2 py-0.5 rounded text-xs">Paso 2</span> Precio de Personalización (Técnicas)</h4>
+                                <p className="mb-2">Cada técnica tiene Costos Fijos (Setups que se cobran 1 sola vez sin importar cuántas camisas sean, como revelados o matrices) y Costos Variables (que se multiplican por unidad, como tinta). <strong>A la suma de estos costos también se le aplica tu Margen General.</strong></p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800 space-y-1">
+                                    <p>Costo Fijo Total = Suma de todos los Setups</p>
+                                    <p>Costo Variable Total = Suma de variables × Cantidad</p>
+                                    <p>Precio de Venta Técnica = (Costo Fijo Total + Costo Variable Total) × (1 + [Margen / 100])</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-amber-500/30 shadow-inner">
+                                <h4 className="font-bold text-amber-400 text-base mb-2 flex items-center gap-2"><span className="bg-amber-500/20 px-2 py-0.5 rounded text-xs">Paso 3</span> Cascada de Descuentos (VIP + Volumen)</h4>
+                                <p className="mb-2">Si el cliente compra mucho (ej. 10% OFF por volumen) y además es VIP (ej. 10% OFF), el sistema <strong>NO suma</strong> 10+10=20%. En su lugar, aplica un descuento "en cascada" secuencial para proteger tus finanzas.</p>
+                                <div className="bg-slate-950 p-3 rounded text-xs border border-slate-800 text-slate-300">
+                                    <p>Subtotal Bruto = Precio de Venta Prendas + Precio de Venta Técnicas</p>
+                                    <p className="mt-1 font-mono text-amber-400">Total con Descuento = Subtotal Bruto × (1 - % Volumen) × (1 - % VIP)</p>
+                                    <p className="mt-2 text-[10px] text-slate-500">Ejemplo ilustrativo: L 1,000 con 10% Vol y 10% VIP = (1000 × 0.90) = 900. Luego (900 × 0.90) = L 810 Finales.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-purple-500/30 shadow-inner">
+                                <h4 className="font-bold text-purple-400 text-base mb-2 flex items-center gap-2"><span className="bg-purple-500/20 px-2 py-0.5 rounded text-xs">Paso 4</span> Impuestos (ISV)</h4>
+                                <p className="mb-2">El impuesto global (ej. 15%) se calcula <strong>después de aplicar los descuentos</strong> y solo sobre los ítems del catálogo o técnicas que tengan activada la casilla "Suma Impuesto".</p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end mt-8 border-t border-slate-700 pt-4">
+                            <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg">Entendido, cerrar guía</button>
+                        </div>
+                    </div>
+                </div>
+            )
+        }
 
         function GestionJerarquica({ catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal }) {
           const [tecActivaId, setTecActivaId] = useState(tecnicas[0]?.id || null);
@@ -788,7 +849,12 @@
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
 
-          // MODIFICACIÓN: Estados de Paginación y Búsqueda para ADMIN
+          // REF para el scroll de las pestañas
+          const scrollRef = useRef(null);
+          const scrollTabs = (offset) => {
+              if (scrollRef.current) scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+          };
+
           const [busquedaAdmin, setBusquedaAdmin] = useState('');
           const [itemsPorPaginaAdmin, setItemsPorPaginaAdmin] = useState(10);
           const [paginaActualAdmin, setPaginaActualAdmin] = useState(1);
@@ -820,7 +886,8 @@
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'costoBase', label: 'Costo (L):', type: 'number' }, 
                   { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
-                  { id: 'tecnicasRecomendadas', label: 'Aceptadas (Scroll o ajustado):', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
+                  // MODIFICACIÓN: Eliminado texto entre paréntesis
+                  { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Cambiar Imagen:', type: 'file' } 
               ],
               onSubmit: (datos) => { const editado = { ...prod, nombre: datos.nombre || prod.nombre, costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, detalles: datos.detalles !== undefined ? datos.detalles : prod.detalles, tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto }; setCatalogo(catalogo.map(p => p.id === prod.id ? editado : p)); }
@@ -833,7 +900,6 @@
           const handleEditarTecnicaBase = () => { if(!tecActual) return; setModalConfig({ titulo: "Editar Técnica Base", valoresIniciales: { nombre: tecActual.nombre, cobraImpuesto: tecActual.cobraImpuesto !== false }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }], onSubmit: (datos) => { if(datos.nombre) updateTecnicaActual({ ...tecActual, nombre: datos.nombre, cobraImpuesto: !!datos.cobraImpuesto }); } }) };
           const handleEliminarTecnica = () => { if(!tecActual) return; setModalConfig({ titulo: "Eliminar Técnica", esConfirmacion: true, mensaje: `¿Eliminar "${tecActual.nombre}" y sus variantes?`, campos: [], onSubmit: () => { const nuevas = tecnicas.filter(t => t.id !== tecActual.id); setTecnicas(nuevas); setTecActivaId(nuevas[0]?.id || null); }}); };
           
-          // MODIFICACIÓN: Nuevas funciones de Edición para Ubicaciones, Variantes y Costos
           const agregarSubcat = () => setModalConfig({ titulo: "Nueva Ubicación", campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }], onSubmit: (datos) => { if (datos.nombre) updateTecnicaActual({ ...tecActual, subcategorias: [...tecActual.subcategorias, { id: `SUB_${Date.now()}`, nombre: datos.nombre, opciones: [] }] }); }});
           const editarSubcat = (subId, nombreActual) => setModalConfig({ titulo: "Editar Ubicación", valoresIniciales: { nombre: nombreActual }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }], onSubmit: (datos) => { if (datos.nombre) updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? { ...s, nombre: datos.nombre } : s) }); }});
           const eliminarSubcat = (subId, nombre) => setModalConfig({ titulo: "Eliminar Ubicación", esConfirmacion: true, mensaje: `¿Eliminar "${nombre}"?`, campos: [], onSubmit: () => updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.filter(s => s.id !== subId) }) });
@@ -860,7 +926,6 @@
                 </div>
               </div>
 
-              {/* MODIFICACIÓN: Administrar mejor el espacio ajustando la altura máxima y haciendo flex layout robusto */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 
                 {/* PANEL 1: Catálogo */}
@@ -909,9 +974,16 @@
 
                 {/* PANEL 2: Técnicas */}
                 <div className="bg-slate-800 rounded-3xl border border-slate-700 flex flex-col shadow-lg h-[calc(100vh-14rem)] min-h-[600px]">
-                  <div className="p-4 border-b border-slate-700 flex gap-2 overflow-x-auto custom-scrollbar shrink-0 items-center">
-                    {tecnicas.map(t => <button key={t.id} onClick={()=>setTecActivaId(t.id)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${tecActivaId === t.id ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>{t.nombre}</button>)}
-                    <button onClick={handleCrearTecnica} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 shrink-0"><Plus size={16}/></button>
+                  {/* MODIFICACIÓN: Scroll de técnicas con flechas y botón fijo */}
+                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80 rounded-t-3xl">
+                    <button onClick={() => scrollTabs(-150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block mr-2"><ChevronLeft size={16}/></button>
+                    <div ref={scrollRef} className="flex gap-2 overflow-x-hidden flex-1 scroll-smooth">
+                        {tecnicas.map(t => <button key={t.id} onClick={()=>setTecActivaId(t.id)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${tecActivaId === t.id ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>{t.nombre}</button>)}
+                    </div>
+                    <button onClick={() => scrollTabs(150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block ml-2"><ChevronRight size={16}/></button>
+                    <div className="border-l border-slate-700 pl-3 ml-2">
+                        <button onClick={handleCrearTecnica} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center gap-1 shrink-0"><Plus size={16}/><span className="hidden md:inline text-xs font-bold">Nueva</span></button>
+                    </div>
                   </div>
                   
                   {tecActual ? (
@@ -932,7 +1004,6 @@
                             <div className="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
                                 <div className="flex items-center gap-3">
                                     <span className="font-bold text-slate-200"><Layers size={14} className="inline mr-2 text-blue-400"/>{sub.nombre}</span>
-                                    {/* MODIFICACIÓN: Botones de editar y eliminar para ubicación */}
                                     <div className="flex gap-1 ml-2">
                                         <button onClick={()=>editarSubcat(sub.id, sub.nombre)} className="text-blue-400 hover:text-blue-300 bg-slate-800 p-1 rounded"><Pencil size={12}/></button>
                                         <button onClick={()=>eliminarSubcat(sub.id, sub.nombre)} className="text-red-400 hover:text-red-300 bg-slate-800 p-1 rounded"><Trash2 size={12}/></button>
@@ -947,7 +1018,6 @@
                                   <div className="flex justify-between items-center mb-3">
                                       <p className="font-bold text-white text-sm"><Edit3 size={14} className="inline mr-2 text-slate-500"/>{op.nombre}</p>
                                       <div className="flex items-center gap-3">
-                                          {/* MODIFICACIÓN: Corregido bug donde editarOpcion no estaba implementado */}
                                           <button onClick={() => editarOpcion(sub.id, op.id, op.nombre)} className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors bg-slate-900 px-2 py-1 rounded"><Pencil size={12} /> Editar</button>
                                           <button onClick={() => eliminarOpcion(sub.id, op.id, op.nombre)} className="text-red-400 hover:bg-red-500/10 p-1 rounded"><Trash2 size={14}/></button>
                                       </div>
@@ -1013,7 +1083,6 @@
               <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl">
                 <h3 className="text-xl font-bold text-white mb-6">{config.titulo}</h3>
                 <form onSubmit={handleSubmit} className="flex flex-col max-h-[75vh]">
-                  {/* MODIFICACIÓN: Contenedor con Scroll para administrar mejor el espacio en modales grandes como Editar Producto */}
                   <div className="overflow-y-auto custom-scrollbar pr-2 space-y-5 flex-1">
                     {config.esConfirmacion ? <p className="text-slate-300 text-sm leading-relaxed">{config.mensaje}</p> : (
                         config.campos.map(c => (
@@ -1022,7 +1091,6 @@
                             
                             {c.type === 'file' ? <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, c.id)} className="text-white text-sm" /> 
                             : c.type === 'checkboxGroup' ? (
-                                /* MODIFICACIÓN: Grid de 2 columnas para checkboxes para optimizar altura vertical */
                                 <div className="grid grid-cols-2 gap-2 bg-slate-900 p-3 rounded-xl border border-slate-700 max-h-40 overflow-y-auto custom-scrollbar">
                                     {c.options.map(opt => <label key={opt.value} className="flex gap-2 text-white text-sm"><input type="checkbox" checked={(form[c.id] || []).includes(opt.value)} onChange={(e) => handleCheckboxGroup(c.id, opt.value, e.target.checked)} className="accent-blue-500" /> <span className="truncate" title={opt.label}>{opt.label}</span></label>)}
                                 </div>
@@ -1071,7 +1139,6 @@
 
           return (
             <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col md:flex-row fade-in">
-              {/* MODIFICACIÓN: Aside Sticky y con flexbox para empujar el estado abajo siempre */}
               <aside className="w-full md:w-72 bg-slate-950 flex flex-col border-r border-slate-800 z-10 md:h-screen md:sticky md:top-0">
                 <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
                     <div className="flex items-center gap-3 text-emerald-500 mb-10"><Settings size={32} /><span className="text-xl font-bold text-white">ERP Admin</span></div>
@@ -1083,7 +1150,6 @@
                         <MenuBtn icon={Megaphone} label="Avisos y WhatsApp" active={vista === 'MENSAJES'} onClick={() => setVista('MENSAJES')} dark />
                     </nav>
                 </div>
-                {/* MODIFICACIÓN: Área fijada en la parte inferior */}
                 <div className="p-6 bg-slate-950 border-t border-slate-800 mt-auto">
                     <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
                     <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-red-500/20"><LogOut size={18} /> Cerrar Sesión</button>
