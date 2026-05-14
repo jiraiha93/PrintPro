@@ -223,9 +223,18 @@
              if(isConnectedToCloud) dbEliminar('ordenes', id); else { const newOrders = ordenes.filter(o => o.id !== id); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
              showToast('Orden eliminada permanentemente', 'error');
           }
-          const adminSetRecursos = (nuevoRecurso) => {
-            if(isConnectedToCloud) dbGuardar('recursos', nuevoRecurso.id, nuevoRecurso); else { const newR = [nuevoRecurso, ...recursos]; setRecursos(newR); saveLocal('recursos', newR); }
-            showToast('Recurso publicado correctamente');
+          const adminSetRecursos = async (nuevoRecurso) => {
+            try {
+                if(isConnectedToCloud) {
+                    await dbGuardar('recursos', nuevoRecurso.id, nuevoRecurso);
+                } else { 
+                    const newR = [nuevoRecurso, ...recursos]; setRecursos(newR); saveLocal('recursos', newR); 
+                }
+                showToast('Recurso publicado correctamente');
+            } catch (error) {
+                console.error("Error subiendo recurso:", error);
+                showToast('Error al publicar. Verifica las reglas o el tamaño del archivo.', 'error');
+            }
           };
           const adminEliminarRecurso = (id) => {
             if(isConnectedToCloud) dbEliminar('recursos', id); else { const newR = recursos.filter(r => r.id !== id); setRecursos(newR); saveLocal('recursos', newR); }
@@ -1290,6 +1299,13 @@
           const handleFileChange = (e, fieldId) => { 
             const file = e.target.files[0]; 
             if (file) { 
+                // Validación para evitar que Firestore colapse por documentos de más de 1MB
+                if (!file.type.startsWith('image/') && file.size > 750 * 1024) {
+                    alert('⚠️ El archivo PDF es muy pesado. El límite máximo para bases de datos NoSQL es de 750KB. Por favor, comprímelo.');
+                    e.target.value = '';
+                    return;
+                }
+
                 const reader = new FileReader(); 
                 reader.onload = (event) => {
                     if(file.type.startsWith('image/')) {
