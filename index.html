@@ -96,9 +96,9 @@
         
         const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
         const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
-        const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15 }, { id: 'd2', min: 100, pct: 8 }, { id: 'd3', min: 50, pct: 4 }];
+        const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }];
         
-        const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado'];
+        const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado', 'Cancelada'];
         
         const MENSAJES_BASE = { 
             bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', 
@@ -114,11 +114,11 @@
           const [ordenes, setOrdenes] = useState(() => loadLocal('ordenes', []));
           const [catalogo, setCatalogo] = useState(() => loadLocal('catalogo', CATALOGO_BASE));
           const [tecnicas, setTecnicas] = useState(() => loadLocal('tecnicas', TECNICAS_BASE)); 
+          const [recursos, setRecursos] = useState(() => loadLocal('recursos', []));
           const [mensajesGlobales, setMensajesGlobales] = useState(() => loadLocal('mensajes', MENSAJES_BASE)); 
           const [margenGanancia, setMargenGanancia] = useState(() => loadLocal('margenGanancia', 40)); 
           const [impuestoGlobal, setImpuestoGlobal] = useState(() => loadLocal('impuestoGlobal', 15)); 
           const [descuentosVolumen, setDescuentosVolumen] = useState(() => loadLocal('descuentosVol', DESCUENTOS_VOL_BASE));
-          const [descuentosVolumenActivos, setDescuentosVolumenActivos] = useState(() => loadLocal('descuentosVolActivos', true));
           
           const [loadingData, setLoadingData] = useState(true);
           const [isConnectedToCloud, setIsConnectedToCloud] = useState(!!app && !!auth);
@@ -160,6 +160,7 @@
             
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
+            const unsubRec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'recursos'), (snap) => { if (!snap.empty) setRecursos(snap.docs.map(d => d.data())); }, console.error);
             
             let unsubUsu;
             if (isAdmin) {
@@ -189,14 +190,13 @@
                     setMargenGanancia(d.margenGanancia || 40); 
                     setImpuestoGlobal(d.impuestoGlobal !== undefined ? d.impuestoGlobal : 15); 
                     if(d.descuentosVolumen) setDescuentosVolumen(d.descuentosVolumen);
-                    if(d.descuentosVolumenActivos !== undefined) setDescuentosVolumenActivos(d.descuentosVolumenActivos);
                 }
                 const msgDoc = snap.docs.find(d => d.id === 'mensajes');
                 if (msgDoc) setMensajesGlobales(msgDoc.data());
               }, console.error);
 
             setLoadingData(false);
-            return () => { unsubCat(); unsubTec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
+            return () => { unsubCat(); unsubTec(); unsubRec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
           }, [userDb]);
 
           const dbGuardar = async (coleccion, id, data) => { if (db && isConnectedToCloud) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); };
@@ -223,6 +223,14 @@
              if(isConnectedToCloud) dbEliminar('ordenes', id); else { const newOrders = ordenes.filter(o => o.id !== id); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
              showToast('Orden eliminada permanentemente', 'error');
           }
+          const adminSetRecursos = (nuevoRecurso) => {
+            if(isConnectedToCloud) dbGuardar('recursos', nuevoRecurso.id, nuevoRecurso); else { const newR = [nuevoRecurso, ...recursos]; setRecursos(newR); saveLocal('recursos', newR); }
+            showToast('Recurso publicado correctamente');
+          };
+          const adminEliminarRecurso = (id) => {
+            if(isConnectedToCloud) dbEliminar('recursos', id); else { const newR = recursos.filter(r => r.id !== id); setRecursos(newR); saveLocal('recursos', newR); }
+            showToast('Recurso eliminado del portal', 'error');
+          };
           const adminSetCatalogo = (nuevoCatalogo) => {
             if(isConnectedToCloud) { const idsActuales = nuevoCatalogo.map(c => c.id); catalogo.forEach(c => { if(!idsActuales.includes(c.id)) dbEliminar('catalogo', c.id); }); nuevoCatalogo.forEach(c => dbGuardar('catalogo', c.id, c)); } 
             else { setCatalogo(nuevoCatalogo); saveLocal('catalogo', nuevoCatalogo); }
@@ -233,13 +241,12 @@
             else { setTecnicas(nuevasTecnicas); saveLocal('tecnicas', nuevasTecnicas); }
             showToast('Configuración de técnicas guardada');
           };
-          const adminSetConfiguracionGlobal = (nuevoMargen, nuevoImpuesto, nuevosDescuentos, nuevosDescuentosActivos) => {
-            if(isConnectedToCloud) dbGuardar('config', 'general', { margenGanancia: nuevoMargen, impuestoGlobal: nuevoImpuesto, descuentosVolumen: nuevosDescuentos, descuentosVolumenActivos: nuevosDescuentosActivos });
+          const adminSetConfiguracionGlobal = (nuevoMargen, nuevoImpuesto, nuevosDescuentos) => {
+            if(isConnectedToCloud) dbGuardar('config', 'general', { margenGanancia: nuevoMargen, impuestoGlobal: nuevoImpuesto, descuentosVolumen: nuevosDescuentos });
             else { 
                 setMargenGanancia(nuevoMargen); saveLocal('margenGanancia', nuevoMargen); 
                 setImpuestoGlobal(nuevoImpuesto); saveLocal('impuestoGlobal', nuevoImpuesto); 
                 setDescuentosVolumen(nuevosDescuentos); saveLocal('descuentosVol', nuevosDescuentos); 
-                setDescuentosVolumenActivos(nuevosDescuentosActivos); saveLocal('descuentosVolActivos', nuevosDescuentosActivos);
             }
             showToast('Tarifas globales guardadas exitosamente');
           }
@@ -270,16 +277,17 @@
                  ) : usuarioActual.rol === 'ADMIN' ? (
                     <PanelAdmin 
                         ordenes={ordenes} catalogo={catalogo} setCatalogo={adminSetCatalogo} tecnicas={tecnicas} setTecnicas={adminSetTecnicas}
-                        margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} descuentosVolumenActivos={descuentosVolumenActivos} setConfigGlobal={adminSetConfiguracionGlobal}
+                        margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={adminSetConfiguracionGlobal}
                         mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes}
                         usuarios={usuarios} onActualizarUsuario={handleActualizarUsuario} onEliminarUsuario={handleEliminarUsuario}
+                        recursos={recursos} onActualizarRecurso={adminSetRecursos} onEliminarRecurso={adminEliminarRecurso}
                         onActualizarOrden={handleActualizarOrden} onEliminarOrden={handleEliminarOrden} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
                     />
                  ) : (
                     <PortalClienteVIP 
-                        cliente={usuarioActual} catalogo={catalogo} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} descuentosVolumenActivos={descuentosVolumenActivos}
+                        cliente={usuarioActual} catalogo={catalogo} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen}
                         ordenes={ordenes.filter(o => o.clienteId === usuarioActual.id)} onCrearOrden={handleCrearOrden} onActualizarOrden={handleActualizarOrden}
-                        mensajesGlobales={mensajesGlobales} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
+                        mensajesGlobales={mensajesGlobales} recursos={recursos} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
                     />
                  )}
              </>
@@ -342,7 +350,7 @@
           );
         }
 
-        function PortalClienteVIP({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, descuentosVolumenActivos, ordenes, onCrearOrden, onActualizarOrden, mensajesGlobales, onLogout, isConnectedToCloud, showToast }) {
+        function PortalClienteVIP({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, ordenes, onCrearOrden, onActualizarOrden, mensajesGlobales, recursos, onLogout, isConnectedToCloud, showToast }) {
           const [vista, setVista] = useState('NUEVA_COTIZACION'); 
           
           return (
@@ -357,6 +365,7 @@
                     <nav className="space-y-2">
                     <MenuBtn icon={Plus} label="Nueva Cotización" active={vista === 'NUEVA_COTIZACION'} onClick={() => setVista('NUEVA_COTIZACION')} />
                     <MenuBtn icon={FileText} label="Mis Órdenes" active={vista === 'HISTORIAL'} onClick={() => setVista('HISTORIAL')} />
+                    <MenuBtn icon={BookOpen} label="Archivos & Guías" active={vista === 'RECURSOS'} onClick={() => setVista('RECURSOS')} />
                     </nav>
                 </div>
                 <div className="p-6 bg-slate-50 border-t border-slate-200 mt-auto">
@@ -367,26 +376,49 @@
               
               <main className="flex-1 p-8 overflow-y-auto bg-slate-50">
                 {(mensajesGlobales.bienvenida || mensajesGlobales.promo) && (
-                    <div className="max-w-5xl mx-auto mb-8 bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-md flex items-start gap-4">
-                        <Bell size={28} className="shrink-0 mt-1 text-blue-200" />
-                        <div>
-                            {mensajesGlobales.bienvenida && <h2 className="font-bold text-lg">{mensajesGlobales.bienvenida}</h2>}
-                            {mensajesGlobales.promo && <p className="text-blue-100 text-sm mt-2 font-medium bg-white/10 p-3 rounded-xl border border-white/20 leading-relaxed">{mensajesGlobales.promo}</p>}
+                    <div className="max-w-5xl mx-auto mb-6 bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-start gap-4 fade-in hover:shadow-md transition-shadow">
+                        <div className="bg-blue-50 p-2.5 rounded-lg shrink-0">
+                            <Megaphone size={20} className="text-blue-600" />
+                        </div>
+                        <div className="flex-1 pt-0.5">
+                            {mensajesGlobales.bienvenida && <h2 className="font-bold text-slate-800 text-sm mb-1 tracking-tight">{mensajesGlobales.bienvenida}</h2>}
+                            {mensajesGlobales.promo && <p className="text-slate-500 text-xs leading-relaxed max-w-4xl">{mensajesGlobales.promo}</p>}
                         </div>
                     </div>
                 )}
                 
-                {vista === 'NUEVA_COTIZACION' ? (
-                  <CotizadorWizard cliente={cliente} catalogo={catalogo} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} descuentosVolumenActivos={descuentosVolumenActivos} onGuardar={(o) => { onCrearOrden(o); setVista('HISTORIAL'); }} />
-                ) : (
-                  <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} isClient={true} cliente={cliente} mensajesGlobales={mensajesGlobales} showToast={showToast} />
-                )}
+                {vista === 'NUEVA_COTIZACION' && <CotizadorWizard cliente={cliente} catalogo={catalogo} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} onGuardar={(o) => { onCrearOrden(o); setVista('HISTORIAL'); }} />}
+                {vista === 'HISTORIAL' && <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} isClient={true} cliente={cliente} mensajesGlobales={mensajesGlobales} showToast={showToast} />}
+                {vista === 'RECURSOS' && <VistaRecursosCliente recursos={recursos} />}
               </main>
             </div>
           );
         }
 
-        function CotizadorWizard({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, descuentosVolumenActivos, onGuardar }) {
+        function VistaRecursosCliente({ recursos }) {
+            return (
+                <div className="max-w-5xl mx-auto space-y-4 fade-in">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Archivos y Documentación</h2>
+                    {recursos.length === 0 && <p className="text-slate-500">No hay documentos disponibles en este momento.</p>}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                        {recursos.map(r => (
+                            <div key={r.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-all">
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div className="bg-blue-50 p-3 rounded-xl text-blue-600"><BookOpen size={24}/></div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-700 leading-tight">{r.titulo}</h3>
+                                        {r.descripcion && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.descripcion}</p>}
+                                    </div>
+                                </div>
+                                <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-50 text-blue-600 font-bold py-2.5 rounded-xl border border-slate-200 hover:bg-blue-50 transition-colors text-sm">Descargar / Ver</a>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        function CotizadorWizard({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, onGuardar }) {
           const [paso, setPaso] = useState(1);
           const [proveeCliente, setProveeCliente] = useState(false); 
           const [itemSelect, setItemSelect] = useState(null);
@@ -450,10 +482,10 @@
             let descuentoVol = 0; 
             let tierActivo = null;
 
-            if (descuentosVolumenActivos && descuentosVolumen) {
+            if (descuentosVolumen) {
                 const tiers = [...descuentosVolumen].sort((a,b) => b.min - a.min);
                 for (let t of tiers) { 
-                    if (cantidad >= t.min) { 
+                    if (t.activo !== false && cantidad >= t.min) { 
                         tierActivo = t; 
                         descuentoVol = t.pct / 100;
                         break; 
@@ -467,9 +499,9 @@
             let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
             return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: totalFinal / cantidad, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0 };
-          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen, descuentosVolumenActivos]);
+          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen]);
 
-          useEffect(() => { if (cotizacion && cantidad < cotizacion.minRequerido) setErrorValidacion(`La técnica requiere un mínimo de ${cotizacion.minRequerido} pzas.`); else setErrorValidacion(''); }, [cantidad, cotizacion]);
+          useEffect(() => { if (cotizacion && cantidad < cotizacion.minRequerido) setErrorValidacion(`La personalización exige un mínimo de ${cotizacion.minRequerido} pzas.`); else setErrorValidacion(''); }, [cantidad, cotizacion]);
 
           const handleGuardar = () => {
             if(!cotizacion || !cotizacion.valido || errorValidacion) return;
@@ -582,7 +614,6 @@
                         <div>
                           <label className="block text-sm font-bold text-slate-600 mb-2">Cantidad de Unidades</label>
                           <input type="number" min="1" value={cantidad} onChange={(e) => setCantidad(Number(e.target.value))} className="w-full p-4 rounded-xl border-2 border-blue-200 text-2xl font-bold focus:border-blue-600 outline-none transition-colors" />
-                          {errorValidacion && <p className="text-red-500 text-sm mt-2 flex items-center gap-1"><AlertCircle size={14}/> {errorValidacion}</p>}
                         </div>
 
                         {productoSeleccionado.cobraImpuesto === false && (
@@ -602,19 +633,29 @@
                           <p className="text-sm text-emerald-800 font-bold">Descuentos Dinámicos Activos:</p>
                           <ul className="text-xs text-emerald-600 list-disc pl-4 mt-1 space-y-1">
                             {cliente.descuentoGlobal > 0 && <li>Cliente VIP: -{cliente.descuentoGlobal}%</li>}
-                            {descuentosVolumenActivos && cotizacion.tierActivo && (
+                            {cotizacion.tierActivo && (
                                 <li>
                                     Tarifa por Volumen (+{cotizacion.tierActivo.min}u): -{cotizacion.tierActivo.pct}%
                                     <span className="block text-[10px] text-emerald-600/80 mt-0.5">Se aplica a todas las {cantidad} piezas por igual.</span>
                                 </li>
                             )}
-                            {(!descuentosVolumenActivos) && <li className="list-none text-slate-500 italic mt-1">Los descuentos por volumen están ocultos/desactivados.</li>}
-                            {descuentosVolumenActivos && cliente.descuentoGlobal === 0 && !cotizacion.tierActivo && <li className="list-none text-slate-500 italic">No hay descuentos aplicables en este volumen.</li>}
+                            {cliente.descuentoGlobal === 0 && !cotizacion.tierActivo && <li className="list-none text-slate-500 italic mt-1">No hay descuentos aplicables en este volumen.</li>}
                           </ul>
                         </div>
                       </div>
 
-                      <div className="flex-1 bg-slate-900 text-white p-6 rounded-3xl flex flex-col justify-between shadow-lg">
+                      <div className="flex-1 bg-slate-900 text-white p-6 rounded-3xl flex flex-col justify-between shadow-lg relative overflow-hidden">
+                        {errorValidacion ? (
+                            <div className="absolute inset-0 bg-slate-900/95 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center z-10 fade-in">
+                                <div className="bg-slate-800 p-4 rounded-full mb-4 shadow-inner">
+                                    <Lock size={32} className="text-slate-500" />
+                                </div>
+                                <h4 className="font-bold text-slate-300 text-lg mb-2">Bloqueo por Volumen</h4>
+                                <p className="text-slate-500 text-sm leading-relaxed">{errorValidacion}</p>
+                                <p className="text-blue-400/80 text-xs mt-4 font-semibold">Alcanza el mínimo para revelar el resumen financiero.</p>
+                            </div>
+                        ) : null}
+
                         <div>
                           <h4 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Resumen Financiero</h4>
                           <div className="space-y-2 text-sm text-slate-300">
@@ -659,13 +700,13 @@
                   <ModalDetalleOrden 
                     orden={ordenSeleccionada} isClient={isClient} clienteInfo={cliente} onClose={() => setOrdenSeleccionada(null)}
                     onActualizarOrden={(actualizada) => { onActualizarOrden(actualizada); setOrdenSeleccionada(actualizada); }}
-                    onCancelar={() => { onActualizarOrden({...ordenSeleccionada, estado: 'Cancelada por Cliente'}); setOrdenSeleccionada(null); }}
+                    onCancelar={() => { onActualizarOrden({...ordenSeleccionada, estado: 'Cancelada'}); setOrdenSeleccionada(null); }}
                     onEliminarAdmin={() => { onEliminarOrden(ordenSeleccionada.id); setOrdenSeleccionada(null); }}
                   />
               )}
               <h2 className="text-2xl font-bold text-slate-800 mb-6">Gestión de Cotizaciones</h2>
               {ordenes.map(orden => {
-                const esCancelada = orden.estado === 'Cancelada por Cliente';
+                const esCancelada = orden.estado === 'Cancelada';
                 return (
                 <div key={orden.id} className={`bg-white rounded-2xl shadow-sm border p-6 flex justify-between items-center gap-4 hover:shadow-md transition-shadow ${esCancelada ? 'border-red-200 bg-red-50/30 opacity-75' : 'border-slate-200'}`}>
                   <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-4 items-center">
@@ -685,7 +726,7 @@
         }
 
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
-            const esCancelada = orden.estado === 'Cancelada por Cliente';
+            const esCancelada = orden.estado === 'Cancelada';
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
 
             return (
@@ -878,17 +919,67 @@
             )
         }
 
+        function GestionRecursos({ recursos, onActualizarRecurso, onEliminarRecurso }) {
+            const [modalConfig, setModalConfig] = useState(null);
+            
+            const handleCrear = () => {
+                setModalConfig({
+                    titulo: "Subir Nuevo Archivo/Guía",
+                    campos: [
+                        { id: 'titulo', label: 'Título del documento:', type: 'text' },
+                        { id: 'descripcion', label: 'Descripción breve:', type: 'text' },
+                        { id: 'archivo', label: 'Archivo (PDF, PNG, JPG):', type: 'file' }
+                    ],
+                    onSubmit: (datos) => {
+                        if (datos.titulo && datos.archivo) {
+                            onActualizarRecurso({ id: `REC_${Date.now()}`, titulo: datos.titulo, descripcion: datos.descripcion || '', archivoBase64: datos.archivo });
+                        }
+                    }
+                });
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto space-y-4 fade-in">
+                    {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+                    
+                    <div className="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-1">Gestión de Archivos Compartidos</h2>
+                            <p className="text-sm text-slate-400">Sube PDFs o imágenes (guías de tallas, manuales) para que tus clientes las descarguen.</p>
+                        </div>
+                        <button onClick={handleCrear} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105">
+                            <Upload size={20}/> Subir Archivo
+                        </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {recursos.map(r => (
+                            <div key={r.id} className="bg-slate-800 rounded-2xl p-5 border border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-sm">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="bg-slate-900 p-3 rounded-xl text-blue-400"><BookOpen size={24}/></div>
+                                    <button onClick={() => onEliminarRecurso(r.id)} className="text-red-400 hover:text-red-300 p-2 bg-slate-900 rounded-lg transition-colors" title="Eliminar"><Trash2 size={16}/></button>
+                                </div>
+                                <h3 className="text-white font-bold text-lg mb-1">{r.titulo}</h3>
+                                <p className="text-slate-400 text-sm mb-4 flex-1 line-clamp-2">{r.descripcion}</p>
+                                <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-600 transition-colors text-sm">Previsualizar / Descargar</a>
+                            </div>
+                        ))}
+                        {recursos.length === 0 && <div className="col-span-full py-10 text-center text-slate-500 font-medium bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">No hay recursos subidos actualmente.</div>}
+                    </div>
+                </div>
+            );
+        }
+
         // ==========================================
         // GESTIÓN JERÁRQUICA (CATÁLOGO Y TÉCNICAS) Y TARIFAS
         // ==========================================
-        function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, descuentosActivosActual, onSave, onClose }) {
+        function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
             const [margen, setMargen] = useState(margenActual || 0); 
             const [impuesto, setImpuesto] = useState(impuestoActual || 0); 
             const [descuentos, setDescuentos] = useState(descuentosActuales || []);
-            const [activos, setActivos] = useState(descuentosActivosActual !== undefined ? descuentosActivosActual : true);
 
-            const addTier = () => setDescuentos([...descuentos, { id: `desc_${Date.now()}`, min: 100, pct: 5 }]);
-            const updateTier = (id, field, value) => setDescuentos(descuentos.map(d => d.id === id ? { ...d, [field]: Number(value) } : d));
+            const addTier = () => setDescuentos([...descuentos, { id: `desc_${Date.now()}`, min: 100, pct: 5, activo: true }]);
+            const updateTier = (id, field, value) => setDescuentos(descuentos.map(d => d.id === id ? { ...d, [field]: field === 'activo' ? value : Number(value) } : d));
             const removeTier = (id) => setDescuentos(descuentos.filter(d => d.id !== id));
             return ( 
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
@@ -901,27 +992,24 @@
                         <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
                             <div className="flex justify-between items-center mb-4">
                                 <label className="text-sm font-bold text-blue-400">Niveles de Descuento por Volumen</label>
-                                <div className="flex items-center gap-3">
-                                    <label className="flex items-center gap-2 text-xs font-bold text-slate-300 cursor-pointer bg-slate-800 px-2 py-1 rounded border border-slate-600">
-                                        <input type="checkbox" checked={activos} onChange={(e) => setActivos(e.target.checked)} className="accent-blue-500 w-4 h-4 rounded" />
-                                        Activo en vista cliente
-                                    </label>
-                                    <button onClick={addTier} className="text-xs bg-blue-600 text-white px-2 py-1 rounded">+ Añadir</button>
-                                </div>
+                                <button onClick={addTier} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-500 transition-colors">+ Añadir Nivel</button>
                             </div>
                             <div className="space-y-3">
                                 {descuentos.map(d => (
                                     <div key={d.id} className="flex gap-2 items-center bg-slate-800 p-2 rounded-lg border border-slate-600">
+                                        <div className="px-2 flex items-center">
+                                            <input type="checkbox" checked={d.activo !== false} onChange={e=>updateTier(d.id, 'activo', e.target.checked)} className="accent-blue-500 w-4 h-4 cursor-pointer" title="Mostrar y aplicar en vista cliente" />
+                                        </div>
                                         <div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Min. Pzas</label><input type="number" value={d.min} onChange={e=>updateTier(d.id, 'min', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-sm outline-none" /></div>
                                         <div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Desc. (%)</label><input type="number" value={d.pct} onChange={e=>updateTier(d.id, 'pct', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-sm outline-none" /></div>
-                                        <button onClick={()=>removeTier(d.id)} className="mt-4 text-red-400 p-2"><Trash2 size={16}/></button>
+                                        <button onClick={()=>removeTier(d.id)} className="mt-4 text-red-400 p-2 hover:bg-red-500/10 rounded"><Trash2 size={16}/></button>
                                     </div>
                                 ))}
                             </div>
                         </div>
                         <div className="flex justify-end gap-3 mt-4">
                             <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button>
-                            <button onClick={() => { onSave(margen, impuesto, descuentos, activos); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Tarifas</button>
+                            <button onClick={() => { onSave(margen, impuesto, descuentos); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Tarifas</button>
                         </div>
                     </div>
                 </div> 
@@ -937,7 +1025,6 @@
                                 <h3 className="text-2xl font-bold text-white flex items-center gap-2"><Calculator size={24} className="text-blue-400"/> Guía Detallada de Fórmulas</h3>
                                 <p className="text-slate-400 text-sm mt-1">Así es como el cotizador calcula matemáticamente los precios.</p>
                             </div>
-                            <button onClick={onClose} className="text-slate-400 hover:text-white bg-slate-700 p-2 rounded-full"><X size={20}/></button>
                         </div>
                         
                         <div className="space-y-6 text-sm">
@@ -963,7 +1050,7 @@
 
                             <div className="bg-slate-900 p-5 rounded-xl border border-amber-500/30 shadow-inner">
                                 <h4 className="font-bold text-amber-400 text-base mb-2 flex items-center gap-2"><span className="bg-amber-500/20 px-2 py-0.5 rounded text-xs">Paso 3</span> Cascada de Descuentos (VIP + Volumen)</h4>
-                                <p className="mb-2">El descuento por volumen <strong>se aplica a TODAS las piezas</strong> una vez alcanzado el nivel. Si el cliente compra 300 piezas y el nivel es de 100 (10% OFF), las 300 piezas reciben el descuento. Además, si es VIP (ej. 10% OFF), se aplica un descuento "en cascada" secuencial para proteger tus finanzas.</p>
+                                <p className="mb-2">El descuento por volumen <strong>se aplica a TODAS las piezas</strong> una vez alcanzado el nivel y si la casilla está activa. Si el cliente compra 300 piezas y el nivel es de 100 (10% OFF), las 300 piezas reciben el descuento. Además, si es VIP (ej. 10% OFF), se aplica un descuento "en cascada" secuencial para proteger tus finanzas.</p>
                                 <div className="bg-slate-950 p-3 rounded text-xs border border-slate-800 text-slate-300">
                                     <p>Subtotal Bruto = Precio de Venta Prendas + Precio de Venta Técnicas</p>
                                     <p className="mt-1 font-mono text-amber-400">Total con Descuento = Subtotal Bruto × (1 - % Volumen) × (1 - % VIP)</p>
@@ -985,7 +1072,7 @@
             )
         }
 
-        function GestionJerarquica({ catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, descuentosVolumenActivos, setConfigGlobal }) {
+        function GestionJerarquica({ catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal }) {
           const [tecActivaId, setTecActivaId] = useState(tecnicas[0]?.id || null);
           const [modalConfig, setModalConfig] = useState(null); 
           const [showTarifasModal, setShowTarifasModal] = useState(false);
@@ -1058,7 +1145,7 @@
           return (
             <div className="max-w-7xl mx-auto space-y-8 relative fade-in">
               {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-              {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} descuentosActivosActual={descuentosVolumenActivos} onSave={setConfigGlobal} onClose={()=>setShowTarifasModal(false)} />}
+              {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} onSave={setConfigGlobal} onClose={()=>setShowTarifasModal(false)} />}
               {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
               
               <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
@@ -1205,17 +1292,22 @@
             if (file) { 
                 const reader = new FileReader(); 
                 reader.onload = (event) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width; let height = img.height;
-                        const MAX_SIZE = 800;
-                        if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-                        canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                        setForm({...form, [fieldId]: canvas.toDataURL('image/jpeg', 0.7)});
-                    };
-                    img.src = event.target.result;
-                }; reader.readAsDataURL(file); 
+                    if(file.type.startsWith('image/')) {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let width = img.width; let height = img.height;
+                            const MAX_SIZE = 800;
+                            if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                            canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
+                            setForm({...form, [fieldId]: canvas.toDataURL('image/jpeg', 0.7)});
+                        };
+                        img.src = event.target.result;
+                    } else {
+                        setForm({...form, [fieldId]: event.target.result});
+                    }
+                }; 
+                reader.readAsDataURL(file); 
             } 
           };
           const handleCheckboxGroup = (fieldId, value, checked) => { const currentArr = form[fieldId] || []; if (checked) setForm({...form, [fieldId]: [...currentArr, value]}); else setForm({...form, [fieldId]: currentArr.filter(v => v !== value)}); };
@@ -1231,7 +1323,7 @@
                         <div key={c.id}>
                             {c.type !== 'boolean' && <label className="block text-sm font-bold text-slate-400 mb-2">{c.label}</label>}
                             
-                            {c.type === 'file' ? <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, c.id)} className="text-white text-sm" /> 
+                            {c.type === 'file' ? <input type="file" accept=".pdf,image/*" onChange={(e) => handleFileChange(e, c.id)} className="text-white text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer" /> 
                             : c.type === 'checkboxGroup' ? (
                                 <div className="grid grid-cols-2 gap-2 bg-slate-900 p-3 rounded-xl border border-slate-700 max-h-40 overflow-y-auto custom-scrollbar">
                                     {c.options.map(opt => <label key={opt.value} className="flex gap-2 text-white text-sm"><input type="checkbox" checked={(form[c.id] || []).includes(opt.value)} onChange={(e) => handleCheckboxGroup(c.id, opt.value, e.target.checked)} className="accent-blue-500" /> <span className="truncate" title={opt.label}>{opt.label}</span></label>)}
@@ -1249,7 +1341,7 @@
                                     {c.maxLength && <p className="text-right text-xs text-slate-500 mt-1">{(form[c.id] || '').length}/{c.maxLength}</p>}
                                 </div>
                             )
-                            : <input required={c.id!=='imagenUrl'} type={c.type} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors" onChange={e => setForm({...form, [c.id]: e.target.value})} />
+                            : <input required={c.id!=='imagenUrl' && c.id!=='archivo'} type={c.type} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors" onChange={e => setForm({...form, [c.id]: e.target.value})} />
                             }
                         </div>
                         ))
@@ -1274,9 +1366,9 @@
           return <button onClick={onClick} className={`${baseClasses} ${active ? activeClasses : inactiveClasses}`}><Icon size={20} /><span>{label}</span></button>;
         }
         
-        function PanelAdmin({ ordenes, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, descuentosVolumenActivos, setConfigGlobal, usuarios, onActualizarUsuario, onEliminarUsuario, onActualizarOrden, onEliminarOrden, mensajesGlobales, adminSetMensajes, onLogout, isConnectedToCloud, showToast }) {
+        function PanelAdmin({ ordenes, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, mensajesGlobales, adminSetMensajes, onLogout, isConnectedToCloud, showToast }) {
           const [vista, setVista] = useState('DASHBOARD'); 
-          const ordenesValidas = ordenes.filter(o => o.estado !== 'Cancelada por Cliente');
+          const ordenesValidas = ordenes.filter(o => o.estado !== 'Cancelada');
           const ingresosProyectados = ordenesValidas.reduce((sum, o) => sum + o.total, 0);
 
           return (
@@ -1290,6 +1382,7 @@
                         <MenuBtn icon={Package} label="Catálogo & Lógica" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} dark />
                         <MenuBtn icon={Users} label="Usuarios & Accesos" active={vista === 'USUARIOS'} onClick={() => setVista('USUARIOS')} dark />
                         <MenuBtn icon={Megaphone} label="Avisos y WhatsApp" active={vista === 'MENSAJES'} onClick={() => setVista('MENSAJES')} dark />
+                        <MenuBtn icon={BookOpen} label="Recursos (PDFs/Guías)" active={vista === 'RECURSOS'} onClick={() => setVista('RECURSOS')} dark />
                     </nav>
                 </div>
                 <div className="p-6 bg-slate-950 border-t border-slate-800 mt-auto">
@@ -1310,16 +1403,17 @@
                    </div>
                 )}
                 {vista === 'ORDENES' && <div className="max-w-6xl mx-auto space-y-4 fade-in"><div className="bg-slate-800 rounded-2xl p-6 border border-slate-700"><HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} mensajesGlobales={mensajesGlobales} showToast={showToast} /></div></div>}
-                {vista === 'CATALOGO' && <GestionJerarquica catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} descuentosVolumenActivos={descuentosVolumenActivos} setConfigGlobal={setConfigGlobal} />}
+                {vista === 'CATALOGO' && <GestionJerarquica catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
                 {vista === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
                 {vista === 'MENSAJES' && <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
+                {vista === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
               </main>
             </div>
           );
         }
 
         function EstadoBadge({ estado }) {
-          const colores = { 'Cotización enviada': 'bg-sky-100 text-sky-700 border-sky-200', 'Pendiente': 'bg-slate-100 text-slate-700 border-slate-200', 'Aprobado / En producción': 'bg-indigo-100 text-indigo-700 border-indigo-200', 'Control de calidad': 'bg-purple-100 text-purple-700 border-purple-200', 'Listo para envío': 'bg-teal-100 text-teal-700 border-teal-200', 'Entrega parcial': 'bg-amber-100 text-amber-700 border-amber-200', 'Finalizado / Entregado': 'bg-emerald-100 text-emerald-700 border-emerald-200', 'Cancelada por Cliente': 'bg-red-100 text-red-700 border-red-200' };
+          const colores = { 'Cotización enviada': 'bg-sky-100 text-sky-700 border-sky-200', 'Pendiente': 'bg-slate-100 text-slate-700 border-slate-200', 'Aprobado / En producción': 'bg-indigo-100 text-indigo-700 border-indigo-200', 'Control de calidad': 'bg-purple-100 text-purple-700 border-purple-200', 'Listo para envío': 'bg-teal-100 text-teal-700 border-teal-200', 'Entrega parcial': 'bg-amber-100 text-amber-700 border-amber-200', 'Finalizado / Entregado': 'bg-emerald-100 text-emerald-700 border-emerald-200', 'Cancelada': 'bg-red-100 text-red-700 border-red-200' };
           const clase = colores[estado] || colores['Pendiente'];
           return <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] uppercase font-bold border ${clase}`}>{estado}</span>;
         }
