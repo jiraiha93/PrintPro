@@ -160,7 +160,7 @@
             
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
-            const unsubRec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'recursos'), (snap) => { if (!snap.empty) setRecursos(snap.docs.map(d => d.data())); }, console.error);
+            const unsubRec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'recursos'), (snap) => { setRecursos(snap.docs.map(d => d.data())); }, console.error);
             
             let unsubUsu;
             if (isAdmin) {
