@@ -205,9 +205,43 @@
             return () => { unsubCatList(); unsubCat(); unsubTec(); unsubRec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
           }, [userDb]);
 
-          const dbGuardar = async (coleccion, id, data) => { if (db && isConnectedToCloud) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); };
-          const dbEliminar = async (coleccion, id) => { if (db && isConnectedToCloud) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id)); };
-          const dbGuardarLista = async (coleccion, lista) => { if(db && isConnectedToCloud) lista.forEach(item => dbGuardar(coleccion, item.id, item)); }
+          // ==========================================
+          // CORE: MANEJO SEGURO DE OPERACIONES DB
+          // Se agregaron bloques try/catch para estabilidad
+          // ==========================================
+          const dbGuardar = async (coleccion, id, data) => { 
+            if (db && isConnectedToCloud) {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); 
+                } catch (error) {
+                    console.error(`Error guardando en BD (${coleccion}):`, error);
+                    showToast(`Error al guardar datos. Verifica tus permisos.`, 'error');
+                }
+            }
+          };
+
+          const dbEliminar = async (coleccion, id) => { 
+            if (db && isConnectedToCloud) {
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id)); 
+                } catch (error) {
+                    console.error(`Error eliminando en BD (${coleccion}):`, error);
+                    showToast(`Error al eliminar registro de la BD.`, 'error');
+                }
+            }
+          };
+
+          const dbGuardarLista = async (coleccion, lista) => { 
+            if(db && isConnectedToCloud) {
+                try {
+                    // Optimización: Promesas en paralelo
+                    await Promise.all(lista.map(item => dbGuardar(coleccion, item.id, item)));
+                } catch (error) {
+                    console.error(`Error guardando lista en BD (${coleccion}):`, error);
+                }
+            } 
+          };
+          // ==========================================
 
           const adminSetCategorias = (nuevasCategorias) => {
                if(isConnectedToCloud) {
