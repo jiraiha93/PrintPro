@@ -94,7 +94,14 @@
           { id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' },
         ];
         
-        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
+        const CATEGORIAS_BASE = [
+            { id: 'cat_1', nombre: 'DTF - Textil' }, 
+            { id: 'cat_2', nombre: 'Sublimacion' }, 
+            { id: 'cat_3', nombre: 'DTF - UV' }, 
+            { id: 'cat_4', nombre: 'Bordado' }
+        ];
+
+        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: 'cat_1', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
         const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }];
         
@@ -112,6 +119,7 @@
           const [usuarios, setUsuarios] = useState(() => loadLocal('usuarios', USUARIOS_BASE));
           const [usuarioActual, setUsuarioActual] = useState(() => loadSession('sesionActiva', null)); 
           const [ordenes, setOrdenes] = useState(() => loadLocal('ordenes', []));
+          const [categorias, setCategorias] = useState(() => loadLocal('categorias', CATEGORIAS_BASE));
           const [catalogo, setCatalogo] = useState(() => loadLocal('catalogo', CATALOGO_BASE));
           const [tecnicas, setTecnicas] = useState(() => loadLocal('tecnicas', TECNICAS_BASE)); 
           const [recursos, setRecursos] = useState(() => loadLocal('recursos', []));
@@ -158,6 +166,7 @@
             setLoadingData(true);
             const isAdmin = userDb.email === 'admin@printpro.com';
             
+            const unsubCatList = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'categorias'), (snap) => { if (!snap.empty) setCategorias(snap.docs.map(d => d.data())); else dbGuardarLista('categorias', categorias); }, console.error);
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
             const unsubRec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'recursos'), (snap) => { setRecursos(snap.docs.map(d => d.data())); }, console.error);
@@ -196,12 +205,23 @@
               }, console.error);
 
             setLoadingData(false);
-            return () => { unsubCat(); unsubTec(); unsubRec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
+            return () => { unsubCatList(); unsubCat(); unsubTec(); unsubRec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
           }, [userDb]);
 
           const dbGuardar = async (coleccion, id, data) => { if (db && isConnectedToCloud) await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); };
           const dbEliminar = async (coleccion, id) => { if (db && isConnectedToCloud) await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id)); };
           const dbGuardarLista = async (coleccion, lista) => { if(db && isConnectedToCloud) lista.forEach(item => dbGuardar(coleccion, item.id, item)); }
+
+          const adminSetCategorias = (nuevasCategorias) => {
+               if(isConnectedToCloud) {
+                   const idsActuales = nuevasCategorias.map(c => c.id);
+                   categorias.forEach(c => { if(!idsActuales.includes(c.id)) dbEliminar('categorias', c.id); });
+                   nuevasCategorias.forEach(c => dbGuardar('categorias', c.id, c));
+               } else {
+                   setCategorias(nuevasCategorias); saveLocal('categorias', nuevasCategorias);
+               }
+               showToast('Categorías actualizadas');
+          };
 
           const handleActualizarUsuario = (usuAct) => {
             if(isConnectedToCloud) dbGuardar('usuarios', usuAct.id, usuAct); else { const newU = usuarios.map(u => u.id === usuAct.id ? usuAct : u); setUsuarios(newU); saveLocal('usuarios', newU); }
@@ -285,7 +305,9 @@
                     <PantallaLogin auth={auth} isConnectedToCloud={isConnectedToCloud} />
                  ) : usuarioActual.rol === 'ADMIN' ? (
                     <PanelAdmin 
-                        ordenes={ordenes} catalogo={catalogo} setCatalogo={adminSetCatalogo} tecnicas={tecnicas} setTecnicas={adminSetTecnicas}
+                        ordenes={ordenes} 
+                        categorias={categorias} setCategorias={adminSetCategorias}
+                        catalogo={catalogo} setCatalogo={adminSetCatalogo} tecnicas={tecnicas} setTecnicas={adminSetTecnicas}
                         margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={adminSetConfiguracionGlobal}
                         mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes}
                         usuarios={usuarios} onActualizarUsuario={handleActualizarUsuario} onEliminarUsuario={handleEliminarUsuario}
@@ -294,7 +316,7 @@
                     />
                  ) : (
                     <PortalClienteVIP 
-                        cliente={usuarioActual} catalogo={catalogo} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen}
+                        cliente={usuarioActual} catalogo={catalogo} categorias={categorias} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen}
                         ordenes={ordenes.filter(o => o.clienteId === usuarioActual.id)} onCrearOrden={handleCrearOrden} onActualizarOrden={handleActualizarOrden}
                         mensajesGlobales={mensajesGlobales} recursos={recursos} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
                     />
@@ -359,7 +381,7 @@
           );
         }
 
-        function PortalClienteVIP({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, ordenes, onCrearOrden, onActualizarOrden, mensajesGlobales, recursos, onLogout, isConnectedToCloud, showToast }) {
+        function PortalClienteVIP({ cliente, catalogo, categorias, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, ordenes, onCrearOrden, onActualizarOrden, mensajesGlobales, recursos, onLogout, isConnectedToCloud, showToast }) {
           const [vista, setVista] = useState('NUEVA_COTIZACION'); 
           
           return (
@@ -396,7 +418,7 @@
                     </div>
                 )}
                 
-                {vista === 'NUEVA_COTIZACION' && <CotizadorWizard cliente={cliente} catalogo={catalogo} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} onGuardar={(o) => { onCrearOrden(o); setVista('HISTORIAL'); }} />}
+                {vista === 'NUEVA_COTIZACION' && <CotizadorWizard cliente={cliente} catalogo={catalogo} categorias={categorias} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} onGuardar={(o) => { onCrearOrden(o); setVista('HISTORIAL'); }} />}
                 {vista === 'HISTORIAL' && <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} isClient={true} cliente={cliente} mensajesGlobales={mensajesGlobales} showToast={showToast} />}
                 {vista === 'RECURSOS' && <VistaRecursosCliente recursos={recursos} />}
               </main>
@@ -427,7 +449,7 @@
             );
         }
 
-        function CotizadorWizard({ cliente, catalogo, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, onGuardar }) {
+        function CotizadorWizard({ cliente, catalogo, categorias, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, onGuardar }) {
           const [paso, setPaso] = useState(1);
           const [proveeCliente, setProveeCliente] = useState(false); 
           const [itemSelect, setItemSelect] = useState(null);
@@ -437,14 +459,19 @@
           const [errorValidacion, setErrorValidacion] = useState('');
 
           const [busqueda, setBusqueda] = useState('');
+          const [categoriaFiltro, setCategoriaFiltro] = useState('');
           const [itemsPorPagina, setItemsPorPagina] = useState(10);
           const [paginaActual, setPaginaActual] = useState(1);
 
-          useEffect(() => { setPaginaActual(1); }, [busqueda, itemsPorPagina]);
+          useEffect(() => { setPaginaActual(1); }, [busqueda, categoriaFiltro, itemsPorPagina]);
 
           const catalogoFiltrado = useMemo(() => {
-              return catalogo.filter(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (p.detalles && p.detalles.toLowerCase().includes(busqueda.toLowerCase())));
-          }, [catalogo, busqueda]);
+              return catalogo.filter(p => {
+                  const matchSearch = p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || (p.detalles && p.detalles.toLowerCase().includes(busqueda.toLowerCase()));
+                  const matchCat = categoriaFiltro === '' || p.categoriaId === categoriaFiltro;
+                  return matchSearch && matchCat;
+              });
+          }, [catalogo, busqueda, categoriaFiltro]);
 
           const totalPaginas = Math.ceil(catalogoFiltrado.length / itemsPorPagina) || 1;
           const catalogoPaginado = useMemo(() => {
@@ -540,16 +567,22 @@
                     </div>
 
                     <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <div className="relative w-full md:w-96">
+                        <div className="relative w-full md:w-auto flex-1 max-w-sm">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input type="text" placeholder="Buscar por nombre o descripción..." value={busqueda} onChange={e=>setBusqueda(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white" />
                         </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <label className="text-sm text-slate-500 font-semibold whitespace-nowrap">Mostrar:</label>
-                            <select value={itemsPorPagina} onChange={e=>setItemsPorPagina(Number(e.target.value))} className="p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700">
-                                <option value={10}>10 artículos</option>
-                                <option value={20}>20 artículos</option>
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                            <select value={categoriaFiltro} onChange={e=>setCategoriaFiltro(e.target.value)} className="w-full sm:w-auto p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700">
+                                <option value="">Todas las categorías</option>
+                                {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                             </select>
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-slate-500 font-semibold whitespace-nowrap">Mostrar:</label>
+                                <select value={itemsPorPagina} onChange={e=>setItemsPorPagina(Number(e.target.value))} className="p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700">
+                                    <option value={10}>10 artículos</option>
+                                    <option value={20}>20 artículos</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -1081,8 +1114,9 @@
             )
         }
 
-        function GestionJerarquica({ catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal }) {
+        function GestionJerarquica({ categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal }) {
           const [tecActivaId, setTecActivaId] = useState(tecnicas[0]?.id || null);
+          const [categoriaActivaId, setCategoriaActivaId] = useState('todas');
           const [modalConfig, setModalConfig] = useState(null); 
           const [showTarifasModal, setShowTarifasModal] = useState(false);
           const [showFichaTecnica, setShowFichaTecnica] = useState(false);
@@ -1091,50 +1125,119 @@
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
 
           const scrollRef = useRef(null);
-          const scrollTabs = (offset) => {
-              if (scrollRef.current) scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-          };
+          const scrollRefCat = useRef(null);
+          const scrollTabs = (offset) => { if (scrollRef.current) scrollRef.current.scrollBy({ left: offset, behavior: 'smooth' }); };
+          const scrollTabsCat = (offset) => { if (scrollRefCat.current) scrollRefCat.current.scrollBy({ left: offset, behavior: 'smooth' }); };
 
           const [busquedaAdmin, setBusquedaAdmin] = useState('');
           const [itemsPorPaginaAdmin, setItemsPorPaginaAdmin] = useState(10);
           const [paginaActualAdmin, setPaginaActualAdmin] = useState(1);
 
-          useEffect(() => { setPaginaActualAdmin(1); }, [busquedaAdmin, itemsPorPaginaAdmin]);
+          useEffect(() => { setPaginaActualAdmin(1); }, [busquedaAdmin, itemsPorPaginaAdmin, categoriaActivaId]);
 
-          const catalogoFiltradoAdmin = useMemo(() => catalogo.filter(p => p.nombre.toLowerCase().includes(busquedaAdmin.toLowerCase())), [catalogo, busquedaAdmin]);
+          // Filtrado doble (búsqueda y categoría)
+          const catalogoFiltradoAdmin = useMemo(() => {
+             return catalogo.filter(p => {
+                 const matchBusqueda = p.nombre.toLowerCase().includes(busquedaAdmin.toLowerCase());
+                 const matchCat = categoriaActivaId === 'todas' || p.categoriaId === categoriaActivaId;
+                 return matchBusqueda && matchCat;
+             });
+          }, [catalogo, busquedaAdmin, categoriaActivaId]);
+          
           const totalPaginasAdmin = Math.ceil(catalogoFiltradoAdmin.length / itemsPorPaginaAdmin) || 1;
           const catalogoPaginadoAdmin = useMemo(() => catalogoFiltradoAdmin.slice((paginaActualAdmin - 1) * itemsPorPaginaAdmin, paginaActualAdmin * itemsPorPaginaAdmin), [catalogoFiltradoAdmin, paginaActualAdmin, itemsPorPaginaAdmin]);
 
+          // ======================= HANDLERS DE CATEGORÍAS =======================
+          const handleCrearCategoria = () => {
+             setModalConfig({
+                 titulo: "Nueva Categoría",
+                 campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
+                 onSubmit: (datos) => {
+                     if (datos.nombre) {
+                         const nueva = { id: `CAT_${Date.now()}`, nombre: datos.nombre };
+                         setCategorias([...categorias, nueva]);
+                         setCategoriaActivaId(nueva.id);
+                     }
+                 }
+             });
+          };
+
+          const handleEditarCategoria = () => {
+             const cat = categorias.find(c => c.id === categoriaActivaId);
+             if (!cat) return;
+             setModalConfig({
+                 titulo: "Editar Categoría",
+                 valoresIniciales: { nombre: cat.nombre },
+                 campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
+                 onSubmit: (datos) => {
+                     if (datos.nombre) setCategorias(categorias.map(c => c.id === categoriaActivaId ? { ...c, nombre: datos.nombre } : c));
+                 }
+             });
+          };
+
+          const handleEliminarCategoria = () => {
+             const cat = categorias.find(c => c.id === categoriaActivaId);
+             if (!cat) return;
+             const prodEnCat = catalogo.filter(p => p.categoriaId === cat.id);
+             if (prodEnCat.length > 0) {
+                 setModalConfig({
+                     titulo: "Acción Protegida",
+                     esConfirmacion: true,
+                     mensaje: `No puedes eliminar la categoría "${cat.nombre}" porque contiene ${prodEnCat.length} productos asignados. Por favor, cambia la categoría de esos productos o elimínalos antes de continuar.`,
+                     submitLabel: "Entendido",
+                     campos: [],
+                     onSubmit: () => {}
+                 });
+                 return;
+             }
+             setModalConfig({
+                 titulo: "Eliminar Categoría",
+                 esConfirmacion: true,
+                 mensaje: `¿Seguro que deseas eliminar la categoría "${cat.nombre}" permanentemente?`,
+                 campos: [],
+                 onSubmit: () => {
+                     setCategorias(categorias.filter(c => c.id !== categoriaActivaId));
+                     setCategoriaActivaId('todas');
+                 }
+             });
+          };
+
+          // ======================= HANDLERS DE PRODUCTOS =======================
           const handleCrearProducto = () => {
             setModalConfig({
               titulo: "Nuevo Producto Base", 
-              valoresIniciales: { costoBase: 0, detalles: '', tecnicasRecomendadas: [], cobraImpuesto: true },
+              valoresIniciales: { costoBase: 0, detalles: '', tecnicasRecomendadas: [], cobraImpuesto: true, categoriaId: categoriaActivaId !== 'todas' ? categoriaActivaId : '' },
               campos: [ 
-                  { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
+                  { id: 'nombre', label: 'Nombre:', type: 'text' }, 
+                  { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
+                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
                   { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
                   { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
-              onSubmit: (datos) => { if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { setCatalogo([...catalogo, { id: `PROD_${Date.now()}`, nombre: datos.nombre, detalles: datos.detalles || '', tipo: 'General', costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [], cobraImpuesto: !!datos.cobraImpuesto }]); } }
+              onSubmit: (datos) => { if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { setCatalogo([...catalogo, { id: `PROD_${Date.now()}`, nombre: datos.nombre, detalles: datos.detalles || '', categoriaId: datos.categoriaId || '', costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [], cobraImpuesto: !!datos.cobraImpuesto }]); } }
             });
           };
 
           const handleEditarProducto = (prod) => {
             setModalConfig({
               titulo: "Editar Producto", 
-              valoresIniciales: { nombre: prod.nombre, costoBase: prod.costoBase, detalles: prod.detalles || '', tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false },
+              valoresIniciales: { nombre: prod.nombre, categoriaId: prod.categoriaId || '', costoBase: prod.costoBase, detalles: prod.detalles || '', tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false },
               campos: [ 
-                  { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'costoBase', label: 'Costo (L):', type: 'number' }, 
+                  { id: 'nombre', label: 'Nombre:', type: 'text' }, 
+                  { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
+                  { id: 'costoBase', label: 'Costo (L):', type: 'number' }, 
                   { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
                   { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Cambiar Imagen:', type: 'file' } 
               ],
-              onSubmit: (datos) => { const editado = { ...prod, nombre: datos.nombre || prod.nombre, costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, detalles: datos.detalles !== undefined ? datos.detalles : prod.detalles, tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto }; setCatalogo(catalogo.map(p => p.id === prod.id ? editado : p)); }
+              onSubmit: (datos) => { const editado = { ...prod, nombre: datos.nombre || prod.nombre, categoriaId: datos.categoriaId || prod.categoriaId, costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, detalles: datos.detalles !== undefined ? datos.detalles : prod.detalles, tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto }; setCatalogo(catalogo.map(p => p.id === prod.id ? editado : p)); }
             });
           };
 
           const handleEliminarProducto = (id, nombre) => setModalConfig({ titulo: "Eliminar Producto", esConfirmacion: true, mensaje: `¿Eliminar "${nombre}"?`, campos: [], onSubmit: () => setCatalogo(catalogo.filter(p => p.id !== id)) });
           
+          // ======================= HANDLERS DE TÉCNICAS =======================
           const handleCrearTecnica = () => setModalConfig({ titulo: "Nueva Técnica", valoresIniciales: { cobraImpuesto: true }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }], onSubmit: (datos) => { if (datos.nombre) { const nueva = { id: `TEC_${Date.now()}`, nombre: datos.nombre, cobraImpuesto: !!datos.cobraImpuesto, minimo: 1, subcategorias: [] }; setTecnicas([...tecnicas, nueva]); setTecActivaId(nueva.id); } } });
           const handleEditarTecnicaBase = () => { if(!tecActual) return; setModalConfig({ titulo: "Editar Técnica Base", valoresIniciales: { nombre: tecActual.nombre, cobraImpuesto: tecActual.cobraImpuesto !== false }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }], onSubmit: (datos) => { if(datos.nombre) updateTecnicaActual({ ...tecActual, nombre: datos.nombre, cobraImpuesto: !!datos.cobraImpuesto }); } }) };
           const handleEliminarTecnica = () => { if(!tecActual) return; setModalConfig({ titulo: "Eliminar Técnica", esConfirmacion: true, mensaje: `¿Eliminar "${tecActual.nombre}" y sus variantes?`, campos: [], onSubmit: () => { const nuevas = tecnicas.filter(t => t.id !== tecActual.id); setTecnicas(nuevas); setTecActivaId(nuevas[0]?.id || null); }}); };
@@ -1167,22 +1270,47 @@
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 
-                {/* PANEL 1: Catálogo */}
+                {/* PANEL 1: Catálogo (AHORA CON CATEGORÍAS) */}
                 <div className="bg-slate-800 rounded-3xl border border-slate-700 flex flex-col shadow-lg h-[calc(100vh-14rem)] min-h-[600px]">
-                  <div className="p-6 border-b border-slate-700">
-                      <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2"><Package size={20}/> Catálogo de Artículos</h2>
-                      <div className="flex flex-col sm:flex-row gap-3">
-                          <div className="relative flex-1">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                              <input type="text" placeholder="Buscar producto..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-600 bg-slate-900 text-white text-sm outline-none focus:border-blue-500" />
+                  
+                  {/* CABECERA: TABS DE CATEGORÍAS */}
+                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80 rounded-t-3xl">
+                    <button onClick={() => scrollTabsCat(-150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block mr-2"><ChevronLeft size={16}/></button>
+                    <div ref={scrollRefCat} className="flex gap-2 overflow-x-hidden flex-1 scroll-smooth">
+                        <button onClick={()=>setCategoriaActivaId('todas')} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${categoriaActivaId === 'todas' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>Todas</button>
+                        {categorias.map(c => <button key={c.id} onClick={()=>setCategoriaActivaId(c.id)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${categoriaActivaId === c.id ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>{c.nombre}</button>)}
+                    </div>
+                    <button onClick={() => scrollTabsCat(150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block ml-2"><ChevronRight size={16}/></button>
+                    <div className="border-l border-slate-700 pl-3 ml-2">
+                        <button onClick={handleCrearCategoria} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center gap-1 shrink-0"><Plus size={16}/><span className="hidden xl:inline text-xs font-bold">Nueva</span></button>
+                    </div>
+                  </div>
+
+                  {/* CONTENIDO SUPERIOR: BUSQUEDA Y EDICIÓN DE CATEGORÍA ACTIVA */}
+                  <div className="p-4 border-b border-slate-700 bg-slate-800">
+                      {categoriaActivaId !== 'todas' && (
+                          <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-700 mb-4">
+                              <span className="text-sm font-bold text-emerald-400">Categoría Activa: {categorias.find(c => c.id === categoriaActivaId)?.nombre}</span>
+                              <div className="flex gap-2">
+                                  <button onClick={handleEditarCategoria} className="text-blue-400 hover:text-blue-300 p-1.5 bg-slate-800 rounded-lg flex items-center transition-colors text-xs font-bold"><Edit3 size={14} className="mr-1"/> Editar</button>
+                                  <button onClick={handleEliminarCategoria} className="text-red-400 hover:text-red-300 p-1.5 bg-slate-800 rounded-lg flex items-center transition-colors text-xs font-bold"><Trash2 size={14} className="mr-1"/> Borrar</button>
+                              </div>
                           </div>
-                          <select value={itemsPorPaginaAdmin} onChange={e=>setItemsPorPaginaAdmin(Number(e.target.value))} className="p-2 border border-slate-600 bg-slate-900 text-white rounded-lg outline-none text-sm font-bold">
+                      )}
+                      
+                      <div className="flex flex-col sm:flex-row gap-3 items-center">
+                          <div className="relative flex-1 w-full">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                              <input type="text" placeholder="Buscar producto por nombre..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-600 bg-slate-900 text-white text-sm outline-none focus:border-blue-500" />
+                          </div>
+                          <select value={itemsPorPaginaAdmin} onChange={e=>setItemsPorPaginaAdmin(Number(e.target.value))} className="w-full sm:w-auto p-2 border border-slate-600 bg-slate-900 text-white rounded-lg outline-none text-sm font-bold">
                               <option value={10}>10 items</option>
                               <option value={20}>20 items</option>
                           </select>
                       </div>
                   </div>
                   
+                  {/* TABLA DE PRODUCTOS */}
                   <div className="overflow-x-auto flex-1 custom-scrollbar p-2">
                     <table className="w-full text-left text-sm min-w-full">
                       <thead><tr className="border-b border-slate-700 text-slate-400"><th className="px-4 pb-3">Producto</th><th className="pb-3 text-center">Costo</th><th className="pb-3 text-center">Acciones</th></tr></thead>
@@ -1196,7 +1324,7 @@
                         ))}
                       </tbody>
                     </table>
-                    {catalogoPaginadoAdmin.length === 0 && <p className="text-center text-slate-500 mt-6">No se encontraron productos.</p>}
+                    {catalogoPaginadoAdmin.length === 0 && <p className="text-center text-slate-500 mt-6">No se encontraron productos en esta categoría.</p>}
                   </div>
 
                   <div className="p-4 border-t border-slate-700 bg-slate-800/50 rounded-b-3xl">
@@ -1220,7 +1348,7 @@
                     </div>
                     <button onClick={() => scrollTabs(150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block ml-2"><ChevronRight size={16}/></button>
                     <div className="border-l border-slate-700 pl-3 ml-2">
-                        <button onClick={handleCrearTecnica} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center gap-1 shrink-0"><Plus size={16}/><span className="hidden md:inline text-xs font-bold">Nueva</span></button>
+                        <button onClick={handleCrearTecnica} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center gap-1 shrink-0"><Plus size={16}/><span className="hidden xl:inline text-xs font-bold">Nueva</span></button>
                     </div>
                   </div>
                   
@@ -1299,7 +1427,6 @@
           const handleFileChange = (e, fieldId) => { 
             const file = e.target.files[0]; 
             if (file) { 
-                // Validación para evitar que Firestore colapse por documentos de más de 1MB
                 if (!file.type.startsWith('image/') && file.size > 750 * 1024) {
                     alert('⚠️ El archivo PDF es muy pesado. El límite máximo para bases de datos NoSQL es de 750KB. Por favor, comprímelo.');
                     e.target.value = '';
@@ -1351,6 +1478,12 @@
                                     {c.label}
                                 </label>
                             )
+                            : c.type === 'select' ? (
+                                <select required={c.required !== false} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors text-sm" onChange={e => setForm({...form, [c.id]: e.target.value})}>
+                                    <option value="">-- Seleccionar --</option>
+                                    {c.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                </select>
+                            )
                             : c.type === 'textarea' ? (
                                 <div className="relative">
                                     <textarea maxLength={c.maxLength} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors resize-none h-24 text-sm" onChange={e => setForm({...form, [c.id]: e.target.value})} placeholder={c.placeholder || ''} />
@@ -1366,7 +1499,7 @@
                   <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700 shrink-0">
                       <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 transition-colors">Cancelar</button>
                       <button type="submit" className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:scale-105 ${config.esConfirmacion ? 'bg-red-600 shadow-red-600/20' : 'bg-blue-600 shadow-blue-600/20'}`}>
-                          {config.submitLabel || (config.esConfirmacion ? 'Sí, Eliminar' : 'Guardar')}
+                          {config.submitLabel || (config.esConfirmacion ? 'Sí, Confirmar' : 'Guardar')}
                       </button>
                   </div>
                 </form>
@@ -1382,7 +1515,7 @@
           return <button onClick={onClick} className={`${baseClasses} ${active ? activeClasses : inactiveClasses}`}><Icon size={20} /><span>{label}</span></button>;
         }
         
-        function PanelAdmin({ ordenes, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, mensajesGlobales, adminSetMensajes, onLogout, isConnectedToCloud, showToast }) {
+        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, mensajesGlobales, adminSetMensajes, onLogout, isConnectedToCloud, showToast }) {
           const [vista, setVista] = useState('DASHBOARD'); 
           const ordenesValidas = ordenes.filter(o => o.estado !== 'Cancelada');
           const ingresosProyectados = ordenesValidas.reduce((sum, o) => sum + o.total, 0);
@@ -1419,7 +1552,7 @@
                    </div>
                 )}
                 {vista === 'ORDENES' && <div className="max-w-6xl mx-auto space-y-4 fade-in"><div className="bg-slate-800 rounded-2xl p-6 border border-slate-700"><HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} mensajesGlobales={mensajesGlobales} showToast={showToast} /></div></div>}
-                {vista === 'CATALOGO' && <GestionJerarquica catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
+                {vista === 'CATALOGO' && <GestionJerarquica categorias={categorias} setCategorias={setCategorias} catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
                 {vista === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
                 {vista === 'MENSAJES' && <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
                 {vista === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
