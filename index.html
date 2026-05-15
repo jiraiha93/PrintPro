@@ -94,14 +94,9 @@
           { id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' },
         ];
         
-        const CATEGORIAS_BASE = [
-            { id: 'cat_1', nombre: 'DTF - Textil' }, 
-            { id: 'cat_2', nombre: 'Sublimacion' }, 
-            { id: 'cat_3', nombre: 'DTF - UV' }, 
-            { id: 'cat_4', nombre: 'Bordado' }
-        ];
+        const CATEGORIAS_BASE = [];
 
-        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: 'cat_1', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
+        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: '', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
         const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }];
         
@@ -166,7 +161,9 @@
             setLoadingData(true);
             const isAdmin = userDb.email === 'admin@printpro.com';
             
-            const unsubCatList = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'categorias'), (snap) => { if (!snap.empty) setCategorias(snap.docs.map(d => d.data())); else dbGuardarLista('categorias', categorias); }, console.error);
+            const unsubCatList = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'categorias'), (snap) => { 
+                setCategorias(snap.docs.map(d => d.data())); 
+            }, console.error);
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
             const unsubRec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'recursos'), (snap) => { setRecursos(snap.docs.map(d => d.data())); }, console.error);
