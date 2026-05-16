@@ -525,9 +525,20 @@
           const cotizacion = useMemo(() => {
             if (!productoSeleccionado) return null;
             let minRequerido = 1;
+            
+            // 1. Identificamos primero el mínimo requerido
+            aplicaciones.forEach(app => {
+              if(!app.tecnicaId || !app.subcatId || !app.opcionId) return;
+              const tec = tecnicas.find(t => t.id === app.tecnicaId); if(!tec) return;
+              if (tec.minimo > minRequerido) minRequerido = tec.minimo;
+            });
+
+            // 2. Definimos la cantidad efectiva a calcular
             const cantNum = Number(cantidad) || 0;
+            const cantEfectiva = (cliente.modoTest || cantNum >= minRequerido) ? cantNum : minRequerido;
+
             const costoBaseProd = proveeCliente ? 0 : productoSeleccionado.costoBase;
-            let subtotalProducto = (costoBaseProd * cantNum) * (1 + (margenGanancia / 100));
+            let subtotalProducto = (costoBaseProd * cantEfectiva) * (1 + (margenGanancia / 100));
             const aplicaImpProd = productoSeleccionado.cobraImpuesto !== false;
             let impuestoProducto = aplicaImpProd ? subtotalProducto * (impuestoGlobal / 100) : 0;
             
@@ -536,12 +547,11 @@
             aplicaciones.forEach(app => {
               if(!app.tecnicaId || !app.subcatId || !app.opcionId) return;
               const tec = tecnicas.find(t => t.id === app.tecnicaId); if(!tec) return;
-              if (tec.minimo > minRequerido) minRequerido = tec.minimo;
               const subcat = tec.subcategorias.find(s => s.id === app.subcatId); const opcion = subcat?.opciones.find(o => o.id === app.opcionId); if(!opcion) return;
 
               const fijoApp = opcion.costosFijos.reduce((sum, c) => sum + Number(c.valor), 0);
               const varApp = opcion.costosVariables.reduce((sum, c) => sum + Number(c.valor), 0);
-              const subtotalVentaApp = (fijoApp + (varApp * cantNum)) * (1 + (margenGanancia / 100));
+              const subtotalVentaApp = (fijoApp + (varApp * cantEfectiva)) * (1 + (margenGanancia / 100));
               subtotalTecnicas += subtotalVentaApp;
               if (tec.cobraImpuesto !== false) impuestoTecnicas += subtotalVentaApp * (impuestoGlobal / 100);
             });
@@ -553,7 +563,7 @@
             if (descuentosVolumen) {
                 const tiers = [...descuentosVolumen].sort((a,b) => b.min - a.min);
                 for (let t of tiers) { 
-                    if (t.activo !== false && cantNum >= t.min) { 
+                    if (t.activo !== false && cantEfectiva >= t.min) { 
                         tierActivo = t; 
                         descuentoVol = t.pct / 100;
                         break; 
@@ -566,10 +576,17 @@
             let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
             let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
-            return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: cantNum > 0 ? totalFinal / cantNum : 0, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0 };
-          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, tecnicas, descuentosVolumen]);
+            return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: cantEfectiva > 0 ? totalFinal / cantEfectiva : 0, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, cantEfectiva };
+          }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, cliente.modoTest, tecnicas, descuentosVolumen]);
 
-          useEffect(() => { if (cotizacion && Number(cantidad) < cotizacion.minRequerido) setErrorValidacion(`Esta personalización exige un mínimo de ${cotizacion.minRequerido} pzas.`); else setErrorValidacion(''); }, [cantidad, cotizacion]);
+          useEffect(() => { 
+              if (!cliente.modoTest && cotizacion && Number(cantidad) < cotizacion.minRequerido) {
+                  setErrorValidacion(`Esta personalización exige un mínimo de ${cotizacion.minRequerido} pzas.`); 
+              } else {
+                  setErrorValidacion(''); 
+              }
+          }, [cantidad, cotizacion, cliente.modoTest]);
+
           const handleGuardar = () => {
             if(!cotizacion || !cotizacion.valido || errorValidacion) return;
             const tecnicasDetalle = aplicaciones.map(app => {
@@ -688,12 +705,12 @@
                           <label className="block text-sm font-bold text-slate-600 mb-2">Cantidad de Unidades</label>
                           <input 
                               type="number" 
-                              min={cotizacion?.minRequerido || 1} 
+                              min={cliente.modoTest ? 1 : (cotizacion?.minRequerido || 1)} 
                               value={cantidad} 
                               onChange={(e) => setCantidad(e.target.value === '' ? '' : Number(e.target.value))} 
                               onBlur={(e) => {
                                   const val = Number(e.target.value);
-                                  if (val < (cotizacion?.minRequerido || 1)) setCantidad(cotizacion?.minRequerido || 1);
+                                  if (!cliente.modoTest && val < (cotizacion?.minRequerido || 1)) setCantidad(cotizacion?.minRequerido || 1);
                               }}
                               className="w-full p-4 rounded-xl border-2 border-blue-200 text-2xl font-bold focus:border-blue-600 outline-none transition-colors" 
                           />
@@ -735,6 +752,11 @@
                       <div className="flex-1 bg-slate-900 text-white p-6 rounded-3xl flex flex-col justify-between shadow-lg relative overflow-hidden">
                         <div>
                           <h4 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Resumen Financiero</h4>
+                          {cotizacion.cantEfectiva > Number(cantidad) && (
+                              <p className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded mb-3 border border-amber-500/20 w-fit">
+                                  Proyectando base al mínimo ({cotizacion.cantEfectiva} u.)
+                              </p>
+                          )}
                           <div className="space-y-2 text-sm text-slate-300">
                             <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
                             {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
@@ -866,15 +888,16 @@
                 setModalUsuario({
                     titulo: `Vincular Nuevo Cliente`,
                     mensaje: `IMPORTANTE: Primero crea la cuenta en tu consola de Firebase Authentication y copia el "User UID".`,
-                    valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0 },
+                    valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0, modoTest: false },
                     campos: [
                         { id: 'id', label: 'Firebase User UID:', type: 'text' },
                         { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
                         { id: 'telefono', label: 'Teléfono:', type: 'text' },
-                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' }
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' },
+                        { id: 'modoTest', label: 'Modo Test (Permitir cotizar por debajo del mínimo):', type: 'boolean' }
                     ],
                     onSubmit: (datos) => {
-                        onActualizarUsuario({ id: datos.id.trim(), rol: 'CLIENTE', nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal) });
+                        onActualizarUsuario({ id: datos.id.trim(), rol: 'CLIENTE', nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal), modoTest: !!datos.modoTest });
                     }
                 });
             };
@@ -882,14 +905,15 @@
             const handleEditar = (user) => {
                 setModalUsuario({
                     titulo: `Editar Perfil: ${user.nombre}`,
-                    valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0 },
+                    valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0, modoTest: !!user.modoTest },
                     campos: [
                         { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
                         { id: 'telefono', label: 'Teléfono:', type: 'text' },
-                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' }
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' },
+                        { id: 'modoTest', label: 'Modo Test (Permitir cotizar por debajo del mínimo):', type: 'boolean' }
                     ],
                     onSubmit: (datos) => {
-                        onActualizarUsuario({ ...user, nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal) });
+                        onActualizarUsuario({ ...user, nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal), modoTest: !!datos.modoTest });
                     }
                 });
             };
@@ -945,7 +969,8 @@
                                             ) : (
                                                 <div>
                                                     <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold">CLIENTE</span>
-                                                    {u.descuentoGlobal > 0 && <p className="text-emerald-400 text-xs font-bold mt-2">VIP: -{u.descuentoGlobal}% OFF</p>}
+                                                    {u.descuentoGlobal > 0 && <span className="ml-2 text-emerald-400 text-xs font-bold">VIP: -{u.descuentoGlobal}% OFF</span>}
+                                                    {u.modoTest && <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded text-[10px] font-bold mt-2 block w-max">MODO TEST</span>}
                                                 </div>
                                             )}
                                         </td>
