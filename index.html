@@ -1197,12 +1197,14 @@
           const [modalConfig, setModalConfig] = useState(null); 
           const [showTarifasModal, setShowTarifasModal] = useState(false);
           const [showFichaTecnica, setShowFichaTecnica] = useState(false);
-          const [collapsedSubcats, setCollapsedSubcats] = useState({});
+          // CAMBIO QUIRÚRGICO: Se cambia "collapsedSubcats" por "openSubcats" para que por defecto (undefined) los considere cerrados.
+          const [openSubcats, setOpenSubcats] = useState({});
           
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
 
-          const toggleSubcat = (id) => setCollapsedSubcats(prev => ({...prev, [id]: !prev[id]}));
+          // CAMBIO QUIRÚRGICO: Se actualiza la función para mutar el nuevo estado invertido
+          const toggleSubcat = (id) => setOpenSubcats(prev => ({...prev, [id]: !prev[id]}));
 
           const scrollRef = useRef(null);
           const scrollRefCat = useRef(null);
@@ -1459,7 +1461,8 @@
                             <div className="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => toggleSubcat(sub.id)}>
                                 <div className="flex items-center gap-3">
                                     <button className="text-slate-400 hover:text-white p-1 rounded focus:outline-none">
-                                        {collapsedSubcats[sub.id] ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                                        {/* CAMBIO QUIRÚRGICO: Invertimos íconos para que coincida con lógica openSubcats */}
+                                        {openSubcats[sub.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                                     </button>
                                     <span className="font-bold text-slate-200"><Layers size={14} className="inline mr-2 text-blue-400"/>{sub.nombre}</span>
                                     <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
@@ -1470,7 +1473,8 @@
                                 <button onClick={(e)=>{e.stopPropagation(); agregarOpcion(sub.id);}} className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded hover:bg-blue-500/20">+ Variante</button>
                             </div>
                             
-                            {!collapsedSubcats[sub.id] && (
+                            {/* CAMBIO QUIRÚRGICO: Evalúa `true` para mostrar el contenido (inicialmente cerrado/falso) */}
+                            {openSubcats[sub.id] && (
                                 <div className="p-4 bg-slate-800/50 space-y-4">
                                   {sub.opciones.map(op => (
                                     <div key={op.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
