@@ -50,7 +50,7 @@
         import { 
           LayoutDashboard, ShoppingBag, FileText, Settings, Users, Plus, CheckCircle, 
           Clock, Printer, LogOut, AlertCircle, Share2, Package, Edit3, Trash2, Save, X, 
-          Pencil, Layers, Image as ImageIcon, Upload, MessageSquare, Eye, TrendingUp, Activity, Info, Cloud, Database, Lock, Megaphone, Bell, Calculator, BookOpen, Search, ChevronLeft, ChevronRight
+          Pencil, Layers, Image as ImageIcon, Upload, MessageSquare, Eye, TrendingUp, Activity, Info, Cloud, Database, Lock, Megaphone, Bell, Calculator, BookOpen, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
         } from 'https://esm.sh/lucide-react@0.292.0';
         
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
@@ -199,7 +199,7 @@
                 }
                 const msgDoc = snap.docs.find(d => d.id === 'mensajes');
                 if (msgDoc) setMensajesGlobales(msgDoc.data());
-              }, console.error);
+            }, console.error);
 
             setLoadingData(false);
             return () => { unsubCatList(); unsubCat(); unsubTec(); unsubRec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
@@ -207,7 +207,6 @@
 
           // ==========================================
           // CORE: MANEJO SEGURO DE OPERACIONES DB
-          // Se agregaron bloques try/catch para estabilidad
           // ==========================================
           const dbGuardar = async (coleccion, id, data) => { 
             if (db && isConnectedToCloud) {
@@ -234,7 +233,6 @@
           const dbGuardarLista = async (coleccion, lista) => { 
             if(db && isConnectedToCloud) {
                 try {
-                    // Optimización: Promesas en paralelo
                     await Promise.all(lista.map(item => dbGuardar(coleccion, item.id, item)));
                 } catch (error) {
                     console.error(`Error guardando lista en BD (${coleccion}):`, error);
@@ -254,10 +252,29 @@
                showToast('Categorías actualizadas');
           };
 
-          const handleActualizarUsuario = (usuAct) => {
-            if(isConnectedToCloud) dbGuardar('usuarios', usuAct.id, usuAct); else { const newU = usuarios.map(u => u.id === usuAct.id ? usuAct : u); setUsuarios(newU); saveLocal('usuarios', newU); }
+          const handleActualizarUsuario = async (usuAct) => {
+            if (usuAct.modoTest) {
+                if (isConnectedToCloud) {
+                    const previousTestUsers = usuarios.filter(u => u.modoTest && u.id !== usuAct.id);
+                    await dbGuardar('usuarios', usuAct.id, usuAct);
+                    for (const u of previousTestUsers) {
+                        await dbGuardar('usuarios', u.id, { ...u, modoTest: false });
+                    }
+                } else {
+                    const newU = usuarios.map(u => {
+                        if (u.id === usuAct.id) return usuAct;
+                        return u.modoTest ? { ...u, modoTest: false } : u;
+                    });
+                    setUsuarios(newU);
+                    saveLocal('usuarios', newU);
+                }
+            } else {
+                if(isConnectedToCloud) dbGuardar('usuarios', usuAct.id, usuAct); 
+                else { const newU = usuarios.map(u => u.id === usuAct.id ? usuAct : u); setUsuarios(newU); saveLocal('usuarios', newU); }
+            }
             showToast('Perfil actualizado correctamente');
           };
+
           const handleEliminarUsuario = (id) => {
             if(isConnectedToCloud) dbEliminar('usuarios', id); else { const newU = usuarios.filter(u => u.id !== id); setUsuarios(newU); saveLocal('usuarios', newU); }
             showToast('Perfil de cliente removido', 'error');
@@ -444,7 +461,7 @@
                         </div>
                         <div className="flex-1 pt-0.5">
                             {mensajesGlobales.bienvenida && <h2 className="font-bold text-slate-800 text-sm mb-1 tracking-tight">{mensajesGlobales.bienvenida}</h2>}
-                            {mensajesGlobales.promo && <p className="text-slate-500 text-xs leading-relaxed max-w-4xl">{mensajesGlobales.promo}</p>}
+                            {mensajesGlobales.promo && <p className="text-slate-500 text-xs leading-relaxed max-w-4xl whitespace-pre-wrap">{mensajesGlobales.promo}</p>}
                         </div>
                     </div>
                 )}
@@ -1180,9 +1197,12 @@
           const [modalConfig, setModalConfig] = useState(null); 
           const [showTarifasModal, setShowTarifasModal] = useState(false);
           const [showFichaTecnica, setShowFichaTecnica] = useState(false);
+          const [collapsedSubcats, setCollapsedSubcats] = useState({});
           
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
+
+          const toggleSubcat = (id) => setCollapsedSubcats(prev => ({...prev, [id]: !prev[id]}));
 
           const scrollRef = useRef(null);
           const scrollRefCat = useRef(null);
@@ -1333,8 +1353,12 @@
                 {/* PANEL 1: Catálogo (AHORA CON CATEGORÍAS) */}
                 <div className="bg-slate-800 rounded-3xl border border-slate-700 flex flex-col shadow-lg h-[calc(100vh-14rem)] min-h-[600px]">
                   
+                  <div className="px-6 pt-5 pb-2">
+                      <h2 className="text-xl font-bold text-white">Catálogo de Artículos</h2>
+                  </div>
+
                   {/* CABECERA: TABS DE CATEGORÍAS */}
-                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80 rounded-t-3xl">
+                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80">
                     <button onClick={() => scrollTabsCat(-150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block mr-2"><ChevronLeft size={16}/></button>
                     <div ref={scrollRefCat} className="flex gap-2 overflow-x-hidden flex-1 scroll-smooth">
                         <button onClick={()=>setCategoriaActivaId('todas')} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${categoriaActivaId === 'todas' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>Todas</button>
@@ -1401,7 +1425,12 @@
 
                 {/* PANEL 2: Técnicas */}
                 <div className="bg-slate-800 rounded-3xl border border-slate-700 flex flex-col shadow-lg h-[calc(100vh-14rem)] min-h-[600px]">
-                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80 rounded-t-3xl">
+                  
+                  <div className="px-6 pt-5 pb-2">
+                      <h2 className="text-xl font-bold text-white">Catálogo de Técnicas</h2>
+                  </div>
+
+                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80">
                     <button onClick={() => scrollTabs(-150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block mr-2"><ChevronLeft size={16}/></button>
                     <div ref={scrollRef} className="flex gap-2 overflow-x-hidden flex-1 scroll-smooth">
                         {tecnicas.map(t => <button key={t.id} onClick={()=>setTecActivaId(t.id)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${tecActivaId === t.id ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>{t.nombre}</button>)}
@@ -1427,44 +1456,49 @@
                       <div className="space-y-6">
                         {tecActual.subcategorias.map(sub => (
                           <div key={sub.id} className="border border-slate-700 rounded-xl overflow-hidden shadow-sm">
-                            <div className="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center">
+                            <div className="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => toggleSubcat(sub.id)}>
                                 <div className="flex items-center gap-3">
+                                    <button className="text-slate-400 hover:text-white p-1 rounded focus:outline-none">
+                                        {collapsedSubcats[sub.id] ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                                    </button>
                                     <span className="font-bold text-slate-200"><Layers size={14} className="inline mr-2 text-blue-400"/>{sub.nombre}</span>
-                                    <div className="flex gap-1 ml-2">
+                                    <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
                                         <button onClick={()=>editarSubcat(sub.id, sub.nombre)} className="text-blue-400 hover:text-blue-300 bg-slate-800 p-1 rounded"><Pencil size={12}/></button>
                                         <button onClick={()=>eliminarSubcat(sub.id, sub.nombre)} className="text-red-400 hover:text-red-300 bg-slate-800 p-1 rounded"><Trash2 size={12}/></button>
                                     </div>
                                 </div>
-                                <button onClick={()=>agregarOpcion(sub.id)} className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded hover:bg-blue-500/20">+ Variante</button>
+                                <button onClick={(e)=>{e.stopPropagation(); agregarOpcion(sub.id);}} className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded hover:bg-blue-500/20">+ Variante</button>
                             </div>
                             
-                            <div className="p-4 bg-slate-800/50 space-y-4">
-                              {sub.opciones.map(op => (
-                                <div key={op.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                                  <div className="flex justify-between items-center mb-3">
-                                      <p className="font-bold text-white text-sm"><Edit3 size={14} className="inline mr-2 text-slate-500"/>{op.nombre}</p>
-                                      <div className="flex items-center gap-3">
-                                          <button onClick={() => editarOpcion(sub.id, op.id, op.nombre)} className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors bg-slate-900 px-2 py-1 rounded"><Pencil size={12} /> Editar</button>
-                                          <button onClick={() => eliminarOpcion(sub.id, op.id, op.nombre)} className="text-red-400 hover:bg-red-500/10 p-1 rounded"><Trash2 size={14}/></button>
+                            {!collapsedSubcats[sub.id] && (
+                                <div className="p-4 bg-slate-800/50 space-y-4">
+                                  {sub.opciones.map(op => (
+                                    <div key={op.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+                                      <div className="flex justify-between items-center mb-3">
+                                          <p className="font-bold text-white text-sm"><Edit3 size={14} className="inline mr-2 text-slate-500"/>{op.nombre}</p>
+                                          <div className="flex items-center gap-3">
+                                              <button onClick={() => editarOpcion(sub.id, op.id, op.nombre)} className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors bg-slate-900 px-2 py-1 rounded"><Pencil size={12} /> Editar</button>
+                                              <button onClick={() => eliminarOpcion(sub.id, op.id, op.nombre)} className="text-red-400 hover:bg-red-500/10 p-1 rounded"><Trash2 size={14}/></button>
+                                          </div>
                                       </div>
-                                  </div>
-                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
-                                        <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-3"><span className="text-xs font-bold text-slate-400">Fijos (Setups)</span><button onClick={()=>agregarCosto(sub.id, op.id, 'Fijo')} className="text-emerald-400 bg-emerald-500/10 p-1 rounded hover:bg-emerald-500/20"><Plus size={14}/></button></div>
-                                        <ul className="space-y-2">
-                                            {op.costosFijos.map(c => <li key={c.id} className="text-xs flex justify-between text-slate-300 items-center"><span>{c.nombre}</span> <span className="text-emerald-400 font-mono bg-slate-800 pl-2 pr-1 py-0.5 rounded flex items-center gap-1">L{c.valor} <button onClick={()=>editarCosto(sub.id, op.id, c, 'Fijo')} className="text-blue-400 hover:text-blue-300 p-0.5"><Pencil size={12}/></button><button onClick={()=>eliminarCosto(sub.id, op.id, c.id, 'Fijo')} className="text-slate-500 hover:text-red-400 p-0.5"><X size={12}/></button></span></li>)}
-                                        </ul>
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
+                                            <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-3"><span className="text-xs font-bold text-slate-400">Fijos (Setups)</span><button onClick={()=>agregarCosto(sub.id, op.id, 'Fijo')} className="text-emerald-400 bg-emerald-500/10 p-1 rounded hover:bg-emerald-500/20"><Plus size={14}/></button></div>
+                                            <ul className="space-y-2">
+                                                {op.costosFijos.map(c => <li key={c.id} className="text-xs flex justify-between text-slate-300 items-center"><span>{c.nombre}</span> <span className="text-emerald-400 font-mono bg-slate-800 pl-2 pr-1 py-0.5 rounded flex items-center gap-1">L{c.valor} <button onClick={()=>editarCosto(sub.id, op.id, c, 'Fijo')} className="text-blue-400 hover:text-blue-300 p-0.5"><Pencil size={12}/></button><button onClick={()=>eliminarCosto(sub.id, op.id, c.id, 'Fijo')} className="text-slate-500 hover:text-red-400 p-0.5"><X size={12}/></button></span></li>)}
+                                            </ul>
+                                        </div>
+                                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
+                                            <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-3"><span className="text-xs font-bold text-slate-400">Variables (x Und)</span><button onClick={()=>agregarCosto(sub.id, op.id, 'Variable')} className="text-emerald-400 bg-emerald-500/10 p-1 rounded hover:bg-emerald-500/20"><Plus size={14}/></button></div>
+                                            <ul className="space-y-2">
+                                                {op.costosVariables.map(c => <li key={c.id} className="text-xs flex justify-between text-slate-300 items-center"><span>{c.nombre}</span> <span className="text-emerald-400 font-mono bg-slate-800 pl-2 pr-1 py-0.5 rounded flex items-center gap-1">L{c.valor} <button onClick={()=>editarCosto(sub.id, op.id, c, 'Variable')} className="text-blue-400 hover:text-blue-300 p-0.5"><Pencil size={12}/></button><button onClick={()=>eliminarCosto(sub.id, op.id, c.id, 'Variable')} className="text-slate-500 hover:text-red-400 p-0.5"><X size={12}/></button></span></li>)}
+                                            </ul>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
-                                        <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-3"><span className="text-xs font-bold text-slate-400">Variables (x Und)</span><button onClick={()=>agregarCosto(sub.id, op.id, 'Variable')} className="text-emerald-400 bg-emerald-500/10 p-1 rounded hover:bg-emerald-500/20"><Plus size={14}/></button></div>
-                                        <ul className="space-y-2">
-                                            {op.costosVariables.map(c => <li key={c.id} className="text-xs flex justify-between text-slate-300 items-center"><span>{c.nombre}</span> <span className="text-emerald-400 font-mono bg-slate-800 pl-2 pr-1 py-0.5 rounded flex items-center gap-1">L{c.valor} <button onClick={()=>editarCosto(sub.id, op.id, c, 'Variable')} className="text-blue-400 hover:text-blue-300 p-0.5"><Pencil size={12}/></button><button onClick={()=>eliminarCosto(sub.id, op.id, c.id, 'Variable')} className="text-slate-500 hover:text-red-400 p-0.5"><X size={12}/></button></span></li>)}
-                                        </ul>
-                                    </div>
-                                  </div>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
+                            )}
                           </div>
                         ))}
                         <button onClick={agregarSubcat} className="w-full border border-dashed border-slate-600 text-slate-400 font-bold py-4 rounded-xl hover:text-white hover:border-slate-500 transition-colors"><Plus size={18} className="inline mr-2"/> Añadir Ubicación</button>
