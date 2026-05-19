@@ -613,7 +613,7 @@
             onGuardar({
               id: `ORD-${Math.floor(Math.random() * 10000)}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre,
               proveeCliente, detalles: tecnicasDetalle.map(td => `${td.tecnica} (${td.ubicacion} - ${td.variante})`).join(' + ') || 'Sin Personalizar', tecnicasEstructuradas: tecnicasDetalle, comentario: comentario, cantidad, fecha: new Date().toLocaleDateString(),
-              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, estado: 'Cotización enviada', 
+              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, unitario: cotizacion.unitario, estado: 'Cotización enviada', 
             });
           };
 
@@ -844,6 +844,9 @@
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
             const esCancelada = orden.estado === 'Cancelada';
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
+            
+            // Garantizamos la retrocompatibilidad: Si fue guardada antes de la actualización, se calcula al vuelo.
+            const precioUnitario = orden.unitario || (orden.cantidad > 0 ? (orden.total / orden.cantidad) : 0);
 
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
@@ -879,7 +882,19 @@
                                 ) : <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">{orden.detalles || 'Sin personalizar'}</p>}
                             </div>
                             <div className="border-t border-slate-200 pt-4 mt-6">
-                                <div className="flex justify-end"><div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600"><div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div><div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div><div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div></div></div>
+                                <div className="flex justify-end">
+                                    <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
+                                        <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
+                                        <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
+                                        <div className="flex justify-between items-end font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2">
+                                            <span>TOTAL:</span> 
+                                            <div className="text-right">
+                                                <span className="print-text-emerald block">L {orden.total.toFixed(2)}</span>
+                                                <span className="text-xs text-slate-500 font-normal mt-0.5 block">L {precioUnitario.toFixed(2)} c/u</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             {orden.comentario && <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm"><h4 className="text-sm font-black text-amber-800 mb-2 flex items-center gap-2 uppercase tracking-wide"><MessageSquare size={16}/> Notas para el Taller</h4><p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{orden.comentario}</p></div>}
                         </div>
