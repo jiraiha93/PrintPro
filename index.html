@@ -593,7 +593,8 @@
             let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
             let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
-            return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: cantEfectiva > 0 ? totalFinal / cantEfectiva : 0, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, cantEfectiva };
+            // FIX: Calculamos el unitario dividiendo el total final directamente por la cantidad ingresada, no por la cantidad efectiva
+            return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: cantNum > 0 ? totalFinal / cantNum : 0, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, cantEfectiva };
           }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, cliente.modoTest, tecnicas, descuentosVolumen]);
 
           useEffect(() => { 
@@ -845,8 +846,8 @@
             const esCancelada = orden.estado === 'Cancelada';
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
             
-            // Garantizamos la retrocompatibilidad: Si fue guardada antes de la actualización, se calcula al vuelo.
-            const precioUnitario = orden.unitario || (orden.cantidad > 0 ? (orden.total / orden.cantidad) : 0);
+            // FIX: Forzamos el cálculo de la factura dividiendo rigurosamente el total final entre las unidades pedidas.
+            const precioUnitario = orden.cantidad > 0 ? (orden.total / orden.cantidad) : 0;
 
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
