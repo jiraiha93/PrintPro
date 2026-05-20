@@ -588,13 +588,35 @@
                 }
             }
             
-            let multDescuento = (1 - descuentoVol) * (1 - (cliente.descuentoGlobal / 100));
-            let subtotalConDescuento = subtotalGlobal * multDescuento;
-            let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
-            let totalFinal = subtotalConDescuento + impuestoTotalFinal;
+            //  CÓDIGO OPTIMIZADO (Con redondeo exacto a 2 decimales)
+let multDescuento = (1 - descuentoVol) * (1 - (cliente.descuentoGlobal / 100));
+let subtotalConDescuento = subtotalGlobal * multDescuento;
+let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
 
-            // FIX: Calculamos el unitario dividiendo el total final directamente por la cantidad ingresada, no por la cantidad efectiva
-            return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: cantNum > 0 ? totalFinal / cantNum : 0, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, cantEfectiva };
+// 1. Redondeamos primero el subtotal y el impuesto a exactamente 2 decimales
+let subtotalFinalRedondeado = Math.round(subtotalConDescuento * 100) / 100;
+let impuestoFinalRedondeado = Math.round(impuestoTotalFinal * 100) / 100;
+
+// 2. Calculamos el precio unitario base redondeado estrictamente a 2 decimales
+let totalPrevio = subtotalFinalRedondeado + impuestoFinalRedondeado;
+let unitarioRedondeado = cantEfectiva > 0 ? Math.round((totalPrevio / cantEfectiva) * 100) / 100 : 0;
+
+// 3. RECALCULAMOS EL TOTAL FINAL (Unitario Redondeado × Cantidad)
+// Esto garantiza que si el cliente multiplica el unitario por la cantidad en su calculadora,
+// le dará EXACTAMENTE el total que ve impreso, sin perder ni ganar lempiras.
+let totalFinalRedondeado = cantEfectiva > 0 ? Math.round((unitarioRedondeado * cantEfectiva) * 100) / 100 : totalPrevio;
+
+return {
+  subtotalBruto: Math.round(subtotalGlobal * 100) / 100,
+  subtotalDescuento: subtotalFinalRedondeado,
+  impuestos: impuestoFinalRedondeado,
+  total: totalFinalRedondeado, // Total perfecto sin discrepancias
+  unitario: unitarioRedondeado, // Unitario perfecto de 2 decimales
+  minRequerido,
+  tierActivo,
+  valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0,
+  cantEfectiva
+};
           }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, cliente.modoTest, tecnicas, descuentosVolumen]);
 
           useEffect(() => { 
