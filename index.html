@@ -57,9 +57,6 @@
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, collection, doc, setDoc, onSnapshot, query, deleteDoc, where } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // =====================================================================
-        // 🚀 CONFIGURACIÓN DE BASE DE DATOS EN LA NUBE (FIREBASE)
-        // =====================================================================
         const FIREBASE_PROD_CONFIG = {
           apiKey: "AIzaSyA_Xhl948W9g8vpxLdWzCFacnya8AURoXc",
           authDomain: "cotizador-pro-9ec69.firebaseapp.com",
@@ -96,7 +93,7 @@
         
         const CATEGORIAS_BASE = [];
 
-        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: '', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], cobraImpuesto: true }];
+        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: '', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], ubicacionesAceptadas: [], cobraImpuesto: true }];
         const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }];
         
@@ -205,9 +202,6 @@
             return () => { unsubCatList(); unsubCat(); unsubTec(); unsubRec(); if(unsubUsu) unsubUsu(); if(unsubOrd) unsubOrd(); unsubConf(); };
           }, [userDb]);
 
-          // ==========================================
-          // CORE: MANEJO SEGURO DE OPERACIONES DB
-          // ==========================================
           const dbGuardar = async (coleccion, id, data) => { 
             if (db && isConnectedToCloud) {
                 try {
@@ -239,7 +233,6 @@
                 }
             } 
           };
-          // ==========================================
 
           const adminSetCategorias = (nuevasCategorias) => {
                if(isConnectedToCloud) {
@@ -372,10 +365,6 @@
              </>
           );
         }
-
-        // ==========================================
-        // COMPONENTES PRINCIPALES
-        // ==========================================
 
         function ConnectionIndicator({ isConnectedToCloud, darkTheme = false }) {
             return (
@@ -610,10 +599,14 @@
               const t = tecnicas.find(x => x.id === app.tecnicaId); const s = t?.subcategorias.find(y => y.id === app.subcatId); const o = s?.opciones.find(z => z.id === app.opcionId);
               return { tecnica: t?.nombre || 'N/A', ubicacion: s?.nombre || 'N/A', variante: o?.nombre || 'N/A' };
             });
+
+            // Calculando ahorro total (Ahorro VIP + Ahorro Volumen)
+            const ahorro = cotizacion.subtotalBruto > cotizacion.subtotalDescuento ? cotizacion.subtotalBruto - cotizacion.subtotalDescuento : 0;
+
             onGuardar({
               id: `ORD-${Math.floor(Math.random() * 10000)}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre,
               proveeCliente, detalles: tecnicasDetalle.map(td => `${td.tecnica} (${td.ubicacion} - ${td.variante})`).join(' + ') || 'Sin Personalizar', tecnicasEstructuradas: tecnicasDetalle, comentario: comentario, cantidad, fecha: new Date().toLocaleDateString(),
-              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, estado: 'Cotización enviada', 
+              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, ahorro: ahorro, estado: 'Cotización enviada', 
             });
           };
 
@@ -682,6 +675,7 @@
                   </div>
                 )}
 
+                {}
                 {paso === 2 && (
                   <div className="fade-in">
                     <h3 className="text-xl font-bold mb-4">2. Aplicaciones de Personalización</h3>
@@ -689,7 +683,16 @@
                     {tecnicasPermitidas.length === 0 && <div className="p-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl mb-4 text-sm">Este producto no tiene técnicas compatibles configuradas en el catálogo. No se puede personalizar.</div>}
                     <div className="space-y-4 mb-6">
                       {aplicaciones.map((app, index) => {
-                        const tecObj = tecnicas.find(t => t.id === app.tecnicaId); const subObj = tecObj?.subcategorias.find(s => s.id === app.subcatId);
+                        const tecObj = tecnicas.find(t => t.id === app.tecnicaId); 
+                        const subObj = tecObj?.subcategorias.find(s => s.id === app.subcatId);
+                        
+                        // Determinar las ubicaciones filtradas basado en el producto
+                        const subcategoriasPermitidas = tecObj?.subcategorias.filter(s => 
+                            !productoSeleccionado.ubicacionesAceptadas || 
+                            productoSeleccionado.ubicacionesAceptadas.length === 0 || 
+                            productoSeleccionado.ubicacionesAceptadas.includes(s.id)
+                        ) || [];
+
                         return (
                           <div key={app.id} className="p-4 border border-slate-200 rounded-2xl bg-slate-50 relative flex flex-col md:flex-row gap-4 items-center">
                             <button onClick={() => eliminarAplicacion(app.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 shadow-sm transition-colors"><X size={16}/></button>
@@ -699,7 +702,10 @@
                             </div>
                             <div className="flex-1 w-full">
                               <label className="text-xs font-bold text-slate-500 mb-1 block">Ubicación</label>
-                              <select disabled={!tecObj} value={app.subcatId} onChange={e => actualizarAplicacion(app.id, 'subcatId', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"><option value="">-- Seleccionar --</option>{tecObj?.subcategorias.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}</select>
+                              <select disabled={!tecObj} value={app.subcatId} onChange={e => actualizarAplicacion(app.id, 'subcatId', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400">
+                                  <option value="">-- Seleccionar --</option>
+                                  {subcategoriasPermitidas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                              </select>
                             </div>
                             <div className="flex-1 w-full">
                               <label className="text-xs font-bold text-slate-500 mb-1 block">Variante</label>
@@ -777,6 +783,15 @@
                           <div className="space-y-2 text-sm text-slate-300">
                             <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
                             {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
+                            
+                            {/* CÁLCULO DE AHORRO Y RENDERIZADO */}
+                            {cotizacion.subtotalBruto > cotizacion.subtotalDescuento && (
+                                <div className="flex justify-between text-emerald-400 font-medium">
+                                    <span>Su Ahorro:</span> 
+                                    <span>- L {(cotizacion.subtotalBruto - cotizacion.subtotalDescuento).toFixed(2)}</span>
+                                </div>
+                            )}
+
                             <div className="flex justify-between">
                                 <span>Impuestos:</span> 
                                 <span>L {cotizacion.impuestos.toFixed(2)}</span>
@@ -879,7 +894,22 @@
                                 ) : <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">{orden.detalles || 'Sin personalizar'}</p>}
                             </div>
                             <div className="border-t border-slate-200 pt-4 mt-6">
-                                <div className="flex justify-end"><div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600"><div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div><div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div><div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div></div></div>
+                                <div className="flex justify-end">
+                                    <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
+                                        <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
+                                        
+                                        {/* AHORRO REFLEJADO EN FACTURA/ORDEN */}
+                                        {orden.ahorro > 0 && (
+                                            <div className="flex justify-between text-emerald-600 print-text-emerald font-bold">
+                                                <span>Su Ahorro:</span> 
+                                                <span>- L {orden.ahorro.toFixed(2)}</span>
+                                            </div>
+                                        )}
+
+                                        <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
+                                        <div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div>
+                                    </div>
+                                </div>
                             </div>
                             {orden.comentario && <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm"><h4 className="text-sm font-black text-amber-800 mb-2 flex items-center gap-2 uppercase tracking-wide"><MessageSquare size={16}/> Notas para el Taller</h4><p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{orden.comentario}</p></div>}
                         </div>
@@ -894,9 +924,6 @@
             )
         }
 
-        // ==========================================
-        // GESTIÓN DE USUARIOS Y MENSAJES 
-        // ==========================================
         function GestionUsuarios({ usuarios, onActualizarUsuario, onEliminarUsuario }) {
             const [modalUsuario, setModalUsuario] = useState(null);
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
@@ -1089,9 +1116,6 @@
             );
         }
 
-        // ==========================================
-        // GESTIÓN JERÁRQUICA (CATÁLOGO Y TÉCNICAS) Y TARIFAS
-        // ==========================================
         function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
             const [margen, setMargen] = useState(margenActual !== undefined ? margenActual : 0); 
             const [impuesto, setImpuesto] = useState(impuestoActual !== undefined ? impuestoActual : 0); 
@@ -1102,7 +1126,7 @@
             const removeTier = (id) => setDescuentos(descuentos.filter(d => d.id !== id));
             return ( 
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl">
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <h3 className="text-xl font-bold text-white mb-6">Tarifas Globales</h3>
                         <div className="flex gap-4 mb-6">
                             <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700"><label className="text-sm font-bold text-emerald-400 block mb-2">Margen General (%)</label><input type="number" value={margen} onChange={e=>setMargen(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-emerald-500" /></div>
@@ -1197,13 +1221,12 @@
           const [modalConfig, setModalConfig] = useState(null); 
           const [showTarifasModal, setShowTarifasModal] = useState(false);
           const [showFichaTecnica, setShowFichaTecnica] = useState(false);
-          // CAMBIO QUIRÚRGICO: Se cambia "collapsedSubcats" por "openSubcats" para que por defecto (undefined) los considere cerrados.
           const [openSubcats, setOpenSubcats] = useState({});
+          const [tabActivo, setTabActivo] = useState('PRODUCTOS');
           
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
 
-          // CAMBIO QUIRÚRGICO: Se actualiza la función para mutar el nuevo estado invertido
           const toggleSubcat = (id) => setOpenSubcats(prev => ({...prev, [id]: !prev[id]}));
 
           const scrollRef = useRef(null);
@@ -1217,7 +1240,6 @@
 
           useEffect(() => { setPaginaActualAdmin(1); }, [busquedaAdmin, itemsPorPaginaAdmin, categoriaActivaId]);
 
-          // Filtrado doble (búsqueda y categoría)
           const catalogoFiltradoAdmin = useMemo(() => {
              return catalogo.filter(p => {
                  const matchBusqueda = p.nombre.toLowerCase().includes(busquedaAdmin.toLowerCase());
@@ -1229,7 +1251,6 @@
           const totalPaginasAdmin = Math.ceil(catalogoFiltradoAdmin.length / itemsPorPaginaAdmin) || 1;
           const catalogoPaginadoAdmin = useMemo(() => catalogoFiltradoAdmin.slice((paginaActualAdmin - 1) * itemsPorPaginaAdmin, paginaActualAdmin * itemsPorPaginaAdmin), [catalogoFiltradoAdmin, paginaActualAdmin, itemsPorPaginaAdmin]);
 
-          // ======================= HANDLERS DE CATEGORÍAS =======================
           const handleCrearCategoria = () => {
              setModalConfig({
                  titulo: "Nueva Categoría",
@@ -1284,385 +1305,366 @@
              });
           };
 
-          // ======================= HANDLERS DE PRODUCTOS =======================
           const handleCrearProducto = () => {
             setModalConfig({
               titulo: "Nuevo Producto Base", 
-              valoresIniciales: { costoBase: 0, detalles: '', tecnicasRecomendadas: [], cobraImpuesto: true, categoriaId: categoriaActivaId !== 'todas' ? categoriaActivaId : '' },
+              valoresIniciales: { costoBase: 0, detalles: '', tecnicasRecomendadas: [], ubicacionesAceptadas: [], cobraImpuesto: true, categoriaId: categoriaActivaId !== 'todas' ? categoriaActivaId : '' },
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
                   { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
                   { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
-                  { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
+                  { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
+                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Específicas Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
-              onSubmit: (datos) => { if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { setCatalogo([...catalogo, { id: `PROD_${Date.now()}`, nombre: datos.nombre, detalles: datos.detalles || '', categoriaId: datos.categoriaId || '', costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [], cobraImpuesto: !!datos.cobraImpuesto }]); } }
+              onSubmit: (datos) => { 
+                  if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { 
+                      setCatalogo([...catalogo, { 
+                          id: `PROD_${Date.now()}`, nombre: datos.nombre, detalles: datos.detalles || '', categoriaId: datos.categoriaId || '', 
+                          costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [],
+                          ubicacionesAceptadas: datos.ubicacionesAceptadas || [], cobraImpuesto: !!datos.cobraImpuesto 
+                      }]); 
+                  } 
+              }
             });
           };
 
           const handleEditarProducto = (prod) => {
             setModalConfig({
               titulo: "Editar Producto", 
-              valoresIniciales: { nombre: prod.nombre, categoriaId: prod.categoriaId || '', costoBase: prod.costoBase, detalles: prod.detalles || '', tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false },
+              valoresIniciales: { 
+                  nombre: prod.nombre, categoriaId: prod.categoriaId || '', costoBase: prod.costoBase, detalles: prod.detalles || '', 
+                  tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], 
+                  ubicacionesAceptadas: Array.isArray(prod.ubicacionesAceptadas) ? prod.ubicacionesAceptadas : [], 
+                  imagenUrl: prod.imagenUrl, cobraImpuesto: prod.cobraImpuesto !== false 
+              },
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
                   { id: 'costoBase', label: 'Costo (L):', type: 'number' }, 
                   { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
-                  { id: 'tecnicasRecomendadas', label: 'Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
+                  { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
+                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Específicas Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Cambiar Imagen:', type: 'file' } 
               ],
-              onSubmit: (datos) => { const editado = { ...prod, nombre: datos.nombre || prod.nombre, categoriaId: datos.categoriaId || prod.categoriaId, costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, detalles: datos.detalles !== undefined ? datos.detalles : prod.detalles, tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto }; setCatalogo(catalogo.map(p => p.id === prod.id ? editado : p)); }
+              onSubmit: (datos) => { 
+                  const editado = { 
+                      ...prod, nombre: datos.nombre || prod.nombre, categoriaId: datos.categoriaId || prod.categoriaId, 
+                      costoBase: datos.costoBase !== undefined ? parseFloat(datos.costoBase) : prod.costoBase, detalles: datos.detalles !== undefined ? datos.detalles : prod.detalles, 
+                      tecnicasRecomendadas: datos.tecnicasRecomendadas !== undefined ? datos.tecnicasRecomendadas : prod.tecnicasRecomendadas, 
+                      ubicacionesAceptadas: datos.ubicacionesAceptadas !== undefined ? datos.ubicacionesAceptadas : (prod.ubicacionesAceptadas || []),
+                      imagenUrl: datos.imagenUrl || prod.imagenUrl, cobraImpuesto: !!datos.cobraImpuesto 
+                  }; 
+                  setCatalogo(catalogo.map(p => p.id === prod.id ? editado : p)); 
+              }
             });
           };
 
-          const handleEliminarProducto = (id, nombre) => setModalConfig({ titulo: "Eliminar Producto", esConfirmacion: true, mensaje: `¿Eliminar "${nombre}"?`, campos: [], onSubmit: () => setCatalogo(catalogo.filter(p => p.id !== id)) });
-          
-          // ======================= HANDLERS DE TÉCNICAS =======================
-          const handleCrearTecnica = () => setModalConfig({ titulo: "Nueva Técnica", valoresIniciales: { cobraImpuesto: true }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }], onSubmit: (datos) => { if (datos.nombre) { const nueva = { id: `TEC_${Date.now()}`, nombre: datos.nombre, cobraImpuesto: !!datos.cobraImpuesto, minimo: 1, subcategorias: [] }; setTecnicas([...tecnicas, nueva]); setTecActivaId(nueva.id); } } });
-          const handleEditarTecnicaBase = () => { if(!tecActual) return; setModalConfig({ titulo: "Editar Técnica Base", valoresIniciales: { nombre: tecActual.nombre, cobraImpuesto: tecActual.cobraImpuesto !== false }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }], onSubmit: (datos) => { if(datos.nombre) updateTecnicaActual({ ...tecActual, nombre: datos.nombre, cobraImpuesto: !!datos.cobraImpuesto }); } }) };
-          const handleEliminarTecnica = () => { if(!tecActual) return; setModalConfig({ titulo: "Eliminar Técnica", esConfirmacion: true, mensaje: `¿Eliminar "${tecActual.nombre}" y sus variantes?`, campos: [], onSubmit: () => { const nuevas = tecnicas.filter(t => t.id !== tecActual.id); setTecnicas(nuevas); setTecActivaId(nuevas[0]?.id || null); }}); };
-          
-          const agregarSubcat = () => setModalConfig({ titulo: "Nueva Ubicación", campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }], onSubmit: (datos) => { if (datos.nombre) updateTecnicaActual({ ...tecActual, subcategorias: [...tecActual.subcategorias, { id: `SUB_${Date.now()}`, nombre: datos.nombre, opciones: [] }] }); }});
-          const editarSubcat = (subId, nombreActual) => setModalConfig({ titulo: "Editar Ubicación", valoresIniciales: { nombre: nombreActual }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }], onSubmit: (datos) => { if (datos.nombre) updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? { ...s, nombre: datos.nombre } : s) }); }});
-          const eliminarSubcat = (subId, nombre) => setModalConfig({ titulo: "Eliminar Ubicación", esConfirmacion: true, mensaje: `¿Eliminar "${nombre}"?`, campos: [], onSubmit: () => updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.filter(s => s.id !== subId) }) });
-          
-          const agregarOpcion = (subcatId) => setModalConfig({ titulo: "Nueva Variante", campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }], onSubmit: (datos) => { if (datos.nombre) updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subcatId ? { ...s, opciones: [...s.opciones, { id: `OP_${Date.now()}`, nombre: datos.nombre, costosFijos: [], costosVariables: [] }] } : s) }); }});
-          const editarOpcion = (subId, opId, nombreActual) => setModalConfig({ titulo: "Editar Variante", valoresIniciales: { nombre: nombreActual }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }], onSubmit: (datos) => { if (datos.nombre) updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? { ...s, opciones: s.opciones.map(o => o.id === opId ? { ...o, nombre: datos.nombre } : o) } : s) }); }});
-          const eliminarOpcion = (subId, opId, nombre) => setModalConfig({ titulo: "Eliminar Variante", esConfirmacion: true, mensaje: `¿Eliminar "${nombre}"?`, campos: [], onSubmit: () => updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? { ...s, opciones: s.opciones.filter(o => o.id !== opId) } : s) }) });
-          
-          const agregarCosto = (subcatId, opcionId, tipo) => setModalConfig({ titulo: `Añadir Costo ${tipo}`, campos: [{ id: 'nombre', label: `Nombre:`, type: 'text' }, { id: 'valor', label: `Valor (L):`, type: 'number' }], onSubmit: (datos) => { const valorNum = parseFloat(datos.valor); if (datos.nombre && !isNaN(valorNum)) { const key = tipo === 'Fijo' ? 'costosFijos' : 'costosVariables'; updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subcatId ? { ...s, opciones: s.opciones.map(o => o.id === opcionId ? { ...o, [key]: [...o[key], { id: `COST_${Date.now()}`, nombre: datos.nombre, valor: valorNum }] } : o) } : s) }); } }});
-          const editarCosto = (subcatId, opcionId, costo, tipo) => setModalConfig({ titulo: `Editar Costo ${tipo}`, valoresIniciales: { nombre: costo.nombre, valor: costo.valor }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'valor', label: 'Valor (L):', type: 'number' }], onSubmit: (datos) => { const valorNum = parseFloat(datos.valor); if (datos.nombre && !isNaN(valorNum)) { const key = tipo === 'Fijo' ? 'costosFijos' : 'costosVariables'; updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subcatId ? { ...s, opciones: s.opciones.map(o => o.id === opcionId ? { ...o, [key]: o[key].map(c => c.id === costo.id ? { ...c, nombre: datos.nombre, valor: valorNum } : c) } : o) } : s) }); } }});
-          const eliminarCosto = (subcatId, opcionId, costoId, tipo) => { const key = tipo === 'Fijo' ? 'costosFijos' : 'costosVariables'; updateTecnicaActual({ ...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subcatId ? { ...s, opciones: s.opciones.map(o => o.id === opcionId ? { ...o, [key]: o[key].filter(c => c.id !== costoId) } : o) } : s) }); };
+          const handleEliminarProducto = (id, nombre) => setModalConfig({ 
+              titulo: "Eliminar Producto", esConfirmacion: true, mensaje: `¿Eliminar "${nombre}"?`, campos: [], 
+              onSubmit: () => setCatalogo(catalogo.filter(p => p.id !== id)) 
+          });
 
           return (
-            <div className="max-w-7xl mx-auto space-y-8 relative fade-in">
-              {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-              {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} onSave={setConfigGlobal} onClose={()=>setShowTarifasModal(false)} />}
-              {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
-              
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-                <div><h1 className="text-3xl font-bold text-white mb-2">Configuración Lógica y Precios</h1></div>
-                <div className="flex flex-wrap items-center gap-3">
-                    <button onClick={() => setShowFichaTecnica(true)} className="bg-slate-800 hover:bg-slate-700 text-blue-400 border border-slate-700 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-colors"><BookOpen size={18}/> Guía de Fórmulas</button>
-                    <button onClick={() => setShowTarifasModal(true)} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg"><Settings size={20}/> Administrar Tarifas</button>
-                </div>
-              </div>
+              <div className="max-w-[1600px] mx-auto space-y-6 fade-in text-white">
+                  {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+                  {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} onSave={setConfigGlobal} onClose={() => setShowTarifasModal(false)} />}
+                  {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
 
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                
-                {/* PANEL 1: Catálogo (AHORA CON CATEGORÍAS) */}
-                <div className="bg-slate-800 rounded-3xl border border-slate-700 flex flex-col shadow-lg h-[calc(100vh-14rem)] min-h-[600px]">
-                  
-                  <div className="px-6 pt-5 pb-2">
-                      <h2 className="text-xl font-bold text-white">Catálogo de Artículos</h2>
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-lg relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+                      <div className="relative z-10">
+                          <h2 className="text-3xl font-bold mb-2">Ecosistema de Precios</h2>
+                          <p className="text-sm text-slate-400 max-w-xl">Ajusta tu margen global, añade productos al catálogo y estructura el costo individual de tus técnicas y variables.</p>
+                      </div>
+                      <div className="flex flex-wrap gap-3 relative z-10">
+                          <button onClick={() => setShowFichaTecnica(true)} className="flex items-center gap-2 bg-slate-900 border border-slate-600 px-4 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-slate-700 transition-colors"><BookOpen size={18}/> Ver Fórmulas</button>
+                          <button onClick={() => setShowTarifasModal(true)} className="flex items-center gap-2 bg-blue-600 border border-blue-500 px-4 py-2.5 rounded-xl font-bold text-white hover:bg-blue-500 shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"><Settings size={18}/> Tarifas Globales</button>
+                      </div>
                   </div>
 
-                  {/* CABECERA: TABS DE CATEGORÍAS */}
-                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80">
-                    <button onClick={() => scrollTabsCat(-150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block mr-2"><ChevronLeft size={16}/></button>
-                    <div ref={scrollRefCat} className="flex gap-2 overflow-x-hidden flex-1 scroll-smooth">
-                        <button onClick={()=>setCategoriaActivaId('todas')} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${categoriaActivaId === 'todas' ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>Todas</button>
-                        {categorias.map(c => <button key={c.id} onClick={()=>setCategoriaActivaId(c.id)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${categoriaActivaId === c.id ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>{c.nombre}</button>)}
-                    </div>
-                    <button onClick={() => scrollTabsCat(150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block ml-2"><ChevronRight size={16}/></button>
-                    <div className="border-l border-slate-700 pl-3 ml-2">
-                        <button onClick={handleCrearCategoria} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center gap-1 shrink-0"><Plus size={16}/><span className="hidden xl:inline text-xs font-bold">Nueva</span></button>
-                    </div>
+                  <div className="flex bg-slate-800 p-1.5 rounded-xl border border-slate-700 w-full md:w-max mx-auto shadow-sm">
+                      <button onClick={() => setTabActivo('PRODUCTOS')} className={`flex-1 md:w-48 py-2.5 text-sm font-bold rounded-lg transition-all ${tabActivo === 'PRODUCTOS' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>Catálogo de Productos</button>
+                      <button onClick={() => setTabActivo('TECNICAS')} className={`flex-1 md:w-48 py-2.5 text-sm font-bold rounded-lg transition-all ${tabActivo === 'TECNICAS' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}>Técnicas de Impresión</button>
                   </div>
 
-                  {/* CONTENIDO SUPERIOR: BUSQUEDA Y EDICIÓN DE CATEGORÍA ACTIVA */}
-                  <div className="p-4 border-b border-slate-700 bg-slate-800">
-                      {categoriaActivaId !== 'todas' && (
-                          <div className="flex items-center justify-between bg-slate-900 p-3 rounded-xl border border-slate-700 mb-4">
-                              <span className="text-sm font-bold text-emerald-400">Categoría Activa: {categorias.find(c => c.id === categoriaActivaId)?.nombre}</span>
-                              <div className="flex gap-2">
-                                  <button onClick={handleEditarCategoria} className="text-blue-400 hover:text-blue-300 p-1.5 bg-slate-800 rounded-lg flex items-center transition-colors text-xs font-bold"><Edit3 size={14} className="mr-1"/> Editar</button>
-                                  <button onClick={handleEliminarCategoria} className="text-red-400 hover:text-red-300 p-1.5 bg-slate-800 rounded-lg flex items-center transition-colors text-xs font-bold"><Trash2 size={14} className="mr-1"/> Borrar</button>
+                  {tabActivo === 'PRODUCTOS' && (
+                      <div className="fade-in bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-lg">
+                          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                              <div className="relative w-full md:w-auto flex-1 max-w-sm">
+                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                  <input type="text" placeholder="Buscar producto..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-600 text-white outline-none focus:border-blue-500" />
+                              </div>
+                              <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                                  <select value={categoriaActivaId} onChange={e=>setCategoriaActivaId(e.target.value)} className="w-full sm:w-auto p-2 bg-slate-900 border border-slate-600 rounded-xl outline-none text-sm font-bold text-white">
+                                      <option value="todas">Todas las categorías</option>
+                                      {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                                  </select>
+                                  <button onClick={handleCrearCategoria} className="p-2 bg-slate-900 border border-slate-600 rounded-xl hover:bg-slate-700 transition" title="Nueva Categoría"><Plus size={18}/></button>
+                                  {categoriaActivaId !== 'todas' && (
+                                      <>
+                                        <button onClick={handleEditarCategoria} className="p-2 bg-slate-900 border border-slate-600 rounded-xl hover:bg-slate-700 transition" title="Editar Categoría"><Edit3 size={18}/></button>
+                                        <button onClick={handleEliminarCategoria} className="p-2 bg-slate-900 border border-slate-600 rounded-xl hover:bg-slate-700 transition text-red-400" title="Eliminar Categoría"><Trash2 size={18}/></button>
+                                      </>
+                                  )}
+                                  <button onClick={handleCrearProducto} className="flex items-center gap-2 bg-emerald-600 px-4 py-2.5 rounded-xl font-bold hover:bg-emerald-500 shadow-lg"><Plus size={18}/> Nuevo Producto</button>
                               </div>
                           </div>
-                      )}
-                      
-                      <div className="flex flex-col sm:flex-row gap-3 items-center">
-                          <div className="relative flex-1 w-full">
-                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                              <input type="text" placeholder="Buscar producto por nombre..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-600 bg-slate-900 text-white text-sm outline-none focus:border-blue-500" />
-                          </div>
-                          <select value={itemsPorPaginaAdmin} onChange={e=>setItemsPorPaginaAdmin(Number(e.target.value))} className="w-full sm:w-auto p-2 border border-slate-600 bg-slate-900 text-white rounded-lg outline-none text-sm font-bold">
-                              <option value={10}>10 items</option>
-                              <option value={20}>20 items</option>
-                          </select>
-                      </div>
-                  </div>
-                  
-                  {/* TABLA DE PRODUCTOS */}
-                  <div className="overflow-x-auto flex-1 custom-scrollbar p-2">
-                    <table className="w-full text-left text-sm min-w-full">
-                      <thead><tr className="border-b border-slate-700 text-slate-400"><th className="px-4 pb-3">Producto</th><th className="pb-3 text-center">Costo</th><th className="pb-3 text-center">Acciones</th></tr></thead>
-                      <tbody className="divide-y divide-slate-700/50">
-                        {catalogoPaginadoAdmin.map(prod => (
-                          <tr key={prod.id} className="hover:bg-slate-700/30 transition-colors">
-                            <td className="py-3 px-4"><div className="flex items-center gap-3"><div className="w-10 h-10 shrink-0 rounded-lg bg-slate-900 flex items-center justify-center overflow-hidden border border-slate-700 relative">{prod.imagenUrl ? <img src={prod.imagenUrl} className="w-full h-full object-cover" /> : <ImageIcon size={18} className="text-slate-500"/>}{prod.cobraImpuesto === false && <span className="absolute -bottom-1 -right-1 bg-amber-500 rounded-full w-3 h-3 border border-slate-800"></span>}</div><div><p className="text-white font-medium line-clamp-1">{prod.nombre}</p></div></div></td>
-                            <td className="py-3 text-emerald-400 text-center font-mono">L {prod.costoBase}</td>
-                            <td className="py-3"><div className="flex justify-center gap-1"><button onClick={() => handleEditarProducto(prod)} className="text-blue-400 p-1.5 bg-slate-900 rounded hover:bg-slate-800"><Edit3 size={16}/></button><button onClick={() => handleEliminarProducto(prod.id, prod.nombre)} className="text-red-400 p-1.5 bg-slate-900 rounded hover:bg-slate-800"><Trash2 size={16}/></button></div></td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    {catalogoPaginadoAdmin.length === 0 && <p className="text-center text-slate-500 mt-6">No se encontraron productos en esta categoría.</p>}
-                  </div>
 
-                  <div className="p-4 border-t border-slate-700 bg-slate-800/50 rounded-b-3xl">
-                     {totalPaginasAdmin > 1 && (
-                         <div className="flex items-center justify-between mb-4 px-2">
-                             <button disabled={paginaActualAdmin === 1} onClick={() => setPaginaActualAdmin(p => p - 1)} className="text-slate-400 hover:text-white disabled:opacity-30"><ChevronLeft size={20}/></button>
-                             <span className="text-xs font-bold text-slate-500">Página {paginaActualAdmin} de {totalPaginasAdmin}</span>
-                             <button disabled={paginaActualAdmin === totalPaginasAdmin} onClick={() => setPaginaActualAdmin(p => p + 1)} className="text-slate-400 hover:text-white disabled:opacity-30"><ChevronRight size={20}/></button>
-                         </div>
-                     )}
-                    <button onClick={handleCrearProducto} className="w-full bg-slate-700 hover:bg-slate-600 text-white p-3 rounded-xl font-bold text-sm transition-colors"><Plus size={18} className="inline mr-2"/> Agregar Producto</button>
-                  </div>
-                </div>
-
-                {/* PANEL 2: Técnicas */}
-                <div className="bg-slate-800 rounded-3xl border border-slate-700 flex flex-col shadow-lg h-[calc(100vh-14rem)] min-h-[600px]">
-                  
-                  <div className="px-6 pt-5 pb-2">
-                      <h2 className="text-xl font-bold text-white">Catálogo de Técnicas</h2>
-                  </div>
-
-                  <div className="p-4 border-b border-slate-700 flex shrink-0 items-center bg-slate-800/80">
-                    <button onClick={() => scrollTabs(-150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block mr-2"><ChevronLeft size={16}/></button>
-                    <div ref={scrollRef} className="flex gap-2 overflow-x-hidden flex-1 scroll-smooth">
-                        {tecnicas.map(t => <button key={t.id} onClick={()=>setTecActivaId(t.id)} className={`px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap transition-colors ${tecActivaId === t.id ? 'bg-blue-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-slate-200'}`}>{t.nombre}</button>)}
-                    </div>
-                    <button onClick={() => scrollTabs(150)} className="p-2 text-slate-400 hover:text-white bg-slate-900 rounded-lg hidden sm:block ml-2"><ChevronRight size={16}/></button>
-                    <div className="border-l border-slate-700 pl-3 ml-2">
-                        <button onClick={handleCrearTecnica} className="px-3 py-2 rounded-lg bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 flex items-center gap-1 shrink-0"><Plus size={16}/><span className="hidden xl:inline text-xs font-bold">Nueva</span></button>
-                    </div>
-                  </div>
-                  
-                  {tecActual ? (
-                    <div className="p-6 flex-1 overflow-y-auto custom-scrollbar">
-                      <div className="flex flex-wrap gap-4 items-center bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 relative">
-                        {tecActual.cobraImpuesto === false && <span className="absolute top-2 right-2 text-[10px] text-amber-500 font-bold border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 rounded">Exento ISV</span>}
-                        <div><label className="text-xs text-slate-500 block mb-1 font-semibold uppercase">Mínimo Producción</label><input type="number" value={tecActual.minimo} onChange={e=>updateTecnicaActual({...tecActual, minimo: Number(e.target.value)})} className="w-20 p-2 rounded-lg bg-slate-800 text-white text-center border border-slate-600 focus:border-blue-500 outline-none" /></div>
-                        
-                        <div className="ml-auto flex items-center border-l border-slate-700 pl-4 gap-2">
-                            <button onClick={handleEditarTecnicaBase} className="text-blue-400 p-2 text-sm hover:bg-slate-800 rounded-lg flex items-center transition-colors"><Edit3 size={16} className="inline mr-1"/> Editar</button>
-                            <button onClick={handleEliminarTecnica} className="text-red-400 p-2 text-sm hover:bg-slate-800 rounded-lg flex items-center transition-colors"><Trash2 size={16} className="inline mr-1"/> Eliminar</button>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-6">
-                        {tecActual.subcategorias.map(sub => (
-                          <div key={sub.id} className="border border-slate-700 rounded-xl overflow-hidden shadow-sm">
-                            <div className="bg-slate-900 px-4 py-3 border-b border-slate-700 flex justify-between items-center cursor-pointer hover:bg-slate-800 transition-colors" onClick={() => toggleSubcat(sub.id)}>
-                                <div className="flex items-center gap-3">
-                                    <button className="text-slate-400 hover:text-white p-1 rounded focus:outline-none">
-                                        {/* CAMBIO QUIRÚRGICO: Invertimos íconos para que coincida con lógica openSubcats */}
-                                        {openSubcats[sub.id] ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                                    </button>
-                                    <span className="font-bold text-slate-200"><Layers size={14} className="inline mr-2 text-blue-400"/>{sub.nombre}</span>
-                                    <div className="flex gap-1 ml-2" onClick={e => e.stopPropagation()}>
-                                        <button onClick={()=>editarSubcat(sub.id, sub.nombre)} className="text-blue-400 hover:text-blue-300 bg-slate-800 p-1 rounded"><Pencil size={12}/></button>
-                                        <button onClick={()=>eliminarSubcat(sub.id, sub.nombre)} className="text-red-400 hover:text-red-300 bg-slate-800 p-1 rounded"><Trash2 size={12}/></button>
-                                    </div>
-                                </div>
-                                <button onClick={(e)=>{e.stopPropagation(); agregarOpcion(sub.id);}} className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded hover:bg-blue-500/20">+ Variante</button>
-                            </div>
-                            
-                            {/* CAMBIO QUIRÚRGICO: Evalúa `true` para mostrar el contenido (inicialmente cerrado/falso) */}
-                            {openSubcats[sub.id] && (
-                                <div className="p-4 bg-slate-800/50 space-y-4">
-                                  {sub.opciones.map(op => (
-                                    <div key={op.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
-                                      <div className="flex justify-between items-center mb-3">
-                                          <p className="font-bold text-white text-sm"><Edit3 size={14} className="inline mr-2 text-slate-500"/>{op.nombre}</p>
-                                          <div className="flex items-center gap-3">
-                                              <button onClick={() => editarOpcion(sub.id, op.id, op.nombre)} className="flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs font-medium transition-colors bg-slate-900 px-2 py-1 rounded"><Pencil size={12} /> Editar</button>
-                                              <button onClick={() => eliminarOpcion(sub.id, op.id, op.nombre)} className="text-red-400 hover:bg-red-500/10 p-1 rounded"><Trash2 size={14}/></button>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                              {catalogoPaginadoAdmin.map(prod => (
+                                  <div key={prod.id} className="bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden flex flex-col hover:border-blue-500/50 transition-colors">
+                                      <div className="h-32 bg-slate-800 relative flex items-center justify-center border-b border-slate-700">
+                                          {prod.imagenUrl ? <img src={prod.imagenUrl} className="h-full w-full object-cover" alt={prod.nombre} /> : <ImageIcon className="text-slate-600" size={32}/>}
+                                          {prod.cobraImpuesto === false && <span className="absolute top-2 right-2 bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30">EXENTO ISV</span>}
+                                      </div>
+                                      <div className="p-4 flex-1 flex flex-col justify-between">
+                                          <div>
+                                              <p className="font-bold text-white mb-1 line-clamp-1">{prod.nombre}</p>
+                                              <p className="text-xs text-slate-400 mb-2">Costo Base: <span className="text-emerald-400 font-bold">L {prod.costoBase.toFixed(2)}</span></p>
+                                              <p className="text-[10px] text-slate-500 line-clamp-2">{prod.detalles || 'Sin detalles'}</p>
+                                          </div>
+                                          <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-800">
+                                              <button onClick={() => handleEditarProducto(prod)} className="p-1.5 bg-slate-800 text-blue-400 rounded-lg hover:bg-slate-700"><Edit3 size={16}/></button>
+                                              <button onClick={() => handleEliminarProducto(prod.id, prod.nombre)} className="p-1.5 bg-slate-800 text-red-400 rounded-lg hover:bg-slate-700"><Trash2 size={16}/></button>
                                           </div>
                                       </div>
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
-                                            <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-3"><span className="text-xs font-bold text-slate-400">Fijos (Setups)</span><button onClick={()=>agregarCosto(sub.id, op.id, 'Fijo')} className="text-emerald-400 bg-emerald-500/10 p-1 rounded hover:bg-emerald-500/20"><Plus size={14}/></button></div>
-                                            <ul className="space-y-2">
-                                                {op.costosFijos.map(c => <li key={c.id} className="text-xs flex justify-between text-slate-300 items-center"><span>{c.nombre}</span> <span className="text-emerald-400 font-mono bg-slate-800 pl-2 pr-1 py-0.5 rounded flex items-center gap-1">L{c.valor} <button onClick={()=>editarCosto(sub.id, op.id, c, 'Fijo')} className="text-blue-400 hover:text-blue-300 p-0.5"><Pencil size={12}/></button><button onClick={()=>eliminarCosto(sub.id, op.id, c.id, 'Fijo')} className="text-slate-500 hover:text-red-400 p-0.5"><X size={12}/></button></span></li>)}
-                                            </ul>
-                                        </div>
-                                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-700/50">
-                                            <div className="flex justify-between items-center border-b border-slate-700 pb-2 mb-3"><span className="text-xs font-bold text-slate-400">Variables (x Und)</span><button onClick={()=>agregarCosto(sub.id, op.id, 'Variable')} className="text-emerald-400 bg-emerald-500/10 p-1 rounded hover:bg-emerald-500/20"><Plus size={14}/></button></div>
-                                            <ul className="space-y-2">
-                                                {op.costosVariables.map(c => <li key={c.id} className="text-xs flex justify-between text-slate-300 items-center"><span>{c.nombre}</span> <span className="text-emerald-400 font-mono bg-slate-800 pl-2 pr-1 py-0.5 rounded flex items-center gap-1">L{c.valor} <button onClick={()=>editarCosto(sub.id, op.id, c, 'Variable')} className="text-blue-400 hover:text-blue-300 p-0.5"><Pencil size={12}/></button><button onClick={()=>eliminarCosto(sub.id, op.id, c.id, 'Variable')} className="text-slate-500 hover:text-red-400 p-0.5"><X size={12}/></button></span></li>)}
-                                            </ul>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                            )}
+                                  </div>
+                              ))}
+                              {catalogoPaginadoAdmin.length === 0 && <div className="col-span-full py-10 text-center text-slate-500 font-medium">No hay productos que coincidan.</div>}
                           </div>
-                        ))}
-                        <button onClick={agregarSubcat} className="w-full border border-dashed border-slate-600 text-slate-400 font-bold py-4 rounded-xl hover:text-white hover:border-slate-500 transition-colors"><Plus size={18} className="inline mr-2"/> Añadir Ubicación</button>
                       </div>
-                    </div>
-                  ) : <div className="flex-1 flex flex-col items-center justify-center text-slate-500 italic text-sm p-6"><p>Selecciona o crea una técnica en el panel superior.</p></div>}
-                </div>
+                  )}
+
+                  {tabActivo === 'TECNICAS' && (
+                      <div className="fade-in bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-lg">
+                          <p className="text-slate-400 text-sm mb-4">Selecciona una técnica para ver sus variables y costos.</p>
+                          <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                              {tecnicas.map(t => (
+                                  <button key={t.id} onClick={() => setTecActivaId(t.id)} className={`whitespace-nowrap px-4 py-2 rounded-xl text-sm font-bold transition-all border ${tecActivaId === t.id ? 'bg-blue-600 border-blue-500 text-white shadow-lg' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-700'}`}>{t.nombre}</button>
+                              ))}
+                              <button onClick={() => setModalConfig({titulo:"Nueva Técnica", campos:[{id:'nombre', label:'Nombre de Técnica:', type:'text'}, {id:'minimo', label:'Mínimo Requerido:', type:'number'}], onSubmit:(d)=>{ if(d.nombre){ const nt = {id:`TEC_${Date.now()}`, nombre:d.nombre, minimo:Number(d.minimo)||1, cobraImpuesto:true, subcategorias:[]}; setTecnicas([...tecnicas, nt]); setTecActivaId(nt.id); } }})} className="whitespace-nowrap px-4 py-2 bg-slate-900 border border-slate-700 border-dashed rounded-xl text-sm font-bold text-emerald-400 hover:bg-emerald-500/10 transition-colors">+ Añadir Técnica</button>
+                          </div>
+                          
+                          {tecActual && (
+                              <div className="mt-6 border-t border-slate-700 pt-6">
+                                  <div className="flex justify-between items-center mb-6">
+                                      <div><h3 className="text-xl font-bold text-white flex items-center gap-2">{tecActual.nombre}</h3><p className="text-xs text-slate-400 mt-1">Minimo exigido: {tecActual.minimo} pzas.</p></div>
+                                      <div className="flex gap-2">
+                                          <button onClick={() => setModalConfig({titulo:"Editar Técnica", valoresIniciales:{nombre: tecActual.nombre, minimo: tecActual.minimo}, campos:[{id:'nombre', label:'Nombre:', type:'text'}, {id:'minimo', label:'Mínimo:', type:'number'}], onSubmit:(d)=>updateTecnicaActual({...tecActual, nombre: d.nombre, minimo: Number(d.minimo)})})} className="p-2 bg-slate-900 text-blue-400 rounded-lg hover:bg-slate-700"><Edit3 size={18}/></button>
+                                          <button onClick={() => setModalConfig({titulo:"Eliminar", esConfirmacion:true, mensaje:"¿Eliminar técnica completa?", onSubmit:()=>{ setTecnicas(tecnicas.filter(x=>x.id!==tecActual.id)); setTecActivaId(tecnicas[0]?.id||null); }})} className="p-2 bg-slate-900 text-red-400 rounded-lg hover:bg-slate-700"><Trash2 size={18}/></button>
+                                      </div>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                      <div className="flex justify-between items-center bg-slate-900 p-3 rounded-xl border border-slate-700">
+                                          <h4 className="font-bold text-emerald-400">Ubicaciones (Subcategorías)</h4>
+                                          <button onClick={() => setModalConfig({titulo:"Nueva Ubicación", campos:[{id:'nombre', label:'Nombre de la Ubicación (Ej: Pecho, Manga):', type:'text'}], onSubmit:(d)=>{ if(d.nombre) updateTecnicaActual({...tecActual, subcategorias:[...tecActual.subcategorias, {id:`SUB_${Date.now()}`, nombre:d.nombre, opciones:[]}]}); }})} className="text-xs bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded hover:bg-emerald-600/30 transition">+ Agregar Ubicación</button>
+                                      </div>
+
+                                      {tecActual.subcategorias.map(sub => (
+                                          <div key={sub.id} className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
+                                              <div className="flex justify-between items-center p-4 bg-slate-800/50 cursor-pointer" onClick={() => toggleSubcat(sub.id)}>
+                                                  <h5 className="font-bold text-white flex items-center gap-2">{openSubcats[sub.id] ? <ChevronUp size={16}/> : <ChevronDown size={16}/>} {sub.nombre}</h5>
+                                                  <div className="flex gap-2">
+                                                      <button onClick={(e) => { e.stopPropagation(); setModalConfig({titulo:"Editar", valoresIniciales:{nombre:sub.nombre}, campos:[{id:'nombre', label:'Nombre:', type:'text'}], onSubmit:(d)=>updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id===sub.id?{...s, nombre:d.nombre}:s)})}); }} className="p-1.5 text-blue-400 hover:bg-slate-700 rounded"><Edit3 size={14}/></button>
+                                                      <button onClick={(e) => { e.stopPropagation(); updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.filter(s=>s.id!==sub.id)}); }} className="p-1.5 text-red-400 hover:bg-slate-700 rounded"><Trash2 size={14}/></button>
+                                                  </div>
+                                              </div>
+                                              
+                                              {openSubcats[sub.id] && (
+                                                  <div className="p-4 border-t border-slate-700 bg-slate-900/50 space-y-4 fade-in">
+                                                      <button onClick={() => setModalConfig({titulo:"Nueva Variante", campos:[{id:'nombre', label:'Variante (Ej: 1 Color, 2 Colores):', type:'text'}], onSubmit:(d)=>{ if(d.nombre) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id===sub.id?{...s, opciones:[...s.opciones, {id:`OP_${Date.now()}`, nombre:d.nombre, costosFijos:[], costosVariables:[]}]}:s)}); }})} className="w-full py-2 border border-slate-700 border-dashed rounded-lg text-xs font-bold text-blue-400 hover:bg-slate-800 transition">+ Añadir Variante de Precio</button>
+                                                      
+                                                      {sub.opciones.map(op => (
+                                                          <div key={op.id} className="bg-slate-800 p-4 rounded-xl border border-slate-600">
+                                                              <div className="flex justify-between items-center mb-3">
+                                                                  <p className="font-bold text-blue-300 text-sm">Variante: {op.nombre}</p>
+                                                                  <button onClick={() => updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id===sub.id?{...s, opciones:s.opciones.filter(o=>o.id!==op.id)}:s)})} className="text-xs text-red-400 hover:underline">Eliminar Variante</button>
+                                                              </div>
+                                                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                  {/* Costos Fijos */}
+                                                                  <div className="bg-slate-900 p-3 rounded border border-slate-700">
+                                                                      <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 border-b border-slate-800 pb-1"><span>Setups (Costos Fijos)</span></div>
+                                                                      <ul className="space-y-1 mb-2">
+                                                                          {op.costosFijos.map((cf, i) => <li key={i} className="flex justify-between text-xs text-slate-300"><span>{cf.nombre}</span> <span className="font-mono text-emerald-400">L {cf.valor}</span></li>)}
+                                                                          {op.costosFijos.length === 0 && <li className="text-xs text-slate-600 italic">Sin setups.</li>}
+                                                                      </ul>
+                                                                      <button onClick={() => setModalConfig({titulo:"Nuevo Costo Fijo", campos:[{id:'nombre', label:'Concepto:', type:'text'}, {id:'valor', label:'Costo (L):', type:'number'}], onSubmit:(d)=>{ updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id===sub.id?{...s, opciones:s.opciones.map(o=>o.id===op.id?{...o, costosFijos:[...o.costosFijos, {id:`CF_${Date.now()}`, nombre:d.nombre, valor:Number(d.valor)}]}:o)}:s)}); }})} className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded w-full hover:bg-slate-700">+ Add Setup</button>
+                                                                  </div>
+                                                                  {/* Costos Variables */}
+                                                                  <div className="bg-slate-900 p-3 rounded border border-slate-700">
+                                                                      <div className="flex justify-between text-xs font-bold text-slate-400 mb-2 border-b border-slate-800 pb-1"><span>Variables (Por Unidad)</span></div>
+                                                                      <ul className="space-y-1 mb-2">
+                                                                          {op.costosVariables.map((cv, i) => <li key={i} className="flex justify-between text-xs text-slate-300"><span>{cv.nombre}</span> <span className="font-mono text-emerald-400">L {cv.valor}</span></li>)}
+                                                                          {op.costosVariables.length === 0 && <li className="text-xs text-slate-600 italic">Sin variables.</li>}
+                                                                      </ul>
+                                                                      <button onClick={() => setModalConfig({titulo:"Nuevo Costo Variable", campos:[{id:'nombre', label:'Concepto:', type:'text'}, {id:'valor', label:'Costo (L):', type:'number'}], onSubmit:(d)=>{ updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id===sub.id?{...s, opciones:s.opciones.map(o=>o.id===op.id?{...o, costosVariables:[...o.costosVariables, {id:`CV_${Date.now()}`, nombre:d.nombre, valor:Number(d.valor)}]}:o)}:s)}); }})} className="text-[10px] bg-slate-800 text-slate-400 px-2 py-1 rounded w-full hover:bg-slate-700">+ Add Variable</button>
+                                                                  </div>
+                                                              </div>
+                                                          </div>
+                                                      ))}
+                                                  </div>
+                                              )}
+                                          </div>
+                                      ))}
+                                  </div>
+                              </div>
+                          )}
+                      </div>
+                  )}
               </div>
-            </div>
-          );
+          )
         }
 
-        // ==========================================
-        // COMPONENTES AUXILIARES (MODAL)
-        // ==========================================
         function CustomModal({ config, onClose }) {
-          const [form, setForm] = useState(config.valoresIniciales || {});
-          
-          const handleSubmit = (e) => { e.preventDefault(); config.onSubmit(form); onClose(); };
-          const handleFileChange = (e, fieldId) => { 
-            const file = e.target.files[0]; 
-            if (file) { 
-                if (!file.type.startsWith('image/') && file.size > 750 * 1024) {
-                    alert('⚠️ El archivo PDF es muy pesado. El límite máximo para bases de datos NoSQL es de 750KB. Por favor, comprímelo.');
-                    e.target.value = '';
-                    return;
+            const [formData, setFormData] = useState(config.valoresIniciales || {});
+            
+            const handleChange = (id, value) => setFormData(prev => ({ ...prev, [id]: value }));
+            
+            const handleFileChange = (id, file) => {
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => handleChange(id, e.target.result);
+                    reader.readAsDataURL(file);
                 }
+            };
 
-                const reader = new FileReader(); 
-                reader.onload = (event) => {
-                    if(file.type.startsWith('image/')) {
-                        const img = new Image();
-                        img.onload = () => {
-                            const canvas = document.createElement('canvas');
-                            let width = img.width; let height = img.height;
-                            const MAX_SIZE = 800;
-                            if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
-                            canvas.width = width; canvas.height = height; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, width, height);
-                            setForm({...form, [fieldId]: canvas.toDataURL('image/jpeg', 0.7)});
-                        };
-                        img.src = event.target.result;
-                    } else {
-                        setForm({...form, [fieldId]: event.target.result});
-                    }
-                }; 
-                reader.readAsDataURL(file); 
-            } 
-          };
-          const handleCheckboxGroup = (fieldId, value, checked) => { const currentArr = form[fieldId] || []; if (checked) setForm({...form, [fieldId]: [...currentArr, value]}); else setForm({...form, [fieldId]: currentArr.filter(v => v !== value)}); };
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                config.onSubmit(formData);
+                onClose();
+            };
 
-          return (
-            <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-[60] fade-in p-4">
-              <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl">
-                <h3 className="text-xl font-bold text-white mb-6">{config.titulo}</h3>
-                <form onSubmit={handleSubmit} className="flex flex-col max-h-[75vh]">
-                  <div className="overflow-y-auto custom-scrollbar pr-2 space-y-5 flex-1">
-                    {config.esConfirmacion ? <p className="text-slate-300 text-sm leading-relaxed">{config.mensaje}</p> : (
-                        config.campos.map(c => (
-                        <div key={c.id}>
-                            {c.type !== 'boolean' && <label className="block text-sm font-bold text-slate-400 mb-2">{c.label}</label>}
-                            
-                            {c.type === 'file' ? <input type="file" accept=".pdf,image/*" onChange={(e) => handleFileChange(e, c.id)} className="text-white text-sm w-full file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-blue-500 file:text-white hover:file:bg-blue-600 cursor-pointer" /> 
-                            : c.type === 'checkboxGroup' ? (
-                                <div className="grid grid-cols-2 gap-2 bg-slate-900 p-3 rounded-xl border border-slate-700 max-h-40 overflow-y-auto custom-scrollbar">
-                                    {c.options.map(opt => <label key={opt.value} className="flex gap-2 text-white text-sm"><input type="checkbox" checked={(form[c.id] || []).includes(opt.value)} onChange={(e) => handleCheckboxGroup(c.id, opt.value, e.target.checked)} className="accent-blue-500" /> <span className="truncate" title={opt.label}>{opt.label}</span></label>)}
-                                </div>
-                            )
-                            : c.type === 'boolean' ? (
-                                <label className="flex items-center gap-3 text-white text-sm font-bold cursor-pointer mt-2 bg-slate-900 p-3 rounded-xl border border-slate-700 hover:border-blue-500 transition-colors">
-                                    <input type="checkbox" checked={!!form[c.id]} onChange={e => setForm({...form, [c.id]: e.target.checked})} className="w-5 h-5 accent-blue-500 rounded focus:ring-blue-500 focus:ring-2" />
-                                    {c.label}
-                                </label>
-                            )
-                            : c.type === 'select' ? (
-                                <select required={c.required !== false} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors text-sm" onChange={e => setForm({...form, [c.id]: e.target.value})}>
-                                    <option value="">-- Seleccionar --</option>
-                                    {c.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                </select>
-                            )
-                            : c.type === 'textarea' ? (
-                                <div className="relative">
-                                    <textarea maxLength={c.maxLength} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors resize-none h-24 text-sm" onChange={e => setForm({...form, [c.id]: e.target.value})} placeholder={c.placeholder || ''} />
-                                    {c.maxLength && <p className="text-right text-xs text-slate-500 mt-1">{(form[c.id] || '').length}/{c.maxLength}</p>}
-                                </div>
-                            )
-                            : <input required={c.id!=='imagenUrl' && c.id!=='archivo'} type={c.type} value={form[c.id] !== undefined ? form[c.id] : ''} className="w-full p-3 rounded-xl bg-slate-900 text-white outline-none border border-slate-700 focus:border-blue-500 transition-colors" onChange={e => setForm({...form, [c.id]: e.target.value})} />
-                            }
+            return (
+                <div className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 fade-in">
+                    <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-600 max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-slate-700 flex justify-between items-center shrink-0">
+                            <h3 className="text-xl font-bold text-white">{config.titulo}</h3>
+                            <button onClick={onClose} className="text-slate-400 hover:text-white transition-colors"><X size={20}/></button>
                         </div>
-                        ))
-                    )}
-                  </div>
-                  <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700 shrink-0">
-                      <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 transition-colors">Cancelar</button>
-                      <button type="submit" className={`px-5 py-2.5 rounded-xl font-bold text-white shadow-lg transition-transform hover:scale-105 ${config.esConfirmacion ? 'bg-red-600 shadow-red-600/20' : 'bg-blue-600 shadow-blue-600/20'}`}>
-                          {config.submitLabel || (config.esConfirmacion ? 'Sí, Confirmar' : 'Guardar')}
-                      </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          );
-        }
-
-        function MenuBtn({ icon: Icon, label, active, onClick, dark = false }) {
-          const baseClasses = "w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all duration-200";
-          const activeClasses = dark ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-blue-600 text-white shadow-md transform scale-[1.02]";
-          const inactiveClasses = dark ? "text-slate-400 hover:bg-slate-800 hover:text-slate-200" : "text-slate-600 hover:bg-slate-100 hover:text-blue-600";
-          return <button onClick={onClick} className={`${baseClasses} ${active ? activeClasses : inactiveClasses}`}><Icon size={20} /><span>{label}</span></button>;
-        }
-        
-        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, mensajesGlobales, adminSetMensajes, onLogout, isConnectedToCloud, showToast }) {
-          const [vista, setVista] = useState('DASHBOARD'); 
-          const ordenesValidas = ordenes.filter(o => o.estado !== 'Cancelada');
-          const ingresosProyectados = ordenesValidas.reduce((sum, o) => sum + o.total, 0);
-
-          return (
-            <div className="min-h-screen bg-slate-900 text-slate-200 flex flex-col md:flex-row fade-in">
-              <aside className="w-full md:w-72 bg-slate-950 flex flex-col border-r border-slate-800 z-10 md:h-screen md:sticky md:top-0">
-                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-                    <div className="flex items-center gap-3 text-emerald-500 mb-10"><Settings size={32} /><span className="text-xl font-bold text-white">ERP Admin</span></div>
-                    <nav className="space-y-2">
-                        <MenuBtn icon={LayoutDashboard} label="Dashboard" active={vista === 'DASHBOARD'} onClick={() => setVista('DASHBOARD')} dark />
-                        <MenuBtn icon={ShoppingBag} label="Órdenes General" active={vista === 'ORDENES'} onClick={() => setVista('ORDENES')} dark />
-                        <MenuBtn icon={Package} label="Catálogo & Lógica" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} dark />
-                        <MenuBtn icon={Users} label="Usuarios & Accesos" active={vista === 'USUARIOS'} onClick={() => setVista('USUARIOS')} dark />
-                        <MenuBtn icon={Megaphone} label="Avisos y WhatsApp" active={vista === 'MENSAJES'} onClick={() => setVista('MENSAJES')} dark />
-                        <MenuBtn icon={BookOpen} label="Recursos (PDFs/Guías)" active={vista === 'RECURSOS'} onClick={() => setVista('RECURSOS')} dark />
-                    </nav>
+                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                            {config.mensaje && <p className="text-slate-300 mb-4">{config.mensaje}</p>}
+                            {!config.esConfirmacion && (
+                                <form id="custom-modal-form" onSubmit={handleSubmit} className="space-y-4">
+                                    {config.campos.map(campo => (
+                                        <div key={campo.id}>
+                                            <label className="block text-sm font-bold text-slate-400 mb-1">{campo.label}</label>
+                                            {campo.type === 'text' || campo.type === 'number' ? (
+                                                <input type={campo.type} required={campo.required !== false} maxLength={campo.maxLength} value={formData[campo.id] || ''} onChange={(e) => handleChange(campo.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500" />
+                                            ) : campo.type === 'textarea' ? (
+                                                <textarea required={campo.required !== false} maxLength={campo.maxLength} value={formData[campo.id] || ''} onChange={(e) => handleChange(campo.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 h-24 resize-none custom-scrollbar" />
+                                            ) : campo.type === 'boolean' ? (
+                                                <label className="flex items-center gap-2 text-white cursor-pointer"><input type="checkbox" checked={!!formData[campo.id]} onChange={(e) => handleChange(campo.id, e.target.checked)} className="w-5 h-5 accent-blue-500" /> Sí, activar</label>
+                                            ) : campo.type === 'select' ? (
+                                                <select required={campo.required !== false} value={formData[campo.id] || ''} onChange={(e) => handleChange(campo.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 custom-scrollbar">
+                                                    <option value="">Seleccionar...</option>
+                                                    {campo.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                                                </select>
+                                            ) : campo.type === 'file' ? (
+                                                <input type="file" accept="image/*,.pdf" onChange={(e) => handleFileChange(campo.id, e.target.files[0])} className="w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
+                                            ) : campo.type === 'checkboxGroup' ? (
+                                                <div className="max-h-40 overflow-y-auto bg-slate-900 p-3 rounded-xl border border-slate-700 space-y-2 custom-scrollbar">
+                                                    {campo.options.map(opt => {
+                                                        const isChecked = Array.isArray(formData[campo.id]) && formData[campo.id].includes(opt.value);
+                                                        return (
+                                                            <label key={opt.value} className="flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                                                                <input type="checkbox" checked={isChecked} onChange={(e) => {
+                                                                    const current = Array.isArray(formData[campo.id]) ? formData[campo.id] : [];
+                                                                    const newValue = e.target.checked ? [...current, opt.value] : current.filter(v => v !== opt.value);
+                                                                    handleChange(campo.id, newValue);
+                                                                }} className="accent-blue-500 w-4 h-4 cursor-pointer" /> {opt.label}
+                                                            </label>
+                                                        )
+                                                    })}
+                                                    {campo.options.length === 0 && <p className="text-xs text-slate-500 italic">No hay opciones disponibles.</p>}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    ))}
+                                </form>
+                            )}
+                        </div>
+                        <div className="p-6 border-t border-slate-700 flex justify-end gap-3 bg-slate-800 rounded-b-2xl shrink-0">
+                            <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-slate-700 transition-colors">Cancelar</button>
+                            {config.esConfirmacion ? (
+                                <button onClick={() => { config.onSubmit(); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-500 shadow-lg">{config.submitLabel || 'Confirmar'}</button>
+                            ) : (
+                                <button type="submit" form="custom-modal-form" className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-lg">{config.submitLabel || 'Guardar'}</button>
+                            )}
+                        </div>
+                    </div>
                 </div>
-                <div className="p-6 bg-slate-950 border-t border-slate-800 mt-auto">
-                    <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
-                    <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-red-500/20"><LogOut size={18} /> Cerrar Sesión</button>
-                </div>
-              </aside>
-              <main className="flex-1 p-8 overflow-y-auto bg-slate-900 relative">
-                {vista === 'DASHBOARD' && (
-                   <div className="max-w-6xl mx-auto fade-in space-y-8">
-                     <div><h1 className="text-3xl font-bold text-white">Visión General</h1><p className="text-slate-400">Métricas clave del negocio en tiempo real.</p></div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 flex items-center gap-4"><div className="bg-blue-500/20 p-4 rounded-xl text-blue-400"><Users size={28}/></div><div><p className="text-sm text-slate-400 font-bold">Total Usuarios</p><p className="text-2xl font-black text-white">{usuarios.length}</p></div></div>
-                        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 flex items-center gap-4"><div className="bg-emerald-500/20 p-4 rounded-xl text-emerald-400"><Activity size={28}/></div><div><p className="text-sm text-slate-400 font-bold">Cotizaciones Activas</p><p className="text-2xl font-black text-white">{ordenesValidas.length}</p></div></div>
-                        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 flex items-center gap-4"><div className="bg-amber-500/20 p-4 rounded-xl text-amber-400"><TrendingUp size={28}/></div><div><p className="text-sm text-slate-400 font-bold">Ingresos Proyectados</p><p className="text-2xl font-black text-white">L {ingresosProyectados.toFixed(2)}</p></div></div>
-                        <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 flex items-center gap-4"><div className="bg-red-500/20 p-4 rounded-xl text-red-400"><X size={28}/></div><div><p className="text-sm text-slate-400 font-bold">Canceladas</p><p className="text-2xl font-black text-white">{ordenes.length - ordenesValidas.length}</p></div></div>
-                     </div>
-                   </div>
-                )}
-                {vista === 'ORDENES' && <div className="max-w-6xl mx-auto space-y-4 fade-in"><div className="bg-slate-800 rounded-2xl p-6 border border-slate-700"><HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} mensajesGlobales={mensajesGlobales} showToast={showToast} /></div></div>}
-                {vista === 'CATALOGO' && <GestionJerarquica categorias={categorias} setCategorias={setCategorias} catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
-                {vista === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
-                {vista === 'MENSAJES' && <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
-                {vista === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
-              </main>
-            </div>
-          );
+            )
         }
 
         function EstadoBadge({ estado }) {
-          const colores = { 'Cotización enviada': 'bg-sky-100 text-sky-700 border-sky-200', 'Pendiente': 'bg-slate-100 text-slate-700 border-slate-200', 'Aprobado / En producción': 'bg-indigo-100 text-indigo-700 border-indigo-200', 'Control de calidad': 'bg-purple-100 text-purple-700 border-purple-200', 'Listo para envío': 'bg-teal-100 text-teal-700 border-teal-200', 'Entrega parcial': 'bg-amber-100 text-amber-700 border-amber-200', 'Finalizado / Entregado': 'bg-emerald-100 text-emerald-700 border-emerald-200', 'Cancelada': 'bg-red-100 text-red-700 border-red-200' };
-          const clase = colores[estado] || colores['Pendiente'];
-          return <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] uppercase font-bold border ${clase}`}>{estado}</span>;
+            const colores = {
+                'Cotización enviada': 'bg-blue-100 text-blue-700 border-blue-200',
+                'Pendiente': 'bg-amber-100 text-amber-700 border-amber-200',
+                'Aprobado / En producción': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                'Control de calidad': 'bg-purple-100 text-purple-700 border-purple-200',
+                'Listo para envío': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                'Entrega parcial': 'bg-teal-100 text-teal-700 border-teal-200',
+                'Finalizado / Entregado': 'bg-green-100 text-green-700 border-green-200',
+                'Cancelada': 'bg-red-100 text-red-700 border-red-200',
+            };
+            const clases = colores[estado] || 'bg-slate-100 text-slate-700 border-slate-200';
+            return <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold border ${clases} uppercase tracking-wider inline-block text-center`}>{estado}</span>;
+        }
+
+        function MenuBtn({ icon: Icon, label, active, onClick }) {
+            return (
+                <button onClick={onClick} className={`w-full flex items-center gap-3 p-3 rounded-xl font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                    <Icon size={20} className={active ? 'text-white' : 'text-slate-500'} /> {label}
+                </button>
+            )
+        }
+
+        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, mensajesGlobales, adminSetMensajes, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud, showToast }) {
+            const [vista, setVista] = useState('DASHBOARD');
+            
+            return (
+                <div className="min-h-screen bg-slate-900 flex flex-col md:flex-row fade-in font-sans">
+                    <aside className="w-full md:w-72 bg-slate-800 border-r border-slate-700 flex flex-col z-10 md:h-screen md:sticky md:top-0">
+                       <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                           <div className="flex items-center gap-3 text-blue-400 mb-8"><Printer size={32} /><span className="text-xl font-bold text-white">PrintPro Admin</span></div>
+                           <nav className="space-y-2">
+                               <MenuBtn icon={Activity} label="Dashboard" active={vista==='DASHBOARD'} onClick={()=>setVista('DASHBOARD')} />
+                               <MenuBtn icon={FileText} label="Órdenes" active={vista==='ORDENES'} onClick={()=>setVista('ORDENES')} />
+                               <MenuBtn icon={Layers} label="Catálogo & Tarifas" active={vista==='CATALOGO'} onClick={()=>setVista('CATALOGO')} />
+                               <MenuBtn icon={Users} label="Clientes VIP" active={vista==='USUARIOS'} onClick={()=>setVista('USUARIOS')} />
+                               <MenuBtn icon={BookOpen} label="Recursos" active={vista==='RECURSOS'} onClick={()=>setVista('RECURSOS')} />
+                               <MenuBtn icon={MessageSquare} label="Mensajes" active={vista==='MENSAJES'} onClick={()=>setVista('MENSAJES')} />
+                           </nav>
+                       </div>
+                       <div className="p-6 bg-slate-800 border-t border-slate-700 mt-auto">
+                            <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
+                            <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent"><LogOut size={18} /> Cerrar Sesión</button>
+                       </div>
+                    </aside>
+                    
+                    <main className="flex-1 p-8 overflow-y-auto custom-scrollbar bg-slate-900 relative">
+                        {vista === 'DASHBOARD' && (
+                            <div className="fade-in max-w-6xl mx-auto">
+                                <h2 className="text-3xl font-bold text-white mb-6">Panel de Control</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm"><p className="text-slate-400 text-sm font-bold mb-2">Total Órdenes</p><p className="text-3xl font-black text-white">{ordenes.length}</p></div>
+                                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm"><p className="text-slate-400 text-sm font-bold mb-2">Ingresos Estimados</p><p className="text-3xl font-black text-emerald-400">L {ordenes.filter(o => o.estado !== 'Cancelada').reduce((sum, o) => sum + o.total, 0).toFixed(2)}</p></div>
+                                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm"><p className="text-slate-400 text-sm font-bold mb-2">Artículos en Catálogo</p><p className="text-3xl font-black text-blue-400">{catalogo.length}</p></div>
+                                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-sm"><p className="text-slate-400 text-sm font-bold mb-2">Clientes VIP</p><p className="text-3xl font-black text-purple-400">{usuarios.filter(u=>u.rol==='CLIENTE').length}</p></div>
+                                </div>
+                            </div>
+                        )}
+                        {vista === 'ORDENES' && <div className="fade-in bg-slate-100 p-6 rounded-3xl"><HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} showToast={showToast} mensajesGlobales={mensajesGlobales} /></div>}
+                        {vista === 'CATALOGO' && <GestionJerarquica categorias={categorias} setCategorias={setCategorias} catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
+                        {vista === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
+                        {vista === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
+                        {vista === 'MENSAJES' && <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
+                    </main>
+                </div>
+            )
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
