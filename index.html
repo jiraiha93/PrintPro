@@ -6,6 +6,7 @@
     <title>PrintPro - Cotizador VIP (Cloud Ready)</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
@@ -18,6 +19,7 @@
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* ESTILOS PARA IMPRESIÓN PROFESIONAL */
         @media print {
             body * { visibility: hidden; }
             .print-area, .print-area * { visibility: visible; }
@@ -48,7 +50,7 @@
         import { 
           LayoutDashboard, ShoppingBag, FileText, Settings, Users, Plus, CheckCircle, 
           Clock, Printer, LogOut, AlertCircle, Share2, Package, Edit3, Trash2, Save, X, 
-          Pencil, Layers, Image as ImageIcon, Upload, MessageSquare, Eye, TrendingUp, Activity, Info, Cloud, Database, Lock, Megaphone, Bell, Calculator, BookOpen, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Percent
+          Pencil, Layers, Image as ImageIcon, Upload, MessageSquare, Eye, TrendingUp, Activity, Info, Cloud, Database, Lock, Megaphone, Bell, Calculator, BookOpen, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp
         } from 'https://esm.sh/lucide-react@0.292.0';
         
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
@@ -81,16 +83,28 @@
 
         const loadLocal = (key, fallback) => { try { const item = window.localStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch (e) { return fallback; } };
         const saveLocal = (key, value) => { try { window.localStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.error("Error saving local", e); } };
+
         const loadSession = (key, fallback) => { try { const item = window.sessionStorage.getItem(key); return item ? JSON.parse(item) : fallback; } catch (e) { return fallback; } };
         const saveSession = (key, value) => { try { window.sessionStorage.setItem(key, JSON.stringify(value)); } catch(e) { console.error("Error saving session", e); } };
 
-        const USUARIOS_BASE = [{ id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' }];
+        const USUARIOS_BASE = [
+          { id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' },
+        ];
+        
         const CATEGORIAS_BASE = [];
-        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón.', categoriaId: '', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], ubicacionesAceptadas: [], cobraImpuesto: true }];
-        const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
+
+        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: '', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], ubicacionesAceptadas: [], cobraImpuesto: true }];
+        const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', margenGanancia: 40, impuestoGlobal: 15, descuentosVolumen: [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }], opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }];
+        
         const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado', 'Cancelada'];
-        const MENSAJES_BASE = { bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', promo: 'Aviso importante...', whatsappTemplate: '¡Hola! Te comparto los detalles, orden #{ID} por un total de L {TOTAL}.', whatsappNumero: '' };
+        
+        const MENSAJES_BASE = { 
+            bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', 
+            promo: 'Aviso importante: Aprovecha nuestras tarifas preferenciales automatizadas o mantente al tanto de nuestros nuevos productos aquí.', 
+            whatsappTemplate: '¡Hola! Te comparto los detalles, orden #{ID} por un total de L {TOTAL}. Quedamos a disposición.',
+            whatsappNumero: '' 
+        };
 
         function App() {
           const [userDb, setUserDb] = useState(null); 
@@ -121,7 +135,11 @@
           }, [usuarioActual]);
 
           useEffect(() => {
-            if (!auth) { setLoadingData(false); setIsConnectedToCloud(false); return; } 
+            if (!auth) { 
+                setLoadingData(false); 
+                setIsConnectedToCloud(false); 
+                return; 
+            } 
             const initAuth = async () => {
               try { await setPersistence(auth, browserSessionPersistence); } catch (e) { console.error("⛔ Error Auth", e); } finally { setLoadingData(false); }
             };
@@ -140,7 +158,9 @@
             setLoadingData(true);
             const isAdmin = userDb.email === 'admin@printpro.com';
             
-            const unsubCatList = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'categorias'), (snap) => { setCategorias(snap.docs.map(d => d.data())); }, console.error);
+            const unsubCatList = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'categorias'), (snap) => { 
+                setCategorias(snap.docs.map(d => d.data())); 
+            }, console.error);
             const unsubCat = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'catalogo'), (snap) => { if (!snap.empty) setCatalogo(snap.docs.map(d => d.data())); else dbGuardarLista('catalogo', catalogo); }, console.error);
             const unsubTec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'tecnicas'), (snap) => { if (!snap.empty) setTecnicas(snap.docs.map(d => d.data())); else dbGuardarLista('tecnicas', tecnicas); }, console.error);
             const unsubRec = onSnapshot(collection(db, 'artifacts', appId, basePath, 'data', 'recursos'), (snap) => { setRecursos(snap.docs.map(d => d.data())); }, console.error);
@@ -184,28 +204,44 @@
 
           const dbGuardar = async (coleccion, id, data) => { 
             if (db && isConnectedToCloud) {
-                try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); } 
-                catch (error) { console.error(`Error BD (${coleccion}):`, error); showToast(`Error al guardar.`, 'error'); }
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id), data); 
+                } catch (error) {
+                    console.error(`Error guardando en BD (${coleccion}):`, error);
+                    showToast(`Error al guardar datos. Verifica tus permisos.`, 'error');
+                }
             }
           };
 
           const dbEliminar = async (coleccion, id) => { 
             if (db && isConnectedToCloud) {
-                try { await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id)); } 
-                catch (error) { console.error(`Error BD (${coleccion}):`, error); }
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', coleccion, id)); 
+                } catch (error) {
+                    console.error(`Error eliminando en BD (${coleccion}):`, error);
+                    showToast(`Error al eliminar registro de la BD.`, 'error');
+                }
             }
           };
 
           const dbGuardarLista = async (coleccion, lista) => { 
             if(db && isConnectedToCloud) {
-                try { await Promise.all(lista.map(item => dbGuardar(coleccion, item.id, item))); } 
-                catch (error) { console.error(`Error BD lista (${coleccion}):`, error); }
+                try {
+                    await Promise.all(lista.map(item => dbGuardar(coleccion, item.id, item)));
+                } catch (error) {
+                    console.error(`Error guardando lista en BD (${coleccion}):`, error);
+                }
             } 
           };
 
-          const adminSetCategorias = (nuevas) => {
-               if(isConnectedToCloud) { const ids = nuevas.map(c => c.id); categorias.forEach(c => { if(!ids.includes(c.id)) dbEliminar('categorias', c.id); }); nuevas.forEach(c => dbGuardar('categorias', c.id, c)); } 
-               else { setCategorias(nuevas); saveLocal('categorias', nuevas); }
+          const adminSetCategorias = (nuevasCategorias) => {
+               if(isConnectedToCloud) {
+                   const idsActuales = nuevasCategorias.map(c => c.id);
+                   categorias.forEach(c => { if(!idsActuales.includes(c.id)) dbEliminar('categorias', c.id); });
+                   nuevasCategorias.forEach(c => dbGuardar('categorias', c.id, c));
+               } else {
+                   setCategorias(nuevasCategorias); saveLocal('categorias', nuevasCategorias);
+               }
                showToast('Categorías actualizadas');
           };
 
@@ -214,39 +250,84 @@
                 if (isConnectedToCloud) {
                     const previousTestUsers = usuarios.filter(u => u.modoTest && u.id !== usuAct.id);
                     await dbGuardar('usuarios', usuAct.id, usuAct);
-                    for (const u of previousTestUsers) await dbGuardar('usuarios', u.id, { ...u, modoTest: false });
+                    for (const u of previousTestUsers) {
+                        await dbGuardar('usuarios', u.id, { ...u, modoTest: false });
+                    }
                 } else {
-                    const newU = usuarios.map(u => { if (u.id === usuAct.id) return usuAct; return u.modoTest ? { ...u, modoTest: false } : u; });
-                    setUsuarios(newU); saveLocal('usuarios', newU);
+                    const newU = usuarios.map(u => {
+                        if (u.id === usuAct.id) return usuAct;
+                        return u.modoTest ? { ...u, modoTest: false } : u;
+                    });
+                    setUsuarios(newU);
+                    saveLocal('usuarios', newU);
                 }
             } else {
                 if(isConnectedToCloud) dbGuardar('usuarios', usuAct.id, usuAct); 
                 else { const newU = usuarios.map(u => u.id === usuAct.id ? usuAct : u); setUsuarios(newU); saveLocal('usuarios', newU); }
             }
-            showToast('Perfil actualizado');
+            showToast('Perfil actualizado correctamente');
           };
 
-          const handleEliminarUsuario = (id) => { if(isConnectedToCloud) dbEliminar('usuarios', id); else { const newU = usuarios.filter(u => u.id !== id); setUsuarios(newU); saveLocal('usuarios', newU); } showToast('Cliente removido', 'error'); };
-          const handleCrearOrden = (nueva) => { if(isConnectedToCloud) dbGuardar('ordenes', nueva.id, nueva); else { const newO = [nueva, ...ordenes]; setOrdenes(newO); saveLocal('ordenes', newO); } showToast('Cotización generada'); };
-          const handleActualizarOrden = (ord) => { if(isConnectedToCloud) dbGuardar('ordenes', ord.id, ord); else { const newO = ordenes.map(o => o.id === ord.id ? ord : o); setOrdenes(newO); saveLocal('ordenes', newO); } showToast('Orden actualizada'); }
-          const handleEliminarOrden = (id) => { if(isConnectedToCloud) dbEliminar('ordenes', id); else { const newO = ordenes.filter(o => o.id !== id); setOrdenes(newO); saveLocal('ordenes', newO); } showToast('Orden eliminada', 'error'); }
-          
-          const adminSetRecursos = async (nuevo) => {
-            try { if(isConnectedToCloud) { await dbGuardar('recursos', nuevo.id, nuevo); } else { const newR = [nuevo, ...recursos]; setRecursos(newR); saveLocal('recursos', newR); } showToast('Recurso publicado'); } 
-            catch (error) { showToast('Error al publicar.', 'error'); }
+          const handleEliminarUsuario = (id) => {
+            if(isConnectedToCloud) dbEliminar('usuarios', id); else { const newU = usuarios.filter(u => u.id !== id); setUsuarios(newU); saveLocal('usuarios', newU); }
+            showToast('Perfil de cliente removido', 'error');
           };
-          const adminEliminarRecurso = (id) => { if(isConnectedToCloud) dbEliminar('recursos', id); else { const newR = recursos.filter(r => r.id !== id); setRecursos(newR); saveLocal('recursos', newR); } showToast('Recurso eliminado', 'error'); };
-          const adminSetCatalogo = (nuevo) => { if(isConnectedToCloud) { const ids = nuevo.map(c => c.id); catalogo.forEach(c => { if(!ids.includes(c.id)) dbEliminar('catalogo', c.id); }); nuevo.forEach(c => dbGuardar('catalogo', c.id, c)); } else { setCatalogo(nuevo); saveLocal('catalogo', nuevo); } showToast('Catálogo actualizado'); };
-          const adminSetTecnicas = (nuevas) => { if(isConnectedToCloud) { const ids = nuevas.map(c => c.id); tecnicas.forEach(t => { if(!ids.includes(t.id)) dbEliminar('tecnicas', t.id); }); nuevas.forEach(t => dbGuardar('tecnicas', t.id, t)); } else { setTecnicas(nuevas); saveLocal('tecnicas', nuevas); } showToast('Técnicas guardadas'); };
-          
-          const adminSetConfiguracionGlobal = (nuevoM, nuevoI, nuevosD) => {
-            if(isConnectedToCloud) dbGuardar('config', 'general', { margenGanancia: nuevoM, impuestoGlobal: nuevoI, descuentosVolumen: nuevosD });
-            else { setMargenGanancia(nuevoM); saveLocal('margenGanancia', nuevoM); setImpuestoGlobal(nuevoI); saveLocal('impuestoGlobal', nuevoI); setDescuentosVolumen(nuevosD); saveLocal('descuentosVol', nuevosD); }
-            showToast('Tarifas globales guardadas');
+          const handleCrearOrden = (nuevaOrden) => {
+            if(isConnectedToCloud) dbGuardar('ordenes', nuevaOrden.id, nuevaOrden); else { const newOrders = [nuevaOrden, ...ordenes]; setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
+            showToast('Cotización generada con éxito');
+          };
+          const handleActualizarOrden = (ordenAct) => {
+            if(isConnectedToCloud) dbGuardar('ordenes', ordenAct.id, ordenAct); else { const newOrders = ordenes.map(o => o.id === ordenAct.id ? ordenAct : o); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
+            showToast('Orden actualizada');
           }
-          const adminSetMensajes = (nuevos) => { if(isConnectedToCloud) dbGuardar('config', 'mensajes', nuevos); else { setMensajesGlobales(nuevos); saveLocal('mensajes', nuevos); } showToast('Mensajes guardados'); }
-          
-          const handleLogout = async () => { setUsuarioActual(null); if (auth && auth.currentUser) try { await signOut(auth); } catch(e) {} };
+          const handleEliminarOrden = (id) => {
+             if(isConnectedToCloud) dbEliminar('ordenes', id); else { const newOrders = ordenes.filter(o => o.id !== id); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
+             showToast('Orden eliminada permanentemente', 'error');
+          }
+          const adminSetRecursos = async (nuevoRecurso) => {
+            try {
+                if(isConnectedToCloud) {
+                    await dbGuardar('recursos', nuevoRecurso.id, nuevoRecurso);
+                } else { 
+                    const newR = [nuevoRecurso, ...recursos]; setRecursos(newR); saveLocal('recursos', newR); 
+                }
+                showToast('Recurso publicado correctamente');
+            } catch (error) {
+                console.error("Error subiendo recurso:", error);
+                showToast('Error al publicar. Verifica las reglas o el tamaño del archivo.', 'error');
+            }
+          };
+          const adminEliminarRecurso = (id) => {
+            if(isConnectedToCloud) dbEliminar('recursos', id); else { const newR = recursos.filter(r => r.id !== id); setRecursos(newR); saveLocal('recursos', newR); }
+            showToast('Recurso eliminado del portal', 'error');
+          };
+          const adminSetCatalogo = (nuevoCatalogo) => {
+            if(isConnectedToCloud) { const idsActuales = nuevoCatalogo.map(c => c.id); catalogo.forEach(c => { if(!idsActuales.includes(c.id)) dbEliminar('catalogo', c.id); }); nuevoCatalogo.forEach(c => dbGuardar('catalogo', c.id, c)); } 
+            else { setCatalogo(nuevoCatalogo); saveLocal('catalogo', nuevoCatalogo); }
+            showToast('Catálogo actualizado');
+          };
+          const adminSetTecnicas = (nuevasTecnicas) => {
+            if(isConnectedToCloud) { const idsActuales = nuevasTecnicas.map(c => c.id); tecnicas.forEach(t => { if(!idsActuales.includes(t.id)) dbEliminar('tecnicas', t.id); }); nuevasTecnicas.forEach(t => dbGuardar('tecnicas', t.id, t)); } 
+            else { setTecnicas(nuevasTecnicas); saveLocal('tecnicas', nuevasTecnicas); }
+            showToast('Configuración de técnicas guardada');
+          };
+          const adminSetConfiguracionGlobal = (nuevoMargen, nuevoImpuesto, nuevosDescuentos) => {
+            if(isConnectedToCloud) dbGuardar('config', 'general', { margenGanancia: nuevoMargen, impuestoGlobal: nuevoImpuesto, descuentosVolumen: nuevosDescuentos });
+            else { 
+                setMargenGanancia(nuevoMargen); saveLocal('margenGanancia', nuevoMargen); 
+                setImpuestoGlobal(nuevoImpuesto); saveLocal('impuestoGlobal', nuevoImpuesto); 
+                setDescuentosVolumen(nuevosDescuentos); saveLocal('descuentosVol', nuevosDescuentos); 
+            }
+            showToast('Tarifas guardadas exitosamente');
+          }
+          const adminSetMensajes = (nuevosMensajes) => {
+              if(isConnectedToCloud) dbGuardar('config', 'mensajes', nuevosMensajes); else { setMensajesGlobales(nuevosMensajes); saveLocal('mensajes', nuevosMensajes); }
+              showToast('Mensajes guardados');
+          }
+          const handleLogout = async () => {
+              setUsuarioActual(null);
+              if (auth && auth.currentUser) try { await signOut(auth); } catch(e) { console.error("Error al salir", e); }
+          };
 
           if (loadingData) return ( <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white font-bold fade-in"><Database size={48} className="text-blue-500 mb-4 animate-bounce" /><p>Conectando al Sistema Seguro...</p></div> );
           
@@ -265,11 +346,14 @@
                     <PantallaLogin auth={auth} isConnectedToCloud={isConnectedToCloud} />
                  ) : usuarioActual.rol === 'ADMIN' ? (
                     <PanelAdmin 
-                        ordenes={ordenes} categorias={categorias} setCategorias={adminSetCategorias}
+                        ordenes={ordenes} 
+                        categorias={categorias} setCategorias={adminSetCategorias}
                         catalogo={catalogo} setCatalogo={adminSetCatalogo} tecnicas={tecnicas} setTecnicas={adminSetTecnicas}
                         margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={adminSetConfiguracionGlobal}
-                        mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} usuarios={usuarios} onActualizarUsuario={handleActualizarUsuario} onEliminarUsuario={handleEliminarUsuario}
-                        recursos={recursos} onActualizarRecurso={adminSetRecursos} onEliminarRecurso={adminEliminarRecurso} onActualizarOrden={handleActualizarOrden} onEliminarOrden={handleEliminarOrden} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
+                        mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes}
+                        usuarios={usuarios} onActualizarUsuario={handleActualizarUsuario} onEliminarUsuario={handleEliminarUsuario}
+                        recursos={recursos} onActualizarRecurso={adminSetRecursos} onEliminarRecurso={adminEliminarRecurso}
+                        onActualizarOrden={handleActualizarOrden} onEliminarOrden={handleEliminarOrden} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
                     />
                  ) : (
                     <PortalClienteVIP 
@@ -284,30 +368,13 @@
 
         function ConnectionIndicator({ isConnectedToCloud, darkTheme = false }) {
             return (
-                <div className={`p-3 rounded-xl flex items-center gap-3 text-xs font-bold transition-all shadow-sm ${isConnectedToCloud ? (darkTheme ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') : (darkTheme ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200')}`}>
+                <div className={`p-3 rounded-xl flex items-center gap-3 text-xs font-bold transition-all shadow-sm
+                    ${isConnectedToCloud ? (darkTheme ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') : (darkTheme ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200')}
+                `}>
                     <div className="relative flex h-3 w-3 shrink-0">{isConnectedToCloud && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}<span className={`relative inline-flex rounded-full h-3 w-3 ${isConnectedToCloud ? 'bg-emerald-500' : 'bg-amber-500'}`}></span></div>
                     <div><p className="uppercase tracking-wider opacity-80 text-[10px]">Estado del Sistema</p><p>{isConnectedToCloud ? 'Sincronización (Nube)' : 'Local (Sin Nube)'}</p></div>
                 </div>
             );
-        }
-
-        function MenuBtn({ icon: Icon, label, active, onClick }) {
-            return (
-                <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-blue-600'}`}>
-                    <Icon size={20} /><span>{label}</span>
-                </button>
-            );
-        }
-        
-        function EstadoBadge({ estado }) {
-            const colores = {
-                'Cotización enviada': 'bg-slate-100 text-slate-700 border-slate-200', 'Pendiente': 'bg-amber-100 text-amber-700 border-amber-200',
-                'Aprobado / En producción': 'bg-blue-100 text-blue-700 border-blue-200', 'Control de calidad': 'bg-purple-100 text-purple-700 border-purple-200',
-                'Listo para envío': 'bg-indigo-100 text-indigo-700 border-indigo-200', 'Entrega parcial': 'bg-teal-100 text-teal-700 border-teal-200',
-                'Finalizado / Entregado': 'bg-emerald-100 text-emerald-700 border-emerald-200', 'Cancelada': 'bg-red-100 text-red-700 border-red-200'
-            };
-            const col = colores[estado] || colores['Pendiente'];
-            return <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${col}`}>{estado}</span>;
         }
 
         function PantallaLogin({ auth, isConnectedToCloud }) {
@@ -317,7 +384,9 @@
           const [loading, setLoading] = useState(false);
 
           const handleAuth = async (e) => {
-            e.preventDefault(); setError(''); setLoading(true);
+            e.preventDefault();
+            setError('');
+            setLoading(true);
             try {
               if (isConnectedToCloud && auth) await signInWithEmailAndPassword(auth, username, password);
               else setError('El sistema requiere conexión a la nube activa.');
@@ -351,6 +420,7 @@
 
         function PortalClienteVIP({ cliente, catalogo, categorias, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, ordenes, onCrearOrden, onActualizarOrden, mensajesGlobales, recursos, onLogout, isConnectedToCloud, showToast }) {
           const [vista, setVista] = useState('NUEVA_COTIZACION'); 
+          
           return (
             <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row fade-in">
               <aside className="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10 no-print md:h-screen md:sticky md:top-0">
@@ -375,7 +445,9 @@
               <main className="flex-1 p-8 overflow-y-auto bg-slate-50">
                 {(mensajesGlobales.bienvenida || mensajesGlobales.promo) && (
                     <div className="max-w-5xl mx-auto mb-6 bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-start gap-4 fade-in hover:shadow-md transition-shadow">
-                        <div className="bg-blue-50 p-2.5 rounded-lg shrink-0"><Megaphone size={20} className="text-blue-600" /></div>
+                        <div className="bg-blue-50 p-2.5 rounded-lg shrink-0">
+                            <Megaphone size={20} className="text-blue-600" />
+                        </div>
                         <div className="flex-1 pt-0.5">
                             {mensajesGlobales.bienvenida && <h2 className="font-bold text-slate-800 text-sm mb-1 tracking-tight">{mensajesGlobales.bienvenida}</h2>}
                             {mensajesGlobales.promo && <p className="text-slate-500 text-xs leading-relaxed max-w-4xl whitespace-pre-wrap">{mensajesGlobales.promo}</p>}
@@ -401,7 +473,10 @@
                             <div key={r.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-all">
                                 <div className="flex items-start gap-3 mb-4">
                                     <div className="bg-blue-50 p-3 rounded-xl text-blue-600"><BookOpen size={24}/></div>
-                                    <div><h3 className="font-bold text-slate-700 leading-tight">{r.titulo}</h3>{r.descripcion && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.descripcion}</p>}</div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-700 leading-tight">{r.titulo}</h3>
+                                        {r.descripcion && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.descripcion}</p>}
+                                    </div>
                                 </div>
                                 <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-50 text-blue-600 font-bold py-2.5 rounded-xl border border-slate-200 hover:bg-blue-50 transition-colors text-sm">Descargar / Ver</a>
                             </div>
@@ -436,7 +511,9 @@
           }, [catalogo, busqueda, categoriaFiltro]);
 
           const totalPaginas = Math.ceil(catalogoFiltrado.length / itemsPorPagina) || 1;
-          const catalogoPaginado = useMemo(() => catalogoFiltrado.slice((paginaActual - 1) * itemsPorPagina, paginaActual * itemsPorPagina), [catalogoFiltrado, paginaActual, itemsPorPagina]);
+          const catalogoPaginado = useMemo(() => {
+              return catalogoFiltrado.slice((paginaActual - 1) * itemsPorPagina, paginaActual * itemsPorPagina);
+          }, [catalogoFiltrado, paginaActual, itemsPorPagina]);
 
           const productoSeleccionado = catalogo.find(c => c.id === itemSelect);
           const tecnicasPermitidas = useMemo(() => {
@@ -455,12 +532,14 @@
             if (!productoSeleccionado) return null;
             let minRequerido = 1;
             
+            // 1. Identificamos primero el mínimo requerido
             aplicaciones.forEach(app => {
               if(!app.tecnicaId || !app.subcatId || !app.opcionId) return;
               const tec = tecnicas.find(t => t.id === app.tecnicaId); if(!tec) return;
               if (tec.minimo > minRequerido) minRequerido = tec.minimo;
             });
 
+            // 2. Definimos la cantidad efectiva a calcular
             const cantNum = Number(cantidad) || 0;
             const cantEfectiva = (cliente.modoTest || cantNum >= minRequerido) ? cantNum : minRequerido;
 
@@ -469,9 +548,10 @@
             const aplicaImpProd = productoSeleccionado.cobraImpuesto !== false;
             let impuestoProducto = aplicaImpProd ? subtotalProducto * (impuestoGlobal / 100) : 0;
             
-            let subtotalTecnicas = 0; let impuestoTecnicas = 0;
-            let subtotalTecnicasUnicas = 0; let impuestoTecnicasUnicas = 0;
             let subtotalTecnicasBruto = 0;
+            let subtotalTecnicasConDesc = 0;
+            let impuestoTecnicas = 0;
+            let tiersAplicadosMap = [];
 
             aplicaciones.forEach(app => {
               if(!app.tecnicaId || !app.subcatId || !app.opcionId) return;
@@ -479,84 +559,85 @@
               const subcat = tec.subcategorias.find(s => s.id === app.subcatId); 
               const opcion = subcat?.opciones.find(o => o.id === app.opcionId); if(!opcion) return;
 
-              // Identificar si la ubicación actual tiene tarifas únicas activas
-              const tieneTarifaUnica = subcat.tarifasUnicas?.activado;
-              const margenAUsar = tieneTarifaUnica ? (subcat.tarifasUnicas.margen !== undefined ? subcat.tarifasUnicas.margen : margenGanancia) : margenGanancia;
+              // Extraer margen, impuesto y descuentos específicos de la Ubicación si están definidos
+              const margenApp = (subcat && subcat.margenGanancia !== undefined) ? Number(subcat.margenGanancia) : margenGanancia;
+              const impuestoApp = (subcat && subcat.impuestoGlobal !== undefined) ? Number(subcat.impuestoGlobal) : impuestoGlobal;
+              const descVolApp = (subcat && subcat.descuentosVolumen) ? subcat.descuentosVolumen : descuentosVolumen;
 
               const fijoApp = opcion.costosFijos.reduce((sum, c) => sum + Number(c.valor), 0);
               const varApp = opcion.costosVariables.reduce((sum, c) => sum + Number(c.valor), 0);
               
-              // Subtotal bruto de esta aplicación (antes de descuentos por volumen)
-              const subtotalVentaApp = (fijoApp + (varApp * cantEfectiva)) * (1 + (margenAUsar / 100));
+              const subtotalVentaApp = (fijoApp + (varApp * cantEfectiva)) * (1 + (margenApp / 100));
               subtotalTecnicasBruto += subtotalVentaApp;
 
-              if (tieneTarifaUnica) {
-                  // Aplicar descuento por volumen local independiente si existe
-                  let descVolLocal = 0;
-                  if (subcat.tarifasUnicas.descuentosVolumen) {
-                      const tiers = [...subcat.tarifasUnicas.descuentosVolumen].sort((a,b) => b.min - a.min);
-                      for (let t of tiers) {
-                          if (t.activo !== false && cantEfectiva >= t.min) { descVolLocal = t.pct / 100; break; }
-                      }
+              let descVolPct = 0;
+              let tierActivoApp = null;
+              if (descVolApp) {
+                  const tiers = [...descVolApp].sort((a,b) => b.min - a.min);
+                  for (let t of tiers) { 
+                      if (t.activo !== false && cantEfectiva >= t.min) { 
+                          tierActivoApp = t; 
+                          descVolPct = t.pct / 100;
+                          break; 
+                      } 
                   }
-                  const appDescontada = subtotalVentaApp * (1 - descVolLocal);
-                  subtotalTecnicasUnicas += appDescontada;
-                  if (tec.cobraImpuesto !== false) impuestoTecnicasUnicas += appDescontada * (impuestoGlobal / 100);
-              } else {
-                  // Comportamiento regular agrupado
-                  subtotalTecnicas += subtotalVentaApp;
-                  if (tec.cobraImpuesto !== false) impuestoTecnicas += subtotalVentaApp * (impuestoGlobal / 100);
+              }
+
+              if (tierActivoApp) {
+                  tiersAplicadosMap.push({ subcatNombre: subcat.nombre, tecNombre: tec.nombre, tier: tierActivoApp });
+              }
+
+              let subtotalAppDesc = subtotalVentaApp * (1 - descVolPct);
+              subtotalTecnicasConDesc += subtotalAppDesc;
+
+              if (tec.cobraImpuesto !== false) {
+                  impuestoTecnicas += subtotalAppDesc * (impuestoApp / 100);
               }
             });
 
-            // Subtotal absoluto sin descuentos
-            let subtotalGlobalBruto = subtotalProducto + subtotalTecnicasBruto;
-
-            // Descuentos globales solo aplican a productos y técnicas regulares
-            let subtotalNormalSujetoADescuento = subtotalProducto + subtotalTecnicas;
-            let descuentoVol = 0; 
-            let tierActivo = null;
-
+            let descVolProdPct = 0;
+            let tierActivoProd = null;
             if (descuentosVolumen) {
                 const tiers = [...descuentosVolumen].sort((a,b) => b.min - a.min);
                 for (let t of tiers) { 
                     if (t.activo !== false && cantEfectiva >= t.min) { 
-                        tierActivo = t; 
-                        descuentoVol = t.pct / 100;
+                        tierActivoProd = t; 
+                        descVolProdPct = t.pct / 100;
                         break; 
                     } 
                 }
             }
 
-            let subtotalNormalConVolumen = subtotalNormalSujetoADescuento * (1 - descuentoVol);
-            let impuestoNormalConVolumen = (impuestoProducto + impuestoTecnicas) * (1 - descuentoVol);
+            let subtotalProdConDesc = subtotalProducto * (1 - descVolProdPct);
+            let impuestoProdFinal = impuestoProducto * (1 - descVolProdPct);
 
-            // Sumamos las técnicas independientes que ya traen su propio descuento local
-            let subtotalAntesVip = subtotalNormalConVolumen + subtotalTecnicasUnicas;
-            let impuestoAntesVip = impuestoNormalConVolumen + impuestoTecnicasUnicas;
+            let multVIP = (1 - (cliente.descuentoGlobal / 100));
             
-            // Aplicamos descuento VIP en cascada a TODO
-            let multVip = (1 - (cliente.descuentoGlobal / 100));
-            let subtotalConDescuento = subtotalAntesVip * multVip;
-            let impuestoTotalFinal = impuestoAntesVip * multVip;
+            let subtotalBruto = subtotalProducto + subtotalTecnicasBruto;
+            let subtotalConDescuento = (subtotalProdConDesc + subtotalTecnicasConDesc) * multVIP;
+            let impuestoTotalFinal = (impuestoProdFinal + impuestoTecnicas) * multVIP;
             let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
             return { 
-                subtotalBruto: subtotalGlobalBruto, 
-                subtotalDescuento: subtotalConDescuento, 
-                impuestos: impuestoTotalFinal, 
-                total: totalFinal, 
-                unitario: cantEfectiva > 0 ? totalFinal / cantEfectiva : 0, 
-                minRequerido, 
-                tierActivo, 
-                valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, 
-                cantEfectiva 
+              subtotalBruto, 
+              subtotalDescuento: subtotalConDescuento, 
+              impuestos: impuestoTotalFinal, 
+              total: totalFinal, 
+              unitario: cantEfectiva > 0 ? totalFinal / cantEfectiva : 0, 
+              minRequerido, 
+              tierActivo: tierActivoProd || (tiersAplicadosMap.length > 0 ? tiersAplicadosMap[0].tier : null), 
+              tiersAplicadosMap,
+              valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, 
+              cantEfectiva 
             };
           }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, cliente.modoTest, tecnicas, descuentosVolumen]);
 
           useEffect(() => { 
-              if (!cliente.modoTest && cotizacion && Number(cantidad) < cotizacion.minRequerido) setErrorValidacion(`Esta personalización exige un mínimo de ${cotizacion.minRequerido} pzas.`); 
-              else setErrorValidacion(''); 
+              if (!cliente.modoTest && cotizacion && Number(cantidad) < cotizacion.minRequerido) {
+                  setErrorValidacion(`Esta personalización exige un mínimo de ${cotizacion.minRequerido} pzas.`); 
+              } else {
+                  setErrorValidacion(''); 
+              }
           }, [cantidad, cotizacion, cliente.modoTest]);
 
           const handleGuardar = () => {
@@ -565,7 +646,9 @@
               const t = tecnicas.find(x => x.id === app.tecnicaId); const s = t?.subcategorias.find(y => y.id === app.subcatId); const o = s?.opciones.find(z => z.id === app.opcionId);
               return { tecnica: t?.nombre || 'N/A', ubicacion: s?.nombre || 'N/A', variante: o?.nombre || 'N/A' };
             });
+
             const ahorro = cotizacion.subtotalBruto > cotizacion.subtotalDescuento ? cotizacion.subtotalBruto - cotizacion.subtotalDescuento : 0;
+
             onGuardar({
               id: `ORD-${Math.floor(Math.random() * 10000)}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre,
               proveeCliente, detalles: tecnicasDetalle.map(td => `${td.tecnica} (${td.ubicacion} - ${td.variante})`).join(' + ') || 'Sin Personalizar', tecnicasEstructuradas: tecnicasDetalle, comentario: comentario, cantidad, fecha: new Date().toLocaleDateString(),
@@ -599,7 +682,10 @@
                             </select>
                             <div className="flex items-center gap-2">
                                 <label className="text-sm text-slate-500 font-semibold whitespace-nowrap">Mostrar:</label>
-                                <select value={itemsPorPagina} onChange={e=>setItemsPorPagina(Number(e.target.value))} className="p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700"><option value={10}>10 artículos</option><option value={20}>20 artículos</option></select>
+                                <select value={itemsPorPagina} onChange={e=>setItemsPorPagina(Number(e.target.value))} className="p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700">
+                                    <option value={10}>10 artículos</option>
+                                    <option value={20}>20 artículos</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -630,6 +716,7 @@
                             <button disabled={paginaActual === totalPaginas} onClick={() => setPaginaActual(p => p + 1)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 disabled:opacity-50 transition-colors"><ChevronRight size={20} className="text-slate-600"/></button>
                         </div>
                     )}
+
                     <div className="mt-8 flex justify-end border-t border-slate-100 pt-6"><button disabled={!itemSelect} onClick={() => setPaso(2)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-lg">Siguiente Paso</button></div>
                   </div>
                 )}
@@ -643,7 +730,12 @@
                       {aplicaciones.map((app, index) => {
                         const tecObj = tecnicas.find(t => t.id === app.tecnicaId); 
                         const subObj = tecObj?.subcategorias.find(s => s.id === app.subcatId);
-                        const subcategoriasPermitidas = tecObj?.subcategorias.filter(s => !productoSeleccionado.ubicacionesAceptadas || productoSeleccionado.ubicacionesAceptadas.length === 0 || productoSeleccionado.ubicacionesAceptadas.includes(s.id)) || [];
+                        
+                        const subcategoriasPermitidas = tecObj?.subcategorias.filter(s => 
+                            !productoSeleccionado.ubicacionesAceptadas || 
+                            productoSeleccionado.ubicacionesAceptadas.length === 0 || 
+                            productoSeleccionado.ubicacionesAceptadas.includes(s.id)
+                        ) || [];
 
                         return (
                           <div key={app.id} className="p-4 border border-slate-200 rounded-2xl bg-slate-50 relative flex flex-col md:flex-row gap-4 items-center">
@@ -656,7 +748,7 @@
                               <label className="text-xs font-bold text-slate-500 mb-1 block">Ubicación</label>
                               <select disabled={!tecObj} value={app.subcatId} onChange={e => actualizarAplicacion(app.id, 'subcatId', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400">
                                   <option value="">-- Seleccionar --</option>
-                                  {subcategoriasPermitidas.map(s => <option key={s.id} value={s.id}>{s.nombre} {s.tarifasUnicas?.activado && '⭐'}</option>)}
+                                  {subcategoriasPermitidas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                               </select>
                             </div>
                             <div className="flex-1 w-full">
@@ -678,34 +770,57 @@
                       <div className="flex-1 space-y-6">
                         <div>
                           <label className="block text-sm font-bold text-slate-600 mb-2">Cantidad de Unidades</label>
-                          <input type="number" min={cliente.modoTest ? 1 : (cotizacion?.minRequerido || 1)} value={cantidad} onChange={(e) => setCantidad(e.target.value === '' ? '' : Number(e.target.value))} 
-                              onBlur={(e) => { const val = Number(e.target.value); if (!cliente.modoTest && val < (cotizacion?.minRequerido || 1)) setCantidad(cotizacion?.minRequerido || 1); }}
-                              className="w-full p-4 rounded-xl border-2 border-blue-200 text-2xl font-bold focus:border-blue-600 outline-none transition-colors" />
-                          {errorValidacion && ( <p className="text-amber-600 text-sm font-bold mt-2 flex items-center gap-1 bg-amber-50 p-2.5 rounded-lg border border-amber-200 fade-in"><AlertCircle size={16} className="shrink-0"/> {errorValidacion}</p> )}
+                          <input 
+                              type="number" 
+                              min={cliente.modoTest ? 1 : (cotizacion?.minRequerido || 1)} 
+                              value={cantidad} 
+                              onChange={(e) => setCantidad(e.target.value === '' ? '' : Number(e.target.value))} 
+                              onBlur={(e) => {
+                                  const val = Number(e.target.value);
+                                  if (!cliente.modoTest && val < (cotizacion?.minRequerido || 1)) setCantidad(cotizacion?.minRequerido || 1);
+                              }}
+                              className="w-full p-4 rounded-xl border-2 border-blue-200 text-2xl font-bold focus:border-blue-600 outline-none transition-colors" 
+                          />
+                          {errorValidacion && (
+                              <p className="text-amber-600 text-sm font-bold mt-2 flex items-center gap-1 bg-amber-50 p-2.5 rounded-lg border border-amber-200 fade-in">
+                                  <AlertCircle size={16} className="shrink-0"/> {errorValidacion} (El volumen se ajustará automáticamente).
+                              </p>
+                          )}
                         </div>
 
-                        {productoSeleccionado.cobraImpuesto === false && ( <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex items-center gap-3 text-amber-800"><Info size={20} className="shrink-0" /><p className="text-sm font-bold">Has seleccionado un artículo marcado como Exento de ISV.</p></div> )}
+                        {productoSeleccionado.cobraImpuesto === false && (
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex items-center gap-3 text-amber-800">
+                                <Info size={20} className="shrink-0" />
+                                <p className="text-sm font-bold">Has seleccionado un artículo que está marcado como Exento de ISV.</p>
+                            </div>
+                        )}
 
                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
                             <label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><MessageSquare size={16}/> Notas para el Taller (Opcional)</label>
-                            <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm bg-white" rows="3"></textarea>
+                            <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm bg-white" rows="3" placeholder="Ej: Favor usar logo en color azul marino..."></textarea>
+                            <p className="text-right text-xs text-slate-400 mt-1">{comentario.length}/250</p>
                         </div>
 
                         <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
                           <p className="text-sm text-emerald-800 font-bold">Descuentos Dinámicos Activos:</p>
                           <ul className="text-xs text-emerald-600 list-disc pl-4 mt-1 space-y-1">
                             {cliente.descuentoGlobal > 0 && <li>Cliente VIP: -{cliente.descuentoGlobal}%</li>}
-                            {cotizacion.tierActivo && (
-                                <li>Tarifa por Volumen (+{cotizacion.tierActivo.min}u): -{cotizacion.tierActivo.pct}% <span className="block text-[10px] text-emerald-600/80 mt-0.5">Se aplica a regulares.</span></li>
+                            {cotizacion.tiersAplicadosMap && cotizacion.tiersAplicadosMap.length > 0 ? (
+                                cotizacion.tiersAplicadosMap.map((item, idx) => (
+                                    <li key={idx}>
+                                        Tarifa por Volumen en {item.subcatNombre} (+{item.tier.min}u): -{item.tier.pct}%
+                                        <span className="block text-[10px] text-emerald-600/80 mt-0.5">Se aplica a todas las {cantidad} piezas por igual.</span>
+                                    </li>
+                                ))
+                            ) : cotizacion.tierActivo ? (
+                                <li>
+                                    Tarifa por Volumen (+{cotizacion.tierActivo.min}u): -{cotizacion.tierActivo.pct}%
+                                    <span className="block text-[10px] text-emerald-600/80 mt-0.5">Se aplica a todas las {cantidad} piezas por igual.</span>
+                                </li>
+                            ) : null}
+                            {cliente.descuentoGlobal === 0 && !cotizacion.tierActivo && (!cotizacion.tiersAplicadosMap || cotizacion.tiersAplicadosMap.length === 0) && (
+                                <li className="list-none text-slate-500 italic mt-1">No hay descuentos aplicables en este volumen.</li>
                             )}
-                            {aplicaciones.some(app => {
-                                const t = tecnicas.find(x => x.id === app.tecnicaId);
-                                const s = t?.subcategorias.find(y => y.id === app.subcatId);
-                                return s?.tarifasUnicas?.activado && s?.tarifasUnicas?.descuentosVolumen?.some(d => d.activo !== false && cotizacion.cantEfectiva >= d.min);
-                            }) && (
-                                <li>Tarifas por Volumen Únicas aplicadas en ubicaciones específicas.</li>
-                            )}
-                            {cliente.descuentoGlobal === 0 && !cotizacion.tierActivo && <li className="list-none text-slate-500 italic mt-1">No hay descuentos globales en este volumen.</li>}
                           </ul>
                         </div>
                       </div>
@@ -713,12 +828,26 @@
                       <div className="flex-1 bg-slate-900 text-white p-6 rounded-3xl flex flex-col justify-between shadow-lg relative overflow-hidden">
                         <div>
                           <h4 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Resumen Financiero</h4>
-                          {cotizacion.cantEfectiva > Number(cantidad) && ( <p className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded mb-3 border border-amber-500/20 w-fit">Proyectando base al mínimo ({cotizacion.cantEfectiva} u.)</p> )}
+                          {cotizacion.cantEfectiva > Number(cantidad) && (
+                              <p className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded mb-3 border border-amber-500/20 w-fit">
+                                  Proyectando base al mínimo ({cotizacion.cantEfectiva} u.)
+                              </p>
+                          )}
                           <div className="space-y-2 text-sm text-slate-300">
                             <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
-                            {cotizacion.subtotalDescuento < cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
-                            {cotizacion.subtotalBruto > cotizacion.subtotalDescuento && ( <div className="flex justify-between text-emerald-400 font-medium"><span>Su Ahorro:</span> <span>- L {(cotizacion.subtotalBruto - cotizacion.subtotalDescuento).toFixed(2)}</span></div> )}
-                            <div className="flex justify-between"><span>Impuestos:</span> <span>L {cotizacion.impuestos.toFixed(2)}</span></div>
+                            {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
+                            
+                            {cotizacion.subtotalBruto > cotizacion.subtotalDescuento && (
+                                <div className="flex justify-between text-emerald-400 font-medium">
+                                    <span>Su Ahorro:</span> 
+                                    <span>- L {(cotizacion.subtotalBruto - cotizacion.subtotalDescuento).toFixed(2)}</span>
+                                </div>
+                            )}
+
+                            <div className="flex justify-between">
+                                <span>Impuestos:</span> 
+                                <span>L {cotizacion.impuestos.toFixed(2)}</span>
+                            </div>
                           </div>
                         </div>
                         <div className="border-t border-slate-700 mt-6 pt-4">
@@ -751,7 +880,8 @@
           return (
             <div className="max-w-5xl mx-auto space-y-4 fade-in relative">
               {ordenSeleccionada && (
-                  <ModalDetalleOrden orden={ordenSeleccionada} isClient={isClient} clienteInfo={cliente} onClose={() => setOrdenSeleccionada(null)}
+                  <ModalDetalleOrden 
+                    orden={ordenSeleccionada} isClient={isClient} clienteInfo={cliente} onClose={() => setOrdenSeleccionada(null)}
                     onActualizarOrden={(actualizada) => { onActualizarOrden(actualizada); setOrdenSeleccionada(actualizada); }}
                     onCancelar={() => { onActualizarOrden({...ordenSeleccionada, estado: 'Cancelada'}); setOrdenSeleccionada(null); }}
                     onEliminarAdmin={() => { onEliminarOrden(ordenSeleccionada.id); setOrdenSeleccionada(null); }}
@@ -819,7 +949,14 @@
                                 <div className="flex justify-end">
                                     <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
                                         <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
-                                        {orden.ahorro > 0 && ( <div className="flex justify-between text-emerald-600 print-text-emerald font-bold"><span>Su Ahorro:</span> <span>- L {orden.ahorro.toFixed(2)}</span></div> )}
+                                        
+                                        {orden.ahorro > 0 && (
+                                            <div className="flex justify-between text-emerald-600 print-text-emerald font-bold">
+                                                <span>Su Ahorro:</span> 
+                                                <span>- L {orden.ahorro.toFixed(2)}</span>
+                                            </div>
+                                        )}
+
                                         <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
                                         <div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div>
                                     </div>
@@ -838,74 +975,201 @@
             )
         }
 
-        function ModalTarifasUnicas({ subcategoria, margenGlobal, onSave, onClose }) {
-            const tUnicas = subcategoria.tarifasUnicas || {};
-            const [activado, setActivado] = useState(tUnicas.activado || false);
-            const [margen, setMargen] = useState(tUnicas.margen !== undefined ? tUnicas.margen : margenGlobal);
-            const [descuentos, setDescuentos] = useState(tUnicas.descuentosVolumen || []);
+        function GestionUsuarios({ usuarios, onActualizarUsuario, onEliminarUsuario }) {
+            const [modalUsuario, setModalUsuario] = useState(null);
+            const [modalConfirmacion, setModalConfirmacion] = useState(null);
 
-            const addTier = () => setDescuentos([...descuentos, { id: `desc_${Date.now()}`, min: 100, pct: 5, activo: true }]);
-            const updateTier = (id, field, value) => setDescuentos(descuentos.map(d => d.id === id ? { ...d, [field]: field === 'activo' ? value : (value === '' ? '' : Number(value)) } : d));
-            const removeTier = (id) => setDescuentos(descuentos.filter(d => d.id !== id));
+            const handleCrearPerfil = () => {
+                setModalUsuario({
+                    titulo: `Vincular Nuevo Cliente`,
+                    mensaje: `IMPORTANTE: Primero crea la cuenta en tu consola de Firebase Authentication y copia el "User UID".`,
+                    valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0, modoTest: false },
+                    campos: [
+                        { id: 'id', label: 'Firebase User UID:', type: 'text' },
+                        { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
+                        { id: 'telefono', label: 'Teléfono:', type: 'text' },
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' },
+                        { id: 'modoTest', label: 'Modo Test (Permitir cotizar por debajo del mínimo):', type: 'boolean' }
+                    ],
+                    onSubmit: (datos) => {
+                        onActualizarUsuario({ id: datos.id.trim(), rol: 'CLIENTE', nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal), modoTest: !!datos.modoTest });
+                    }
+                });
+            };
+
+            const handleEditar = (user) => {
+                setModalUsuario({
+                    titulo: `Editar Perfil: ${user.nombre}`,
+                    valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0, modoTest: !!user.modoTest },
+                    campos: [
+                        { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
+                        { id: 'telefono', label: 'Teléfono:', type: 'text' },
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' },
+                        { id: 'modoTest', label: 'Modo Test (Permitir cotizar por debajo del mínimo):', type: 'boolean' }
+                    ],
+                    onSubmit: (datos) => {
+                        onActualizarUsuario({ ...user, nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal), modoTest: !!datos.modoTest });
+                    }
+                });
+            };
+
+            const handleEliminar = (id, nombre, rol) => {
+                if(rol === 'ADMIN') return alert("No puedes eliminar al administrador principal desde aquí.");
+                setModalConfirmacion({
+                    titulo: 'Eliminar Perfil',
+                    mensaje: `¿Eliminar el perfil de "${nombre}"?`,
+                    submitLabel: 'Sí, Eliminar Perfil',
+                    onConfirm: () => onEliminarUsuario(id)
+                });
+            };
 
             return (
-                <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <h3 className="text-xl font-bold text-white mb-2">Tarifas Únicas</h3>
-                        <p className="text-sm text-slate-400 mb-6">Ubicación: <span className="font-bold text-blue-400">{subcategoria.nombre}</span></p>
-
-                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-bold text-white">Activar Tarifas Únicas</p>
-                                <p className="text-xs text-slate-400">Reemplaza el margen y descuentos globales solo para esta ubicación.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked={activado} onChange={(e) => setActivado(e.target.checked)} className="sr-only peer" />
-                                <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                            </label>
+                <div className="max-w-6xl mx-auto space-y-4 fade-in">
+                    {modalUsuario && <CustomModal config={modalUsuario} onClose={() => setModalUsuario(null)} />}
+                    {modalConfirmacion && <CustomModal config={{ titulo: modalConfirmacion.titulo, esConfirmacion: true, mensaje: modalConfirmacion.mensaje, submitLabel: modalConfirmacion.submitLabel, campos: [], onSubmit: modalConfirmacion.onConfirm }} onClose={() => setModalConfirmacion(null)} />}
+                    
+                    <div className="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-1">Perfiles de Clientes</h2>
+                            <p className="text-sm text-slate-400">Vincula los perfiles de los usuarios que ya registraste en Firebase Auth.</p>
                         </div>
-
-                        {activado && (
-                            <div className="fade-in">
-                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
-                                    <label className="text-sm font-bold text-emerald-400 block mb-2">Margen Específico (%)</label>
-                                    <input type="number" value={margen} onChange={e=>setMargen(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-emerald-500" />
-                                </div>
-
-                                <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <label className="text-sm font-bold text-blue-400">Descuentos por Volumen Únicos</label>
-                                        <button onClick={addTier} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-500 transition-colors">+ Añadir Nivel</button>
-                                    </div>
-                                    <div className="space-y-3">
-                                        {descuentos.map(d => (
-                                            <div key={d.id} className="flex gap-2 items-center bg-slate-800 p-2 rounded-lg border border-slate-600">
-                                                <div className="px-2 flex items-center">
-                                                    <input type="checkbox" checked={d.activo !== false} onChange={e=>updateTier(d.id, 'activo', e.target.checked)} className="accent-blue-500 w-4 h-4 cursor-pointer" title="Activar/Desactivar nivel" />
-                                                </div>
-                                                <div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Min. Pzas</label><input type="number" value={d.min} onChange={e=>updateTier(d.id, 'min', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-sm outline-none" /></div>
-                                                <div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Desc. (%)</label><input type="number" value={d.pct} onChange={e=>updateTier(d.id, 'pct', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-sm outline-none" /></div>
-                                                <button onClick={()=>removeTier(d.id)} className="mt-4 text-red-400 p-2 hover:bg-red-500/10 rounded"><Trash2 size={16}/></button>
-                                            </div>
-                                        ))}
-                                        {descuentos.length === 0 && <p className="text-xs text-slate-500 italic">No hay descuentos específicos configurados.</p>}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        <div className="flex justify-end gap-3 mt-4">
-                            <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button>
-                            <button onClick={() => { onSave({ activado, margen, descuentosVolumen: descuentos }); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar</button>
-                        </div>
+                        <button onClick={handleCrearPerfil} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105">
+                            <Plus size={20}/> Vincular Cliente
+                        </button>
                     </div>
+                    
+                    <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto">
+                        <table className="w-full text-left text-sm min-w-full">
+                            <thead>
+                                <tr className="border-b border-slate-700 text-slate-400">
+                                    <th className="pb-3 font-semibold">Cliente</th>
+                                    <th className="pb-3 font-semibold">Firebase UID</th>
+                                    <th className="pb-3 font-semibold">Rol & VIP</th>
+                                    <th className="pb-3 font-semibold text-right">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {usuarios.map(u => (
+                                    <tr key={u.id} className="hover:bg-slate-700/30 transition-colors">
+                                        <td className="py-4">
+                                            <p className="text-white font-bold">{u.nombre}</p>
+                                            <p className="text-slate-400 text-xs mt-1">Tel: {u.telefono || 'N/D'}</p>
+                                        </td>
+                                        <td className="py-4">
+                                            <div className="bg-slate-900 inline-block p-2 rounded-lg border border-slate-700 text-xs font-mono text-slate-400">{u.id}</div>
+                                        </td>
+                                        <td className="py-4">
+                                            {u.rol === 'ADMIN' ? (
+                                                <span className="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold">ADMINISTRADOR</span>
+                                            ) : (
+                                                <div>
+                                                    <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold">CLIENTE</span>
+                                                    {u.descuentoGlobal > 0 && <span className="ml-2 text-emerald-400 text-xs font-bold">VIP: -{u.descuentoGlobal}% OFF</span>}
+                                                    {u.modoTest && <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded text-[10px] font-bold mt-2 block w-max">MODO TEST</span>}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button onClick={() => handleEditar(u)} className="text-blue-400 hover:text-blue-300 p-2 rounded bg-slate-900 hover:bg-slate-700 transition" title="Editar Perfil"><Edit3 size={16}/></button>
+                                                <button onClick={() => handleEliminar(u.id, u.nombre, u.rol)} className="text-red-400 hover:text-red-300 p-2 rounded bg-slate-900 hover:bg-slate-700 transition" title="Eliminar Perfil"><Trash2 size={16}/></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        function GestionMensajes({ mensajesGlobales, adminSetMensajes }) {
+            const [form, setForm] = useState(mensajesGlobales);
+            const handleSave = (e) => { e.preventDefault(); adminSetMensajes(form); }
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-4 fade-in">
+                    <div><h2 className="text-2xl font-bold text-white mb-2">Avisos y Plantillas</h2></div>
+                    <form onSubmit={handleSave} className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-6 shadow-lg">
+                        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700">
+                            <h3 className="text-lg font-bold text-blue-400 flex items-center gap-2 mb-4"><Megaphone size={20}/> Mensajes en Panel Cliente</h3>
+                            <div className="space-y-4">
+                                <div><label className="block text-sm font-bold text-slate-400 mb-2">Mensaje Principal (Bienvenida)</label><input type="text" value={form.bienvenida || ''} onChange={(e) => setForm({...form, bienvenida: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-blue-500" /></div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-400 mb-2">Aviso General / Texto Promocional</label>
+                                    <p className="text-xs text-slate-500 mb-2">Usa este espacio para informar modificaciones de precios, actualizaciones de productos o promociones vigentes.</p>
+                                    <textarea value={form.promo || ''} onChange={(e) => setForm({...form, promo: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-blue-500 resize-none h-24"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700">
+                            <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2 mb-4"><Share2 size={20}/> Plantilla de WhatsApp</h3>
+                            <div className="space-y-4">
+                                <div><label className="block text-sm font-bold text-slate-400 mb-2">Número de WhatsApp de la Empresa (Opcional)</label><input type="text" value={form.whatsappNumero || ''} onChange={(e) => setForm({...form, whatsappNumero: e.target.value.replace(/[^0-9]/g, '')})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500" /></div>
+                                <div><label className="block text-sm font-bold text-slate-400 mb-2">Plantilla al Compartir Cotización</label><textarea value={form.whatsappTemplate || ''} onChange={(e) => setForm({...form, whatsappTemplate: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500 resize-none h-24"></textarea></div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end pt-4"><button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-500">Guardar Configuración</button></div>
+                    </form>
                 </div>
             )
         }
 
-        function ModalTarifasGlobales({ margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
-            const [margen, setMargen] = useState(margenActual !== undefined ? margenActual : 0); 
-            const [impuesto, setImpuesto] = useState(impuestoActual !== undefined ? impuestoActual : 0); 
+        function GestionRecursos({ recursos, onActualizarRecurso, onEliminarRecurso }) {
+            const [modalConfig, setModalConfig] = useState(null);
+            
+            const handleCrear = () => {
+                setModalConfig({
+                    titulo: "Subir Nuevo Archivo/Guía",
+                    campos: [
+                        { id: 'titulo', label: 'Título del documento:', type: 'text' },
+                        { id: 'descripcion', label: 'Descripción breve:', type: 'text' },
+                        { id: 'archivo', label: 'Archivo (PDF, PNG, JPG):', type: 'file' }
+                    ],
+                    onSubmit: (datos) => {
+                        if (datos.titulo && datos.archivo) {
+                            onActualizarRecurso({ id: `REC_${Date.now()}`, titulo: datos.titulo, descripcion: datos.descripcion || '', archivoBase64: datos.archivo });
+                        }
+                    }
+                });
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto space-y-4 fade-in">
+                    {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+                    
+                    <div className="flex justify-between items-end mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-white mb-1">Gestión de Archivos Compartidos</h2>
+                            <p className="text-sm text-slate-400">Sube PDFs o imágenes (guías de tallas, manuales) para que tus clientes las descarguen.</p>
+                        </div>
+                        <button onClick={handleCrear} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105">
+                            <Upload size={20}/> Subir Archivo
+                        </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {recursos.map(r => (
+                            <div key={r.id} className="bg-slate-800 rounded-2xl p-5 border border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-sm">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="bg-slate-900 p-3 rounded-xl text-blue-400"><BookOpen size={24}/></div>
+                                    <button onClick={() => onEliminarRecurso(r.id)} className="text-red-400 hover:text-red-300 p-2 bg-slate-900 rounded-lg transition-colors" title="Eliminar"><Trash2 size={16}/></button>
+                                </div>
+                                <h3 className="text-white font-bold text-lg mb-1">{r.titulo}</h3>
+                                <p className="text-slate-400 text-sm mb-4 flex-1 line-clamp-2">{r.descripcion}</p>
+                                <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-600 transition-colors text-sm">Previsualizar / Descargar</a>
+                            </div>
+                        ))}
+                        {recursos.length === 0 && <div className="col-span-full py-10 text-center text-slate-500 font-medium bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">No hay recursos subidos actualmente.</div>}
+                    </div>
+                </div>
+            );
+        }
+
+        function ModalTarifasGlobales({ titulo = "Tarifas de Ubicación", margenActual, impuestoActual, descuentosActuales, onSave, onClose }) {
+            const [margen, setMargen] = useState(margenActual !== undefined ? margenActual : 40); 
+            const [impuesto, setImpuesto] = useState(impuestoActual !== undefined ? impuestoActual : 15); 
             const [descuentos, setDescuentos] = useState(descuentosActuales || []);
 
             const addTier = () => setDescuentos([...descuentos, { id: `desc_${Date.now()}`, min: 100, pct: 5, activo: true }]);
@@ -914,11 +1178,20 @@
             return ( 
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
                     <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <h3 className="text-xl font-bold text-white mb-6">Tarifas Globales</h3>
+                        <h3 className="text-xl font-bold text-white mb-2">{titulo}</h3>
+                        <p className="text-xs text-slate-400 mb-6">Configura las tarifas aplicables únicamente a esta ubicación.</p>
+                        
                         <div className="flex gap-4 mb-6">
-                            <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700"><label className="text-sm font-bold text-emerald-400 block mb-2">Margen General (%)</label><input type="number" value={margen} onChange={e=>setMargen(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-emerald-500" /></div>
-                            <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700"><label className="text-sm font-bold text-amber-400 block mb-2">Impuesto Global (%)</label><input type="number" value={impuesto} onChange={e=>setImpuesto(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-amber-500" /></div>
+                            <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                                <label className="text-sm font-bold text-emerald-400 block mb-2">Margen General (%)</label>
+                                <input type="number" value={margen} onChange={e=>setMargen(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-emerald-500" />
+                            </div>
+                            <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-700">
+                                <label className="text-sm font-bold text-amber-400 block mb-2">Impuesto (%)</label>
+                                <input type="number" value={impuesto} onChange={e=>setImpuesto(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-amber-500" />
+                            </div>
                         </div>
+
                         <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6">
                             <div className="flex justify-between items-center mb-4">
                                 <label className="text-sm font-bold text-blue-400">Niveles de Descuento por Volumen</label>
@@ -939,86 +1212,64 @@
                         </div>
                         <div className="flex justify-end gap-3 mt-4">
                             <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button>
-                            <button onClick={() => { onSave(margen, impuesto, descuentos); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Tarifas</button>
+                            <button onClick={() => { onSave(Number(margen), Number(impuesto), descuentos); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Tarifas</button>
                         </div>
                     </div>
                 </div> 
             )
         }
 
-        function CustomModal({ config, onClose }) {
-            const [form, setForm] = useState(config.valoresIniciales || {});
-            
-            const handleFile = (e, id) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => setForm({...form, [id]: reader.result});
-                    reader.readAsDataURL(file);
-                }
-            };
-            
-            const toggleCheckboxArray = (id, value) => {
-                const arr = form[id] || [];
-                if (arr.includes(value)) setForm({...form, [id]: arr.filter(x => x !== value)});
-                else setForm({...form, [id]: [...arr, value]});
-            };
-
-            const handleSubmit = (e) => { e.preventDefault(); config.onSubmit(form); onClose(); };
-
+        function ModalFichaTecnica({ onClose }) {
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <h3 className="text-xl font-bold text-white mb-2">{config.titulo}</h3>
-                        {config.mensaje && <p className="text-slate-400 text-sm mb-6">{config.mensaje}</p>}
-                        
-                        {!config.esConfirmacion ? (
-                            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
-                                {config.campos.map(campo => (
-                                    <div key={campo.id}>
-                                        <label className="block text-sm font-bold text-slate-400 mb-1">{campo.label}</label>
-                                        {campo.type === 'text' || campo.type === 'number' ? (
-                                            <input required={campo.required !== false} type={campo.type} value={form[campo.id] || ''} onChange={(e) => setForm({...form, [campo.id]: e.target.value})} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500" />
-                                        ) : campo.type === 'select' ? (
-                                            <select required={campo.required !== false} value={form[campo.id] || ''} onChange={(e) => setForm({...form, [campo.id]: e.target.value})} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500">
-                                                <option value="">Seleccionar</option>
-                                                {campo.options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                                            </select>
-                                        ) : campo.type === 'textarea' ? (
-                                            <textarea required={campo.required !== false} maxLength={campo.maxLength} value={form[campo.id] || ''} onChange={(e) => setForm({...form, [campo.id]: e.target.value})} className="w-full p-3 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 resize-none h-24" />
-                                        ) : campo.type === 'boolean' ? (
-                                            <label className="flex items-center gap-2 cursor-pointer">
-                                                <input type="checkbox" checked={form[campo.id] || false} onChange={(e) => setForm({...form, [campo.id]: e.target.checked})} className="w-5 h-5 accent-blue-500" />
-                                                <span className="text-slate-300 text-sm">Habilitar esta opción</span>
-                                            </label>
-                                        ) : campo.type === 'checkboxGroup' ? (
-                                            <div className="space-y-2 max-h-40 overflow-y-auto bg-slate-900 p-3 rounded-lg border border-slate-700 custom-scrollbar">
-                                                {campo.options.map(opt => (
-                                                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                                                        <input type="checkbox" checked={(form[campo.id] || []).includes(opt.value)} onChange={() => toggleCheckboxArray(campo.id, opt.value)} className="w-4 h-4 accent-blue-500" />
-                                                        <span className="text-slate-300 text-sm">{opt.label}</span>
-                                                    </label>
-                                                ))}
-                                            </div>
-                                        ) : campo.type === 'file' ? (
-                                            <div>
-                                                <input type="file" accept="image/*,application/pdf" onChange={(e) => handleFile(e, campo.id)} className="w-full text-slate-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-                                                {form[campo.id] && form[campo.id].startsWith('data:image') && <img src={form[campo.id]} alt="Preview" className="mt-2 h-20 rounded-lg border border-slate-700" />}
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                ))}
-                                <div className="flex justify-end gap-3 mt-8">
-                                    <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button>
-                                    <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500">Guardar Datos</button>
-                                </div>
-                            </form>
-                        ) : (
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700">Cancelar</button>
-                                <button onClick={() => { config.onSubmit(); onClose(); }} className="px-5 py-2.5 rounded-xl font-bold text-white bg-red-600 hover:bg-red-500">{config.submitLabel || 'Confirmar'}</button>
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-3xl shadow-2xl text-slate-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-white flex items-center gap-2"><Calculator size={24} className="text-blue-400"/> Guía Detallada de Fórmulas</h3>
+                                <p className="text-slate-400 text-sm mt-1">Así es como el cotizador calcula matemáticamente los precios.</p>
                             </div>
-                        )}
+                        </div>
+                        
+                        <div className="space-y-6 text-sm">
+                            <div className="bg-slate-900 p-5 rounded-xl border border-blue-500/30 shadow-inner">
+                                <h4 className="font-bold text-blue-400 text-base mb-2 flex items-center gap-2"><span className="bg-blue-500/20 px-2 py-0.5 rounded text-xs">Paso 1</span> Precio de Venta del Producto</h4>
+                                <p className="mb-2">El sistema toma el <strong>Costo Base</strong> de tu catálogo y lo multiplica por la cantidad. Luego, a ese subtotal de costo, le añade el <strong>Margen General (%)</strong> que definiste para darte el precio de venta final de las prendas.</p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800">
+                                    <p>Costo Total = Costo Base × Cantidad</p>
+                                    <p>Precio de Venta Prendas = Costo Total × (1 + [Margen / 100])</p>
+                                </div>
+                                <p className="mt-2 text-xs text-slate-500 italic">* Nota: Si marcas "Traigo mis artículos", el costo base de la prenda pasa a ser 0.</p>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-emerald-500/30 shadow-inner">
+                                <h4 className="font-bold text-emerald-400 text-base mb-2 flex items-center gap-2"><span className="bg-emerald-500/20 px-2 py-0.5 rounded text-xs">Paso 2</span> Precio de Personalización (Técnicas)</h4>
+                                <p className="mb-2">Cada técnica tiene Costos Fijos (Setups que se cobran 1 sola vez sin importar cuántas camisas sean, como revelados o matrices) y Costos Variables (que se multiplican por unidad, como tinta). <strong>A la suma de estos costos también se le aplica tu Margen General.</strong></p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800 space-y-1">
+                                    <p>Costo Fijo Total = Suma de todos los Setups</p>
+                                    <p>Costo Variable Total = Suma de variables × Cantidad</p>
+                                    <p>Precio de Venta Técnica = (Costo Fijo Total + Costo Variable Total) × (1 + [Margen / 100])</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-amber-500/30 shadow-inner">
+                                <h4 className="font-bold text-amber-400 text-base mb-2 flex items-center gap-2"><span className="bg-amber-500/20 px-2 py-0.5 rounded text-xs">Paso 3</span> Cascada de Descuentos (VIP + Volumen)</h4>
+                                <p className="mb-2">El descuento por volumen <strong>se aplica a TODAS las piezas</strong> una vez alcanzado el nivel y si la casilla está activa. Si el cliente compra 300 piezas y el nivel es de 100 (10% OFF), las 300 piezas reciben el descuento. Además, si es VIP (ej. 10% OFF), se aplica un descuento "en cascada" secuencial para proteger tus finanzas.</p>
+                                <div className="bg-slate-950 p-3 rounded text-xs border border-slate-800 text-slate-300">
+                                    <p>Subtotal Bruto = Precio de Venta Prendas + Precio de Venta Técnicas</p>
+                                    <p className="mt-1 font-mono text-amber-400">Total con Descuento = Subtotal Bruto × (1 - % Volumen) × (1 - % VIP)</p>
+                                    <p className="mt-2 text-[10px] text-slate-500">Ejemplo ilustrativo: L 100/u. Pides 300 pzas. Tier: 100u al 10%. Las 300 pzas tienen 10% (Subtotal = 30,000 × 0.90 = 27,000). Luego, descuento VIP del 10% = (27,000 × 0.90) = L 24,300 Finales.</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-purple-500/30 shadow-inner">
+                                <h4 className="font-bold text-purple-400 text-base mb-2 flex items-center gap-2"><span className="bg-purple-500/20 px-2 py-0.5 rounded text-xs">Paso 4</span> Impuestos (ISV)</h4>
+                                <p className="mb-2">El impuesto global (ej. 15%) se calcula <strong>después de aplicar los descuentos</strong> y solo sobre los ítems del catálogo o técnicas que tengan activada la casilla "Suma Impuesto".</p>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end mt-8 border-t border-slate-700 pt-4">
+                            <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg">Entendido, cerrar guía</button>
+                        </div>
                     </div>
                 </div>
             )
@@ -1028,11 +1279,8 @@
           const [tecActivaId, setTecActivaId] = useState(tecnicas[0]?.id || null);
           const [categoriaActivaId, setCategoriaActivaId] = useState('todas');
           const [modalConfig, setModalConfig] = useState(null); 
-          const [showTarifasModal, setShowTarifasModal] = useState(false);
-          
-          // NUEVO: Estado para el modal de Tarifas Únicas
-          const [subcatTarifasConfig, setSubcatTarifasConfig] = useState(null);
-          
+          const [modalTarifasSubcat, setModalTarifasSubcat] = useState(null); // Ubicación seleccionada para tarifas
+          const [showFichaTecnica, setShowFichaTecnica] = useState(false);
           const [openSubcats, setOpenSubcats] = useState({});
           const [tabActivo, setTabActivo] = useState('PRODUCTOS');
           
@@ -1065,27 +1313,56 @@
 
           const handleCrearCategoria = () => {
              setModalConfig({
-                 titulo: "Nueva Categoría", campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
-                 onSubmit: (datos) => { if (datos.nombre) { const nueva = { id: `CAT_${Date.now()}`, nombre: datos.nombre }; setCategorias([...categorias, nueva]); setCategoriaActivaId(nueva.id); } }
+                 titulo: "Nueva Categoría",
+                 campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
+                 onSubmit: (datos) => {
+                     if (datos.nombre) {
+                         const nueva = { id: `CAT_${Date.now()}`, nombre: datos.nombre };
+                         setCategorias([...categorias, nueva]);
+                         setCategoriaActivaId(nueva.id);
+                     }
+                 }
              });
           };
 
           const handleEditarCategoria = () => {
-             const cat = categorias.find(c => c.id === categoriaActivaId); if (!cat) return;
+             const cat = categorias.find(c => c.id === categoriaActivaId);
+             if (!cat) return;
              setModalConfig({
-                 titulo: "Editar Categoría", valoresIniciales: { nombre: cat.nombre }, campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
-                 onSubmit: (datos) => { if (datos.nombre) setCategorias(categorias.map(c => c.id === categoriaActivaId ? { ...c, nombre: datos.nombre } : c)); }
+                 titulo: "Editar Categoría",
+                 valoresIniciales: { nombre: cat.nombre },
+                 campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
+                 onSubmit: (datos) => {
+                     if (datos.nombre) setCategorias(categorias.map(c => c.id === categoriaActivaId ? { ...c, nombre: datos.nombre } : c));
+                 }
              });
           };
 
           const handleEliminarCategoria = () => {
-             const cat = categorias.find(c => c.id === categoriaActivaId); if (!cat) return;
+             const cat = categorias.find(c => c.id === categoriaActivaId);
+             if (!cat) return;
              const prodEnCat = catalogo.filter(p => p.categoriaId === cat.id);
              if (prodEnCat.length > 0) {
-                 setModalConfig({ titulo: "Acción Protegida", esConfirmacion: true, mensaje: `No puedes eliminar la categoría "${cat.nombre}" porque contiene ${prodEnCat.length} productos asignados.`, submitLabel: "Entendido", campos: [], onSubmit: () => {} });
+                 setModalConfig({
+                     titulo: "Acción Protegida",
+                     esConfirmacion: true,
+                     mensaje: `No puedes eliminar la categoría "${cat.nombre}" porque contiene ${prodEnCat.length} productos asignados. Por favor, cambia la categoría de esos productos o elimínalos antes de continuar.`,
+                     submitLabel: "Entendido",
+                     campos: [],
+                     onSubmit: () => {}
+                 });
                  return;
              }
-             setModalConfig({ titulo: "Eliminar Categoría", esConfirmacion: true, mensaje: `¿Seguro que deseas eliminar la categoría "${cat.nombre}"?`, campos: [], onSubmit: () => { setCategorias(categorias.filter(c => c.id !== categoriaActivaId)); setCategoriaActivaId('todas'); } });
+             setModalConfig({
+                 titulo: "Eliminar Categoría",
+                 esConfirmacion: true,
+                 mensaje: `¿Seguro que deseas eliminar la categoría "${cat.nombre}" permanentemente?`,
+                 campos: [],
+                 onSubmit: () => {
+                     setCategorias(categorias.filter(c => c.id !== categoriaActivaId));
+                     setCategoriaActivaId('todas');
+                 }
+             });
           };
 
           const handleCrearProducto = () => {
@@ -1095,9 +1372,10 @@
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
-                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
+                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
+                  { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
                   { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
-                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
+                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Específicas Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
                   { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
               onSubmit: (datos) => { 
@@ -1124,304 +1402,493 @@
               campos: [ 
                   { id: 'nombre', label: 'Nombre:', type: 'text' }, 
                   { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
-                  { id: 'costoBase', label: 'Costo (L):', type: 'number' }, { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
-                  { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) },
-                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Aceptadas (Vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
-                  { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' }
+                  { id: 'costoBase', label: 'Costo (L):', type: 'number' }, 
+                  { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
+                  { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
+                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Específicas Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
+                  { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, 
+                  { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
-              onSubmit: (datos) => {
-                  setCatalogo(catalogo.map(p => p.id === prod.id ? { 
-                      ...p, nombre: datos.nombre, costoBase: parseFloat(datos.costoBase), detalles: datos.detalles || '', categoriaId: datos.categoriaId || '',
-                      imagenUrl: datos.imagenUrl || p.imagenUrl, tecnicasRecomendadas: datos.tecnicasRecomendadas || [], 
-                      ubicacionesAceptadas: datos.ubicacionesAceptadas || [], cobraImpuesto: !!datos.cobraImpuesto 
-                  } : p));
+              onSubmit: (datos) => { 
+                  if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { 
+                      setCatalogo(catalogo.map(p => p.id === prod.id ? { 
+                          ...p, nombre: datos.nombre, detalles: datos.detalles || '', categoriaId: datos.categoriaId || '', 
+                          costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl !== undefined ? datos.imagenUrl : p.imagenUrl, 
+                          tecnicasRecomendadas: datos.tecnicasRecomendadas || [],
+                          ubicacionesAceptadas: datos.ubicacionesAceptadas || [], cobraImpuesto: !!datos.cobraImpuesto 
+                      } : p)); 
+                  } 
               }
             });
           };
-          
-          const handleEliminarProducto = (id) => setModalConfig({ titulo: "Eliminar Producto", esConfirmacion: true, mensaje: "¿Eliminar este producto del catálogo permanentemente?", campos: [], onSubmit: () => setCatalogo(catalogo.filter(p => p.id !== id)) });
-          
-          const handleCrearTecnica = () => setModalConfig({ titulo: "Nueva Técnica", campos: [{id:'nombre',label:'Nombre:',type:'text'}, {id:'minimo',label:'Mínimo pzas:',type:'number'}, {id:'cobraImpuesto',label:'Suma Impuesto ISV:',type:'boolean'}], onSubmit: (d) => { if(d.nombre) setTecnicas([...tecnicas, {id:`TEC_${Date.now()}`, nombre:d.nombre, minimo:Number(d.minimo)||1, cobraImpuesto:!!d.cobraImpuesto, subcategorias:[]}]); } });
-          const handleEditarTecnica = (tec) => setModalConfig({ titulo: "Editar Técnica", valoresIniciales: {nombre:tec.nombre, minimo:tec.minimo, cobraImpuesto:tec.cobraImpuesto!==false}, campos: [{id:'nombre',label:'Nombre:',type:'text'}, {id:'minimo',label:'Mínimo pzas:',type:'number'}, {id:'cobraImpuesto',label:'Suma Impuesto ISV:',type:'boolean'}], onSubmit: (d) => { if(d.nombre) setTecnicas(tecnicas.map(t => t.id === tec.id ? {...t, nombre:d.nombre, minimo:Number(d.minimo)||1, cobraImpuesto:!!d.cobraImpuesto} : t)); } });
-          const handleEliminarTecnica = (id) => setModalConfig({ titulo: "Eliminar Técnica", esConfirmacion: true, mensaje: "¿Eliminar técnica completa?", campos: [], onSubmit: () => { const newT = tecnicas.filter(t => t.id !== id); setTecnicas(newT); if(tecActivaId === id) setTecActivaId(newT[0]?.id || null); } });
 
-          const handleCrearSubcat = () => setModalConfig({ titulo: "Nueva Ubicación", campos: [{id:'nombre',label:'Nombre de Ubicación (Ej: Pecho):',type:'text'}], onSubmit: (d) => { if(d.nombre) updateTecnicaActual({...tecActual, subcategorias:[...tecActual.subcategorias, {id:`SUB_${Date.now()}`, nombre:d.nombre, opciones:[]}]}); } });
-          const handleEditarSubcat = (subcat) => setModalConfig({ titulo: "Editar Ubicación", valoresIniciales: {nombre:subcat.nombre}, campos: [{id:'nombre',label:'Nombre de Ubicación:',type:'text'}], onSubmit: (d) => { if(d.nombre) updateTecnicaActual({...tecActual, subcategorias:tecActual.subcategorias.map(s => s.id === subcat.id ? {...s, nombre:d.nombre} : s)}); } });
-          const handleEliminarSubcat = (id) => setModalConfig({ titulo: "Eliminar Ubicación", esConfirmacion: true, mensaje: "¿Seguro que deseas eliminar esta ubicación?", campos: [], onSubmit: () => updateTecnicaActual({...tecActual, subcategorias:tecActual.subcategorias.filter(s => s.id !== id)}) });
+          const handleEliminarProducto = (id) => {
+            setModalConfig({
+              titulo: "Eliminar Producto",
+              esConfirmacion: true,
+              mensaje: "¿Seguro que deseas eliminar este producto del catálogo?",
+              campos: [],
+              onSubmit: () => { setCatalogo(catalogo.filter(p => p.id !== id)); }
+            });
+          };
 
-          const handleCrearOpcion = (subcatId) => setModalConfig({ titulo: "Nueva Variante", campos: [{id:'nombre',label:'Nombre (Ej: 1 Color):',type:'text'}], onSubmit: (d) => { if(d.nombre) updateTecnicaActual({...tecActual, subcategorias:tecActual.subcategorias.map(s => s.id === subcatId ? {...s, opciones:[...s.opciones, {id:`OP_${Date.now()}`, nombre:d.nombre, costosFijos:[], costosVariables:[]}]} : s)}); } });
-          const handleEliminarOpcion = (subcatId, opId) => setModalConfig({ titulo: "Eliminar Variante", esConfirmacion: true, mensaje: "¿Eliminar esta variante y sus costos?", campos: [], onSubmit: () => updateTecnicaActual({...tecActual, subcategorias:tecActual.subcategorias.map(s => s.id === subcatId ? {...s, opciones:s.opciones.filter(o => o.id !== opId)} : s)}) });
+          const handleCrearTecnica = () => {
+            setModalConfig({
+              titulo: "Nueva Técnica de Impresión",
+              campos: [
+                { id: 'nombre', label: 'Nombre de la Técnica:', type: 'text' },
+                { id: 'minimo', label: 'Mínimo de Piezas Requerido:', type: 'number' },
+                { id: 'cobraImpuesto', label: 'Suma Impuesto (ISV)', type: 'boolean' }
+              ],
+              onSubmit: (datos) => {
+                if (datos.nombre) {
+                  const nuevaTec = { id: `T_${Date.now()}`, nombre: datos.nombre, minimo: Number(datos.minimo) || 1, cobraImpuesto: datos.cobraImpuesto !== false, subcategorias: [] };
+                  setTecnicas([...tecnicas, nuevaTec]);
+                  setTecActivaId(nuevaTec.id);
+                }
+              }
+            });
+          };
 
-          const handleAgregarCosto = (subcatId, opId, tipo) => setModalConfig({ titulo: `Añadir Costo ${tipo === 'fijos' ? 'Fijo (Setups)' : 'Variable (Por Unidad)'}`, campos: [{id:'nombre',label:'Concepto (Ej: Revelado, Tinta):',type:'text'}, {id:'valor',label:'Costo (L):',type:'number'}], onSubmit: (d) => { if(d.nombre && !isNaN(Number(d.valor))) updateTecnicaActual({...tecActual, subcategorias:tecActual.subcategorias.map(s => s.id === subcatId ? {...s, opciones:s.opciones.map(o => o.id === opId ? {...o, [tipo === 'fijos'?'costosFijos':'costosVariables']: [...o[tipo === 'fijos'?'costosFijos':'costosVariables'], {id:`C_${Date.now()}`, nombre:d.nombre, valor:Number(d.valor)}]} : o)} : s)}); } });
-          const handleEliminarCosto = (subcatId, opId, tipo, costoId) => updateTecnicaActual({...tecActual, subcategorias:tecActual.subcategorias.map(s => s.id === subcatId ? {...s, opciones:s.opciones.map(o => o.id === opId ? {...o, [tipo === 'fijos'?'costosFijos':'costosVariables']: o[tipo === 'fijos'?'costosFijos':'costosVariables'].filter(c => c.id !== costoId)} : o)} : s)});
+          const handleEditarTecnica = (tec) => {
+            setModalConfig({
+              titulo: `Editar Técnica: ${tec.nombre}`,
+              valoresIniciales: { nombre: tec.nombre, minimo: tec.minimo || 1, cobraImpuesto: tec.cobraImpuesto !== false },
+              campos: [
+                { id: 'nombre', label: 'Nombre de la Técnica:', type: 'text' },
+                { id: 'minimo', label: 'Mínimo de Piezas Requerido:', type: 'number' },
+                { id: 'cobraImpuesto', label: 'Suma Impuesto (ISV)', type: 'boolean' }
+              ],
+              onSubmit: (datos) => {
+                if (datos.nombre) {
+                  updateTecnicaActual({ ...tec, nombre: datos.nombre, minimo: Number(datos.minimo) || 1, cobraImpuesto: !!datos.cobraImpuesto });
+                }
+              }
+            });
+          };
+
+          const handleEliminarTecnica = (tecId) => {
+            setModalConfig({
+              titulo: "Eliminar Técnica",
+              esConfirmacion: true,
+              mensaje: "¿Seguro que deseas eliminar esta técnica y todas sus ubicaciones?",
+              campos: [],
+              onSubmit: () => {
+                const nuevas = tecnicas.filter(t => t.id !== tecId);
+                setTecnicas(nuevas);
+                if (nuevas.length > 0) setTecActivaId(nuevas[0].id);
+                else setTecActivaId(null);
+              }
+            });
+          };
+
+          const handleCrearSubcat = () => {
+            if (!tecActual) return;
+            setModalConfig({
+              titulo: `Nueva Ubicación en ${tecActual.nombre}`,
+              campos: [{ id: 'nombre', label: 'Nombre de Ubicación (ej: Pecho, Espalda):', type: 'text' }],
+              onSubmit: (datos) => {
+                if (datos.nombre) {
+                  const nuevaSubcat = {
+                    id: `SUB_${Date.now()}`,
+                    nombre: datos.nombre,
+                    margenGanancia: margenGanancia,
+                    impuestoGlobal: impuestoGlobal,
+                    descuentosVolumen: descuentosVolumen ? [...descuentosVolumen] : [],
+                    opciones: []
+                  };
+                  updateTecnicaActual({ ...tecActual, subcategorias: [...(tecActual.subcategorias || []), nuevaSubcat] });
+                }
+              }
+            });
+          };
+
+          const handleEditarSubcat = (subcat) => {
+            if (!tecActual) return;
+            setModalConfig({
+              titulo: `Editar Ubicación: ${subcat.nombre}`,
+              valoresIniciales: { nombre: subcat.nombre },
+              campos: [{ id: 'nombre', label: 'Nombre de Ubicación:', type: 'text' }],
+              onSubmit: (datos) => {
+                if (datos.nombre) {
+                  const updatedSubcats = tecActual.subcategorias.map(s => s.id === subcat.id ? { ...s, nombre: datos.nombre } : s);
+                  updateTecnicaActual({ ...tecActual, subcategorias: updatedSubcats });
+                }
+              }
+            });
+          };
+
+          const handleEliminarSubcat = (subcatId) => {
+            if (!tecActual) return;
+            setModalConfig({
+              titulo: "Eliminar Ubicación",
+              esConfirmacion: true,
+              mensaje: "¿Seguro que deseas eliminar esta ubicación y sus opciones?",
+              campos: [],
+              onSubmit: () => {
+                const updatedSubcats = tecActual.subcategorias.filter(s => s.id !== subcatId);
+                updateTecnicaActual({ ...tecActual, subcategorias: updatedSubcats });
+              }
+            });
+          };
+
+          const handleGuardarTarifasUbicacion = (subcatTarget, nuevoMargen, nuevoImpuesto, nuevosDescuentos) => {
+            if (!tecActual) return;
+            const updatedSubcats = tecActual.subcategorias.map(s => {
+                if (s.id === subcatTarget.id) {
+                    return {
+                        ...s,
+                        margenGanancia: nuevoMargen,
+                        impuestoGlobal: nuevoImpuesto,
+                        descuentosVolumen: nuevosDescuentos
+                    };
+                }
+                return s;
+            });
+            updateTecnicaActual({ ...tecActual, subcategorias: updatedSubcats });
+          };
+
+          const handleCrearOpcion = (subcatId) => {
+            if (!tecActual) return;
+            setModalConfig({
+              titulo: "Nueva Variante / Opción",
+              campos: [{ id: 'nombre', label: 'Nombre de Variante (ej: 1 Color, Full Color):', type: 'text' }],
+              onSubmit: (datos) => {
+                if (datos.nombre) {
+                  const nuevaOp = { id: `OP_${Date.now()}`, nombre: datos.nombre, costosFijos: [], costosVariables: [] };
+                  const updatedSubcats = tecActual.subcategorias.map(s => s.id === subcatId ? { ...s, opciones: [...(s.opciones || []), nuevaOp] } : s);
+                  updateTecnicaActual({ ...tecActual, subcategorias: updatedSubcats });
+                }
+              }
+            });
+          };
 
           return (
-            <div className="max-w-[1600px] mx-auto fade-in h-[calc(100vh-80px)] flex flex-col">
+            <div className="max-w-6xl mx-auto space-y-6 fade-in">
               {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-              {showTarifasModal && <ModalTarifasGlobales margenActual={margenGanancia} impuestoActual={impuestoGlobal} descuentosActuales={descuentosVolumen} onSave={setConfigGlobal} onClose={() => setShowTarifasModal(false)} />}
               
-              {/* MODAL DE TARIFAS UNICAS INYECTADO */}
-              {subcatTarifasConfig && (
-                  <ModalTarifasUnicas
-                      subcategoria={subcatTarifasConfig}
-                      margenGlobal={margenGanancia}
-                      onSave={(nuevasTarifas) => {
-                          const updatedSubcat = { ...subcatTarifasConfig, tarifasUnicas: nuevasTarifas };
-                          const updatedTecActual = {
-                              ...tecActual,
-                              subcategorias: tecActual.subcategorias.map(s => s.id === updatedSubcat.id ? updatedSubcat : s)
-                          };
-                          updateTecnicaActual(updatedTecActual);
-                      }}
-                      onClose={() => setSubcatTarifasConfig(null)}
+              {modalTarifasSubcat && (
+                  <ModalTarifasGlobales 
+                      titulo={`Tarifas para Ubicación: ${modalTarifasSubcat.nombre}`}
+                      margenActual={modalTarifasSubcat.margenGanancia !== undefined ? modalTarifasSubcat.margenGanancia : margenGanancia}
+                      impuestoActual={modalTarifasSubcat.impuestoGlobal !== undefined ? modalTarifasSubcat.impuestoGlobal : impuestoGlobal}
+                      descuentosActuales={modalTarifasSubcat.descuentosVolumen || descuentosVolumen}
+                      onSave={(m, i, d) => handleGuardarTarifasUbicacion(modalTarifasSubcat, m, i, d)}
+                      onClose={() => setModalTarifasSubcat(null)}
                   />
               )}
 
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4 shrink-0">
-                  <div><h2 className="text-3xl font-bold text-white mb-2">Base de Datos VIP</h2><p className="text-sm text-slate-400">Configura tus productos, márgenes y cálculos de técnicas avanzadas.</p></div>
-                  <button onClick={() => setShowTarifasModal(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105"><Settings size={20}/> Tarifas Globales</button>
+              {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
+
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Estructura de Catálogo & Técnicas</h2>
+                  <p className="text-sm text-slate-400">Administra los productos base, técnicas, ubicaciones y variantes.</p>
+                </div>
+                
+                {/* Cabecera intacta: Botón Ficha Técnica presente, botones de tarifas globales eliminados según lo solicitado */}
+                <div className="flex items-center gap-3">
+                  <button onClick={() => setShowFichaTecnica(true)} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 border border-slate-600 shadow-sm transition-colors text-sm">
+                    <Calculator size={18} className="text-blue-400"/> Guía de Fórmulas
+                  </button>
+                </div>
               </div>
 
-              <div className="flex gap-2 mb-6 border-b border-slate-700 pb-2 shrink-0 overflow-x-auto custom-scrollbar">
-                  <button onClick={() => setTabActivo('PRODUCTOS')} className={`px-6 py-2.5 rounded-t-xl font-bold transition-colors whitespace-nowrap ${tabActivo === 'PRODUCTOS' ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-400' : 'text-slate-400 hover:text-white'}`}>Catálogo de Productos</button>
-                  <button onClick={() => setTabActivo('TECNICAS')} className={`px-6 py-2.5 rounded-t-xl font-bold transition-colors whitespace-nowrap ${tabActivo === 'TECNICAS' ? 'bg-slate-800 text-blue-400 border-b-2 border-blue-400' : 'text-slate-400 hover:text-white'}`}>Técnicas de Impresión</button>
+              <div className="flex border-b border-slate-700 gap-4">
+                <button onClick={() => setTabActivo('PRODUCTOS')} className={`pb-3 font-bold text-sm transition-colors border-b-2 px-2 ${tabActivo === 'PRODUCTOS' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>Productos Base ({catalogo.length})</button>
+                <button onClick={() => setTabActivo('TECNICAS')} className={`pb-3 font-bold text-sm transition-colors border-b-2 px-2 ${tabActivo === 'TECNICAS' ? 'border-blue-500 text-blue-400' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>Técnicas y Ubicaciones ({tecnicas.length})</button>
               </div>
 
               {tabActivo === 'PRODUCTOS' && (
-                  <div className="flex-1 overflow-hidden flex flex-col fade-in">
-                      {/* Sub-bar Categories */}
-                      <div className="flex flex-col sm:flex-row justify-between items-center bg-slate-800 p-4 rounded-2xl mb-4 gap-4 shrink-0 border border-slate-700 shadow-sm">
-                          <div className="relative flex items-center w-full sm:w-2/3">
-                              <button onClick={() => scrollTabsCat(-200)} className="absolute left-0 z-10 p-2 bg-gradient-to-r from-slate-800 to-transparent text-slate-400 hover:text-white"><ChevronLeft size={20}/></button>
-                              <div ref={scrollRefCat} className="flex gap-2 overflow-x-auto custom-scrollbar scroll-smooth px-8 w-full py-1">
-                                  <button onClick={() => setCategoriaActivaId('todas')} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-all border ${categoriaActivaId === 'todas' ? 'bg-blue-600 border-blue-500 text-white shadow-md' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'}`}>Todas ({catalogo.length})</button>
-                                  {categorias.map(c => (
-                                      <button key={c.id} onClick={() => setCategoriaActivaId(c.id)} className={`whitespace-nowrap px-4 py-2 rounded-lg font-bold text-sm transition-all border flex items-center gap-2 ${categoriaActivaId === c.id ? 'bg-blue-600 border-blue-500 text-white shadow-md' : 'bg-slate-900 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'}`}>
-                                          {c.nombre} <span className="bg-slate-950/50 px-1.5 py-0.5 rounded text-[10px]">{catalogo.filter(p=>p.categoriaId === c.id).length}</span>
-                                      </button>
-                                  ))}
-                              </div>
-                              <button onClick={() => scrollTabsCat(200)} className="absolute right-0 z-10 p-2 bg-gradient-to-l from-slate-800 to-transparent text-slate-400 hover:text-white"><ChevronRight size={20}/></button>
-                          </div>
-                          
-                          <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
-                              {categoriaActivaId !== 'todas' && (
-                                  <>
-                                      <button onClick={handleEditarCategoria} className="text-slate-400 hover:text-blue-400 p-2 rounded-lg hover:bg-slate-700 transition" title="Renombrar Categoría"><Edit3 size={18}/></button>
-                                      <button onClick={handleEliminarCategoria} className="text-slate-400 hover:text-red-400 p-2 rounded-lg hover:bg-slate-700 transition" title="Eliminar Categoría"><Trash2 size={18}/></button>
-                                  </>
-                              )}
-                              <button onClick={handleCrearCategoria} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 transition-colors border border-slate-600"><Plus size={16}/> Nueva Categoría</button>
-                          </div>
-                      </div>
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto custom-scrollbar pb-2 sm:pb-0" ref={scrollRefCat}>
+                      <button onClick={() => setCategoriaActivaId('todas')} className={`px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-colors ${categoriaActivaId === 'todas' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Todas</button>
+                      {categorias.map(c => (
+                        <button key={c.id} onClick={() => setCategoriaActivaId(c.id)} className={`px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-colors ${categoriaActivaId === c.id ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>{c.nombre}</button>
+                      ))}
+                      <button onClick={handleCrearCategoria} className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl font-bold text-xs flex items-center gap-1 shrink-0"><Plus size={14}/> Categoría</button>
+                    </div>
 
-                      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4 shrink-0">
-                          <div className="relative w-full sm:w-96"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18}/><input type="text" placeholder="Buscar producto en esta categoría..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 outline-none focus:border-blue-500 bg-slate-800 text-white font-medium" /></div>
-                          <div className="flex items-center gap-3 w-full sm:w-auto">
-                              <select value={itemsPorPaginaAdmin} onChange={e=>setItemsPorPaginaAdmin(Number(e.target.value))} className="p-2.5 border border-slate-700 rounded-xl outline-none bg-slate-800 text-sm font-bold text-slate-300">
-                                  <option value={10}>10 por página</option><option value={20}>20 por página</option><option value={50}>50 por página</option>
-                              </select>
-                              <button onClick={handleCrearProducto} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 w-full sm:w-auto border border-blue-500"><Plus size={18}/> Nuevo Producto</button>
-                          </div>
+                    {categoriaActivaId !== 'todas' && (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button onClick={handleEditarCategoria} className="text-blue-400 hover:text-blue-300 p-2 bg-slate-900 rounded-lg border border-slate-700" title="Editar Categoría"><Pencil size={16}/></button>
+                        <button onClick={handleEliminarCategoria} className="text-red-400 hover:text-red-300 p-2 bg-slate-900 rounded-lg border border-slate-700" title="Eliminar Categoría"><Trash2 size={16}/></button>
                       </div>
-
-                      <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-4">
-                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                              {catalogoPaginadoAdmin.map(prod => (
-                                  <div key={prod.id} className="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex flex-col justify-between hover:border-slate-500 transition-colors shadow-sm group">
-                                      <div className="flex justify-end gap-1 mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                          <button onClick={() => handleEditarProducto(prod)} className="p-1.5 bg-slate-900 rounded hover:bg-blue-900/50 text-blue-400 transition-colors"><Edit3 size={14}/></button>
-                                          <button onClick={() => handleEliminarProducto(prod.id)} className="p-1.5 bg-slate-900 rounded hover:bg-red-900/50 text-red-400 transition-colors"><Trash2 size={14}/></button>
-                                      </div>
-                                      <div className="w-16 h-16 bg-slate-900 rounded-xl mb-3 mx-auto flex items-center justify-center overflow-hidden border border-slate-700 relative">
-                                          {prod.imagenUrl ? <img src={prod.imagenUrl} alt={prod.nombre} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-600" size={24} />}
-                                          {prod.cobraImpuesto === false && <span className="absolute bottom-0.5 right-0.5 bg-amber-500/20 text-amber-400 text-[8px] font-bold px-1 rounded shadow-sm border border-amber-500/30">EX</span>}
-                                      </div>
-                                      <div className="text-center flex-1 flex flex-col">
-                                          <h4 className="font-bold text-white text-sm mb-1 line-clamp-2 leading-tight">{prod.nombre}</h4>
-                                          {prod.categoriaId && <span className="text-[10px] text-slate-400 bg-slate-900 px-2 py-0.5 rounded-full mt-1 mb-2 inline-block w-fit mx-auto border border-slate-700 line-clamp-1">{categorias.find(c=>c.id === prod.categoriaId)?.nombre || 'Sin Cat'}</span>}
-                                          <p className="text-emerald-400 font-bold mt-auto bg-emerald-500/10 py-1 rounded-lg border border-emerald-500/20 shadow-inner">Costo: L {prod.costoBase}</p>
-                                      </div>
-                                  </div>
-                              ))}
-                              {catalogoPaginadoAdmin.length === 0 && <div className="col-span-full py-20 text-center text-slate-500 font-medium">No se encontraron productos en esta categoría o búsqueda.</div>}
-                          </div>
-                      </div>
-                      {totalPaginasAdmin > 1 && (
-                          <div className="flex items-center justify-center gap-4 mt-4 pt-4 border-t border-slate-800 shrink-0">
-                              <button disabled={paginaActualAdmin === 1} onClick={() => setPaginaActualAdmin(p => p - 1)} className="p-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronLeft size={20} className="text-slate-400"/></button>
-                              <span className="text-sm font-bold text-slate-400">Página {paginaActualAdmin} de {totalPaginasAdmin}</span>
-                              <button disabled={paginaActualAdmin === totalPaginasAdmin} onClick={() => setPaginaActualAdmin(p => p + 1)} className="p-2 bg-slate-800 border border-slate-700 rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronRight size={20} className="text-slate-400"/></button>
-                          </div>
-                      )}
+                    )}
                   </div>
+
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                    <div className="relative w-full sm:w-80">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input type="text" placeholder="Buscar productos..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500" />
+                    </div>
+                    <button onClick={handleCrearProducto} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-transform hover:scale-105 text-sm">
+                      <Plus size={18}/> Nuevo Producto Base
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {catalogoPaginadoAdmin.map(prod => (
+                      <div key={prod.id} className="bg-slate-800 rounded-2xl p-5 border border-slate-700 flex flex-col justify-between hover:border-slate-600 transition-colors shadow-md">
+                        <div>
+                          <div className="flex items-center gap-4 mb-4">
+                            <div className="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center overflow-hidden border border-slate-700 shrink-0">
+                              {prod.imagenUrl ? <img src={prod.imagenUrl} alt={prod.nombre} className="w-full h-full object-cover"/> : <ImageIcon className="text-slate-500" size={28}/>}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-white text-base leading-tight">{prod.nombre}</h3>
+                              <p className="text-emerald-400 font-bold text-sm mt-1">Costo Base: L {prod.costoBase.toFixed(2)}</p>
+                              {prod.cobraImpuesto === false && <span className="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 rounded border border-amber-500/30 inline-block mt-1">Exento de ISV</span>}
+                            </div>
+                          </div>
+                          {prod.detalles && <p className="text-xs text-slate-400 mb-4 line-clamp-2">{prod.detalles}</p>}
+                        </div>
+                        <div className="flex justify-end gap-2 border-t border-slate-700/50 pt-4 mt-2">
+                          <button onClick={() => handleEditarProducto(prod)} className="p-2 bg-slate-900 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors"><Edit3 size={16}/></button>
+                          <button onClick={() => handleEliminarProducto(prod.id)} className="p-2 bg-slate-900 hover:bg-slate-700 text-red-400 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                        </div>
+                      </div>
+                    ))}
+                    {catalogoPaginadoAdmin.length === 0 && <div className="col-span-full py-12 text-center text-slate-500 font-medium">No hay productos en esta vista.</div>}
+                  </div>
+
+                  {totalPaginasAdmin > 1 && (
+                      <div className="flex items-center justify-center gap-4 pt-4">
+                          <button disabled={paginaActualAdmin === 1} onClick={() => setPaginaActualAdmin(p => p - 1)} className="p-2 bg-slate-800 border border-slate-700 text-white rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronLeft size={20}/></button>
+                          <span className="text-sm font-bold text-slate-400">Página {paginaActualAdmin} de {totalPaginasAdmin}</span>
+                          <button disabled={paginaActualAdmin === totalPaginasAdmin} onClick={() => setPaginaActualAdmin(p => p + 1)} className="p-2 bg-slate-800 border border-slate-700 text-white rounded-lg hover:bg-slate-700 disabled:opacity-50 transition-colors"><ChevronRight size={20}/></button>
+                      </div>
+                  )}
+                </div>
               )}
 
               {tabActivo === 'TECNICAS' && (
-                  <div className="flex-1 overflow-hidden flex flex-col md:flex-row gap-6 fade-in">
-                      <div className="w-full md:w-64 bg-slate-800 rounded-2xl border border-slate-700 flex flex-col overflow-hidden shrink-0 h-[300px] md:h-full shadow-sm">
-                          <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 backdrop-blur">
-                              <h3 className="font-bold text-white">Catálogo de Técnicas</h3>
-                              <button onClick={handleCrearTecnica} className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors" title="Nueva Técnica"><Plus size={16}/></button>
-                          </div>
-                          <div className="overflow-y-auto custom-scrollbar flex-1 p-2 space-y-1">
-                              {tecnicas.map(tec => (
-                                  <div key={tec.id} className={`flex justify-between items-center p-3 rounded-xl transition-all cursor-pointer ${tecActivaId === tec.id ? 'bg-blue-600 border border-blue-500 shadow-md text-white' : 'hover:bg-slate-700 text-slate-300 border border-transparent'}`} onClick={() => setTecActivaId(tec.id)}>
-                                      <span className="font-bold text-sm truncate pr-2">{tec.nombre}</span>
-                                      <div className="flex gap-1 shrink-0 opacity-80 hover:opacity-100">
-                                          <button onClick={(e) => { e.stopPropagation(); handleEditarTecnica(tec); }} className={`p-1.5 rounded ${tecActivaId === tec.id ? 'hover:bg-blue-500' : 'hover:bg-slate-600'}`}><Edit3 size={14}/></button>
-                                          <button onClick={(e) => { e.stopPropagation(); handleEliminarTecnica(tec.id); }} className={`p-1.5 rounded ${tecActivaId === tec.id ? 'hover:bg-blue-500' : 'hover:bg-slate-600 text-red-400'}`}><Trash2 size={14}/></button>
-                                      </div>
-                                  </div>
-                              ))}
-                          </div>
-                      </div>
-                      
-                      <div className="flex-1 bg-slate-800 rounded-2xl border border-slate-700 flex flex-col overflow-hidden h-[500px] md:h-full shadow-sm">
-                          {tecActual ? (
-                              <>
-                                  <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50 backdrop-blur shrink-0">
-                                      <div><h3 className="text-xl font-bold text-blue-400 mb-1">{tecActual.nombre}</h3><p className="text-xs text-slate-400 font-semibold">Configuración de Costos y Ubicaciones (Mínimo: {tecActual.minimo}u | {tecActual.cobraImpuesto === false ? <span className="text-amber-400 border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 rounded ml-1">Sin Impuesto</span> : 'Aplica ISV'})</p></div>
-                                      <button onClick={handleCrearSubcat} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-colors border border-slate-600 shadow-sm"><Plus size={16}/> Nueva Ubicación</button>
-                                  </div>
-                                  <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-4 bg-slate-800/30">
-                                      {tecActual.subcategorias.map(subcat => (
-                                          <div key={subcat.id} className="bg-slate-900 border border-slate-700 rounded-2xl overflow-hidden shadow-sm hover:border-slate-600 transition-colors">
-                                              <div className="p-4 bg-slate-800/50 flex justify-between items-center cursor-pointer border-b border-slate-700" onClick={() => toggleSubcat(subcat.id)}>
-                                                  <h4 className="font-bold text-white flex items-center gap-2">{openSubcats[subcat.id] ? <ChevronUp size={18} className="text-blue-400"/> : <ChevronDown size={18} className="text-slate-500"/>} Ubicación: {subcat.nombre} {subcat.tarifasUnicas?.activado && <span className="ml-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] uppercase font-bold flex items-center gap-1"><Percent size={10}/> Tarifas Únicas ON</span>}</h4>
-                                                  
-                                                  {}
-                                                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                                                      <button onClick={() => setSubcatTarifasConfig(subcat)} className={`p-1.5 rounded-lg transition ${subcat.tarifasUnicas?.activado ? 'text-blue-400 hover:text-blue-300 hover:bg-slate-700' : 'text-slate-500 hover:text-blue-400 hover:bg-slate-700'}`} title="Tarifas Únicas para esta Ubicación">
-                                                          <Percent size={16}/>
-                                                      </button>
-                                                      <button onClick={() => handleEditarSubcat(subcat)} className="text-emerald-400 hover:text-emerald-300 p-1.5 rounded-lg hover:bg-slate-700 transition" title="Editar Ubicación"><Edit3 size={16}/></button>
-                                                      <button onClick={() => handleEliminarSubcat(subcat.id)} className="text-red-400 hover:text-red-300 p-1.5 rounded-lg hover:bg-slate-700 transition" title="Eliminar Ubicación"><Trash2 size={16}/></button>
-                                                  </div>
-                                              </div>
-                                              
-                                              {openSubcats[subcat.id] && (
-                                                  <div className="p-5 space-y-6 bg-slate-900/50 fade-in">
-                                                      <div className="flex justify-end"><button onClick={() => handleCrearOpcion(subcat.id)} className="text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"><Plus size={14}/> Añadir Variante</button></div>
-                                                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                                          {subcat.opciones.map(op => (
-                                                              <div key={op.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-inner relative group">
-                                                                  <button onClick={() => handleEliminarOpcion(subcat.id, op.id)} className="absolute top-4 right-4 text-red-400 hover:text-red-300 p-1.5 rounded hover:bg-slate-700 transition opacity-0 group-hover:opacity-100"><Trash2 size={14}/></button>
-                                                                  <h5 className="font-bold text-white mb-4 pr-8 border-b border-slate-700 pb-2">{op.nombre}</h5>
-                                                                  <div className="space-y-4">
-                                                                      <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
-                                                                          <div className="flex justify-between items-center mb-2"><h6 className="text-xs font-bold text-slate-400 uppercase">Costos Fijos (Setups)</h6><button onClick={() => handleAgregarCosto(subcat.id, op.id, 'fijos')} className="text-[10px] font-bold bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors">+ Añadir</button></div>
-                                                                          <ul className="space-y-1">
-                                                                              {op.costosFijos.map(c => <li key={c.id} className="text-sm flex justify-between items-center text-slate-300 bg-slate-800 px-2 py-1.5 rounded border border-slate-700/50"><span>{c.nombre}</span> <div className="flex items-center gap-3"><span className="font-mono text-emerald-400">L {c.valor}</span><button onClick={() => handleEliminarCosto(subcat.id, op.id, 'fijos', c.id)} className="text-red-400 hover:text-red-300"><X size={14}/></button></div></li>)}
-                                                                              {op.costosFijos.length === 0 && <li className="text-xs text-slate-500 italic py-1">Sin costos fijos</li>}
-                                                                          </ul>
-                                                                      </div>
-                                                                      <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
-                                                                          <div className="flex justify-between items-center mb-2"><h6 className="text-xs font-bold text-slate-400 uppercase">Costos x Unidad</h6><button onClick={() => handleAgregarCosto(subcat.id, op.id, 'variables')} className="text-[10px] font-bold bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded transition-colors">+ Añadir</button></div>
-                                                                          <ul className="space-y-1">
-                                                                              {op.costosVariables.map(c => <li key={c.id} className="text-sm flex justify-between items-center text-slate-300 bg-slate-800 px-2 py-1.5 rounded border border-slate-700/50"><span>{c.nombre}</span> <div className="flex items-center gap-3"><span className="font-mono text-emerald-400">L {c.valor}</span><button onClick={() => handleEliminarCosto(subcat.id, op.id, 'variables', c.id)} className="text-red-400 hover:text-red-300"><X size={14}/></button></div></li>)}
-                                                                              {op.costosVariables.length === 0 && <li className="text-xs text-slate-500 italic py-1">Sin variables</li>}
-                                                                          </ul>
-                                                                      </div>
-                                                                  </div>
-                                                              </div>
-                                                          ))}
-                                                          {subcat.opciones.length === 0 && <div className="col-span-full py-10 text-center text-slate-500 text-sm italic">No hay variantes configuradas. Añade una (Ej: 1 Color, 2 Colores).</div>}
-                                                      </div>
-                                                  </div>
-                                              )}
-                                          </div>
-                                      ))}
-                                      {tecActual.subcategorias.length === 0 && <div className="text-center py-20 text-slate-500">Agrega ubicaciones para empezar a configurar costos (Ej: Pecho, Espalda).</div>}
-                                  </div>
-                              </>
-                          ) : (
-                              <div className="flex-1 flex items-center justify-center text-slate-500 flex-col gap-3 bg-slate-800/30">
-                                  <Layers size={48} className="opacity-50" />
-                                  <p>Selecciona o crea una técnica para configurarla.</p>
-                              </div>
-                          )}
-                      </div>
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto custom-scrollbar pb-2 sm:pb-0" ref={scrollRef}>
+                      {tecnicas.map(t => (
+                        <button key={t.id} onClick={() => setTecActivaId(t.id)} className={`px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-colors ${tecActivaId === t.id ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>{t.nombre}</button>
+                      ))}
+                    </div>
+                    <button onClick={handleCrearTecnica} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shrink-0"><Plus size={16}/> Nueva Técnica</button>
                   </div>
+
+                  {tecActual && (
+                    <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-6">
+                      <div className="flex justify-between items-center border-b border-slate-700 pb-4">
+                        <div>
+                          <h3 className="text-xl font-bold text-white flex items-center gap-2">{tecActual.nombre} {tecActual.cobraImpuesto === false && <span className="bg-amber-500/20 text-amber-400 text-xs px-2 py-0.5 rounded border border-amber-500/30">Sin ISV</span>}</h3>
+                          <p className="text-xs text-slate-400 mt-1">Mínimo de piezas requeridas: <span className="text-white font-bold">{tecActual.minimo || 1}</span></p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleEditarTecnica(tecActual)} className="p-2 bg-slate-900 text-blue-400 hover:bg-slate-700 rounded-lg transition-colors" title="Editar Técnica"><Pencil size={16}/></button>
+                          <button onClick={() => handleEliminarTecnica(tecActual.id)} className="p-2 bg-slate-900 text-red-400 hover:bg-slate-700 rounded-lg transition-colors" title="Eliminar Técnica"><Trash2 size={16}/></button>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-base font-bold text-slate-300">Ubicaciones Asignadas ({tecActual.subcategorias?.length || 0})</h4>
+                        <button onClick={handleCrearSubcat} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl font-bold text-xs flex items-center gap-1 transition-transform hover:scale-105"><Plus size={16}/> Nueva Ubicación</button>
+                      </div>
+
+                      <div className="space-y-4">
+                        {tecActual.subcategorias?.map(sub => (
+                          <div key={sub.id} className="bg-slate-900 rounded-xl border border-slate-700/80 overflow-hidden">
+                            <div className="p-4 bg-slate-900/90 flex justify-between items-center">
+                              <button onClick={() => toggleSubcat(sub.id)} className="flex items-center gap-2 font-bold text-white text-sm hover:text-blue-400 transition-colors">
+                                {openSubcats[sub.id] ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                                <span>{sub.nombre}</span>
+                                <span className="text-xs text-slate-500 font-normal">({sub.opciones?.length || 0} opciones)</span>
+                              </button>
+                              
+                              {/* Botón Tarifas por Ubicación añadido exactamente a la par de editar y eliminar */}
+                              <div className="flex items-center gap-2">
+                                <button onClick={() => setModalTarifasSubcat(sub)} className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-colors" title="Tarifas de Ubicación">
+                                  <Settings size={14}/> Tarifas
+                                </button>
+                                <button onClick={() => handleEditarSubcat(sub)} className="p-1.5 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-lg transition-colors" title="Editar Ubicación"><Pencil size={14}/></button>
+                                <button onClick={() => handleEliminarSubcat(sub.id)} className="p-1.5 bg-slate-800 hover:bg-slate-700 text-red-400 rounded-lg transition-colors" title="Eliminar Ubicación"><Trash2 size={14}/></button>
+                              </div>
+                            </div>
+
+                            {openSubcats[sub.id] && (
+                              <div className="p-4 border-t border-slate-800 bg-slate-950/40 space-y-4">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Variantes de Personalización</span>
+                                  <button onClick={() => handleCrearOpcion(sub.id)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-500 transition-colors">+ Variante</button>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {sub.opciones?.map(op => (
+                                    <div key={op.id} className="bg-slate-900 p-4 rounded-xl border border-slate-800">
+                                      <p className="font-bold text-white text-sm mb-2">{op.nombre}</p>
+                                      <div className="text-xs text-slate-400 space-y-1">
+                                        <p>Costos Fijos: L {op.costosFijos?.reduce((a,b)=>a+Number(b.valor),0).toFixed(2)}</p>
+                                        <p>Costos Variables: L {op.costosVariables?.reduce((a,b)=>a+Number(b.valor),0).toFixed(2)}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {(!sub.opciones || sub.opciones.length === 0) && <p className="text-xs text-slate-500 col-span-full italic">No hay opciones configuradas.</p>}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                        {(!tecActual.subcategorias || tecActual.subcategorias.length === 0) && <div className="p-8 text-center text-slate-500 text-sm">No hay ubicaciones registradas para esta técnica.</div>}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           );
         }
 
-        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud, mensajesGlobales, adminSetMensajes, showToast }) {
-            const [vista, setVista] = useState('CATALOGO');
-            return (
-                <div className="min-h-screen bg-slate-900 flex flex-col md:flex-row text-slate-200 fade-in">
-                    <aside className="w-full md:w-72 bg-slate-950 border-r border-slate-800 flex flex-col shadow-2xl z-10 md:h-screen md:sticky md:top-0">
-                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
-                            <div className="flex items-center gap-3 text-blue-500 mb-8"><Printer size={32} /><span className="text-xl font-bold text-white">PrintPro Admin</span></div>
-                            <nav className="space-y-1 mb-8">
-                                <MenuBtn icon={Database} label="Precios & Catálogo" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} />
-                                <MenuBtn icon={Users} label="Gestión de Clientes" active={vista === 'USUARIOS'} onClick={() => setVista('USUARIOS')} />
-                                <MenuBtn icon={FileText} label="Panel de Órdenes" active={vista === 'ORDENES'} onClick={() => setVista('ORDENES')} />
-                                <MenuBtn icon={BookOpen} label="Biblioteca Archivos" active={vista === 'RECURSOS'} onClick={() => setVista('RECURSOS')} />
-                                <MenuBtn icon={Megaphone} label="Avisos & Plantillas" active={vista === 'MENSAJES'} onClick={() => setVista('MENSAJES')} />
-                            </nav>
+        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, mensajesGlobales, adminSetMensajes, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud, showToast }) {
+          const [tab, setTab] = useState('ORDENES');
+
+          return (
+            <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col md:flex-row fade-in">
+              <aside className="w-full md:w-72 bg-slate-950 border-r border-slate-800 flex flex-col shadow-xl z-10 no-print md:h-screen md:sticky md:top-0">
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                  <div className="flex items-center gap-3 text-blue-500 mb-8"><Printer size={32} /><span className="text-xl font-bold text-white">PrintPro Admin</span></div>
+                  <nav className="space-y-2">
+                    <MenuBtn icon={FileText} label="Cotizaciones" active={tab === 'ORDENES'} onClick={() => setTab('ORDENES')} dark={true} />
+                    <MenuBtn icon={Layers} label="Catálogo & Técnicas" active={tab === 'JERARQUIA'} onClick={() => setTab('JERARQUIA')} dark={true} />
+                    <MenuBtn icon={Users} label="Clientes & Perfiles" active={tab === 'USUARIOS'} onClick={() => setTab('USUARIOS')} dark={true} />
+                    <MenuBtn icon={Megaphone} label="Mensajes & Plantillas" active={tab === 'MENSAJES'} onClick={() => setTab('MENSAJES')} dark={true} />
+                    <MenuBtn icon={BookOpen} label="Archivos Compartidos" active={tab === 'RECURSOS'} onClick={() => setTab('RECURSOS')} dark={true} />
+                  </nav>
+                </div>
+                <div className="p-6 bg-slate-950 border-t border-slate-800 mt-auto">
+                  <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
+                  <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-400 hover:bg-slate-900 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-slate-800"><LogOut size={18} /> Cerrar Sesión</button>
+                </div>
+              </aside>
+
+              <main className="flex-1 p-8 overflow-y-auto bg-slate-900">
+                {tab === 'ORDENES' && <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} mensajesGlobales={mensajesGlobales} showToast={showToast} />}
+                {tab === 'JERARQUIA' && <GestionJerarquica categorias={categorias} setCategorias={setCategorias} catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
+                {tab === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
+                {tab === 'MENSAJES' && <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
+                {tab === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
+              </main>
+            </div>
+          );
+        }
+
+        function EstadoBadge({ estado }) {
+          const colors = {
+            'Cotización enviada': 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+            'Pendiente': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+            'Aprobado / En producción': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+            'Control de calidad': 'bg-purple-500/20 text-purple-400 border-purple-500/30',
+            'Listo para envío': 'bg-teal-500/20 text-teal-400 border-teal-500/30',
+            'Entrega parcial': 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
+            'Finalizado / Entregado': 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+            'Cancelada': 'bg-red-500/20 text-red-400 border-red-500/30',
+          };
+          return <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${colors[estado] || 'bg-slate-500/20 text-slate-300'}`}>{estado}</span>;
+        }
+
+        function MenuBtn({ icon: Icon, label, active, onClick, dark = false }) {
+          return (
+            <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all ${active ? (dark ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20') : (dark ? 'text-slate-400 hover:bg-slate-900 hover:text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900')}`}>
+              <Icon size={18} /><span>{label}</span>
+            </button>
+          );
+        }
+
+        function CustomModal({ config, onClose }) {
+          const [valores, setValores] = useState(config.valoresIniciales || {});
+
+          const handleFile = (e, fieldId) => {
+            const file = e.target.files[0];
+            if (file) {
+              const reader = new FileReader();
+              reader.onloadend = () => setValores(prev => ({ ...prev, [fieldId]: reader.result }));
+              reader.readAsDataURL(file);
+            }
+          };
+
+          const handleCheckboxGroup = (fieldId, optionValue, isChecked) => {
+            const current = Array.isArray(valores[fieldId]) ? valores[fieldId] : [];
+            if (isChecked) {
+              setValores(prev => ({ ...prev, [fieldId]: [...current, optionValue] }));
+            } else {
+              setValores(prev => ({ ...prev, [fieldId]: current.filter(v => v !== optionValue) }));
+            }
+          };
+
+          const handleSubmit = (e) => {
+            e.preventDefault();
+            config.onSubmit(valores);
+            onClose();
+          };
+
+          return (
+            <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
+              <div className="bg-slate-800 border border-slate-700 text-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+                <div className="p-6 border-b border-slate-700 flex justify-between items-center">
+                  <h3 className="text-lg font-bold">{config.titulo}</h3>
+                  <button onClick={onClose} className="p-1.5 rounded-lg bg-slate-700 text-slate-300 hover:bg-slate-600"><X size={16}/></button>
+                </div>
+                
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                  {config.mensaje && <p className="text-sm text-slate-300 leading-relaxed mb-2">{config.mensaje}</p>}
+                  
+                  {config.campos?.map(c => (
+                    <div key={c.id}>
+                      <label className="block text-xs font-bold text-slate-400 mb-1">{c.label}</label>
+                      {c.type === 'text' && (
+                        <input required type="text" value={valores[c.id] || ''} onChange={e => setValores({ ...valores, [c.id]: e.target.value })} className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500" />
+                      )}
+                      {c.type === 'number' && (
+                        <input required type="number" step="any" value={valores[c.id] !== undefined ? valores[c.id] : ''} onChange={e => setValores({ ...valores, [c.id]: e.target.value })} className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500" />
+                      )}
+                      {c.type === 'textarea' && (
+                        <textarea maxLength={c.maxLength || 250} value={valores[c.id] || ''} onChange={e => setValores({ ...valores, [c.id]: e.target.value })} className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500 resize-none" rows="3" />
+                      )}
+                      {c.type === 'select' && (
+                        <select value={valores[c.id] || ''} onChange={e => setValores({ ...valores, [c.id]: e.target.value })} className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500">
+                          <option value="">-- Seleccionar --</option>
+                          {c.options?.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                      )}
+                      {c.type === 'boolean' && (
+                        <label className="flex items-center gap-2 cursor-pointer mt-1">
+                          <input type="checkbox" checked={!!valores[c.id]} onChange={e => setValores({ ...valores, [c.id]: e.target.checked })} className="accent-blue-500 w-4 h-4" />
+                          <span className="text-sm text-slate-300">Activar</span>
+                        </label>
+                      )}
+                      {c.type === 'file' && (
+                        <input type="file" accept="image/*,application/pdf" onChange={e => handleFile(e, c.id)} className="w-full p-2 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500" />
+                      )}
+                      {c.type === 'checkboxGroup' && (
+                        <div className="space-y-2 max-h-40 overflow-y-auto p-2 bg-slate-900 rounded-xl border border-slate-700 custom-scrollbar">
+                          {c.options?.map(o => {
+                            const isChecked = Array.isArray(valores[c.id]) && valores[c.id].includes(o.value);
+                            return (
+                              <label key={o.value} className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer hover:text-white">
+                                <input type="checkbox" checked={isChecked} onChange={e => handleCheckboxGroup(c.id, o.value, e.target.checked)} className="accent-blue-500 w-3.5 h-3.5" />
+                                <span>{o.label}</span>
+                              </label>
+                            );
+                          })}
                         </div>
-                        <div className="p-6 bg-slate-900 border-t border-slate-800 mt-auto shrink-0">
-                            <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
-                            <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-400 hover:bg-red-950/50 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-red-900/50"><LogOut size={18} /> Salir del Panel</button>
-                        </div>
-                    </aside>
-                    <main className="flex-1 p-8 overflow-y-auto bg-slate-900 h-screen custom-scrollbar">
-                        {vista === 'CATALOGO' && <GestionJerarquica categorias={categorias} setCategorias={setCategorias} catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
-                        {vista === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
-                        {vista === 'ORDENES' && <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} />}
-                        {vista === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
-                        {vista === 'MENSAJES' && <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
-                    </main>
-                </div>
-            );
-        }
+                      )}
+                    </div>
+                  ))}
 
-        function GestionUsuarios({ usuarios, onActualizarUsuario, onEliminarUsuario }) {
-            const [modalUsuario, setModalUsuario] = useState(null);
-            const [modalConfirmacion, setModalConfirmacion] = useState(null);
-
-            const handleCrearPerfil = () => setModalUsuario({ titulo: `Vincular Nuevo Cliente`, mensaje: `IMPORTANTE: Crea la cuenta en Firebase Auth y copia el "User UID".`, valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0, modoTest: false }, campos: [ { id: 'id', label: 'Firebase User UID:', type: 'text' }, { id: 'nombre', label: 'Nombre Empresa:', type: 'text' }, { id: 'telefono', label: 'Teléfono:', type: 'text' }, { id: 'descuentoGlobal', label: 'Descuento VIP (%):', type: 'number' }, { id: 'modoTest', label: 'Modo Test:', type: 'boolean' } ], onSubmit: (d) => onActualizarUsuario({ id: d.id.trim(), rol: 'CLIENTE', nombre: d.nombre, telefono: d.telefono, descuentoGlobal: Number(d.descuentoGlobal), modoTest: !!d.modoTest }) });
-            const handleEditar = (user) => setModalUsuario({ titulo: `Editar Perfil: ${user.nombre}`, valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0, modoTest: !!user.modoTest }, campos: [ { id: 'nombre', label: 'Nombre Empresa:', type: 'text' }, { id: 'telefono', label: 'Teléfono:', type: 'text' }, { id: 'descuentoGlobal', label: 'Descuento VIP (%):', type: 'number' }, { id: 'modoTest', label: 'Modo Test:', type: 'boolean' } ], onSubmit: (d) => onActualizarUsuario({ ...user, nombre: d.nombre, telefono: d.telefono, descuentoGlobal: Number(d.descuentoGlobal), modoTest: !!d.modoTest }) });
-            const handleEliminar = (id, nombre, rol) => { if(rol === 'ADMIN') return alert("No puedes eliminar al admin principal."); setModalConfirmacion({ titulo: 'Eliminar Perfil', mensaje: `¿Eliminar a "${nombre}"?`, submitLabel: 'Sí, Eliminar', onConfirm: () => onEliminarUsuario(id) }); };
-
-            return (
-                <div className="max-w-6xl mx-auto space-y-4 fade-in">
-                    {modalUsuario && <CustomModal config={modalUsuario} onClose={() => setModalUsuario(null)} />}
-                    {modalConfirmacion && <CustomModal config={{ titulo: modalConfirmacion.titulo, esConfirmacion: true, mensaje: modalConfirmacion.mensaje, submitLabel: modalConfirmacion.submitLabel, campos: [], onSubmit: modalConfirmacion.onConfirm }} onClose={() => setModalConfirmacion(null)} />}
-                    <div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-bold text-white mb-1">Perfiles de Clientes</h2><p className="text-sm text-slate-400">Vincula los perfiles de Firebase Auth.</p></div><button onClick={handleCrearPerfil} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg"><Plus size={20}/> Vincular Cliente</button></div>
-                    <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto"><table className="w-full text-left text-sm min-w-full"><thead><tr className="border-b border-slate-700 text-slate-400"><th className="pb-3 font-semibold">Cliente</th><th className="pb-3 font-semibold">Firebase UID</th><th className="pb-3 font-semibold">Rol & VIP</th><th className="pb-3 font-semibold text-right">Acciones</th></tr></thead><tbody className="divide-y divide-slate-700/50">{usuarios.map(u => (<tr key={u.id} className="hover:bg-slate-700/30 transition-colors"><td className="py-4"><p className="text-white font-bold">{u.nombre}</p><p className="text-slate-400 text-xs mt-1">Tel: {u.telefono || 'N/D'}</p></td><td className="py-4"><div className="bg-slate-900 inline-block p-2 rounded-lg border border-slate-700 text-xs font-mono text-slate-400">{u.id}</div></td><td className="py-4">{u.rol === 'ADMIN' ? <span className="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold">ADMIN</span> : <div><span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold">CLIENTE</span>{u.descuentoGlobal > 0 && <span className="ml-2 text-emerald-400 text-xs font-bold">VIP: -{u.descuentoGlobal}%</span>}{u.modoTest && <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded text-[10px] font-bold mt-2 block w-max">MODO TEST</span>}</div>}</td><td className="py-4 text-right"><div className="flex items-center justify-end gap-2"><button onClick={() => handleEditar(u)} className="text-blue-400 hover:text-blue-300 p-2 rounded bg-slate-900 hover:bg-slate-700"><Edit3 size={16}/></button><button onClick={() => handleEliminar(u.id, u.nombre, u.rol)} className="text-red-400 hover:text-red-300 p-2 rounded bg-slate-900 hover:bg-slate-700"><Trash2 size={16}/></button></div></td></tr>))}</tbody></table></div>
-                </div>
-            );
-        }
-
-        function GestionMensajes({ mensajesGlobales, adminSetMensajes }) {
-            const [form, setForm] = useState(mensajesGlobales);
-            const handleSave = (e) => { e.preventDefault(); adminSetMensajes(form); }
-            return (
-                <div className="max-w-4xl mx-auto space-y-4 fade-in">
-                    <div><h2 className="text-2xl font-bold text-white mb-2">Avisos y Plantillas</h2></div>
-                    <form onSubmit={handleSave} className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-6 shadow-lg">
-                        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700"><h3 className="text-lg font-bold text-blue-400 flex items-center gap-2 mb-4"><Megaphone size={20}/> Mensajes en Panel Cliente</h3><div className="space-y-4"><div><label className="block text-sm font-bold text-slate-400 mb-2">Mensaje Principal (Bienvenida)</label><input type="text" value={form.bienvenida || ''} onChange={(e) => setForm({...form, bienvenida: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-blue-500" /></div><div><label className="block text-sm font-bold text-slate-400 mb-2">Aviso General / Texto Promocional</label><textarea value={form.promo || ''} onChange={(e) => setForm({...form, promo: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-blue-500 resize-none h-24"></textarea></div></div></div>
-                        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700"><h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2 mb-4"><Share2 size={20}/> Plantilla de WhatsApp</h3><div className="space-y-4"><div><label className="block text-sm font-bold text-slate-400 mb-2">Número WhatsApp Empresa</label><input type="text" value={form.whatsappNumero || ''} onChange={(e) => setForm({...form, whatsappNumero: e.target.value.replace(/[^0-9]/g, '')})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500" /></div><div><label className="block text-sm font-bold text-slate-400 mb-2">Plantilla Compartir</label><textarea value={form.whatsappTemplate || ''} onChange={(e) => setForm({...form, whatsappTemplate: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500 resize-none h-24"></textarea></div></div></div>
-                        <div className="flex justify-end pt-4"><button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-500">Guardar Configuración</button></div>
-                    </form>
-                </div>
-            )
-        }
-
-        function GestionRecursos({ recursos, onActualizarRecurso, onEliminarRecurso }) {
-            const [modalConfig, setModalConfig] = useState(null);
-            const handleCrear = () => setModalConfig({ titulo: "Subir Nuevo Archivo/Guía", campos: [{id:'titulo',label:'Título:',type:'text'},{id:'descripcion',label:'Descripción:',type:'text'},{id:'archivo',label:'Archivo:',type:'file'}], onSubmit: (d) => { if(d.titulo && d.archivo) onActualizarRecurso({ id: `REC_${Date.now()}`, titulo: d.titulo, descripcion: d.descripcion || '', archivoBase64: d.archivo }); } });
-            return (
-                <div className="max-w-6xl mx-auto space-y-4 fade-in">
-                    {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-                    <div className="flex justify-between items-end mb-6"><div><h2 className="text-2xl font-bold text-white mb-1">Archivos Compartidos</h2></div><button onClick={handleCrear} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg"><Upload size={20}/> Subir Archivo</button></div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{recursos.map(r => (<div key={r.id} className="bg-slate-800 rounded-2xl p-5 border border-slate-700 flex flex-col hover:border-slate-600 shadow-sm"><div className="flex justify-between items-start mb-3"><div className="bg-slate-900 p-3 rounded-xl text-blue-400"><BookOpen size={24}/></div><button onClick={() => onEliminarRecurso(r.id)} className="text-red-400 hover:text-red-300 p-2 bg-slate-900 rounded-lg"><Trash2 size={16}/></button></div><h3 className="text-white font-bold text-lg mb-1">{r.titulo}</h3><p className="text-slate-400 text-sm mb-4 flex-1 line-clamp-2">{r.descripcion}</p><a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-600 text-sm">Previsualizar / Descargar</a></div>))}{recursos.length === 0 && <div className="col-span-full py-10 text-center text-slate-500 bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">No hay recursos.</div>}</div>
-                </div>
-            );
+                  <div className="flex justify-end gap-3 pt-4 border-t border-slate-700 mt-6">
+                    <button type="button" onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 text-sm">Cancelar</button>
+                    <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 text-sm">{config.submitLabel || 'Guardar'}</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          );
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
