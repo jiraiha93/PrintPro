@@ -588,35 +588,12 @@
                 }
             }
             
-            //  CÓDIGO OPTIMIZADO (Con redondeo exacto a 2 decimales)
-let multDescuento = (1 - descuentoVol) * (1 - (cliente.descuentoGlobal / 100));
-let subtotalConDescuento = subtotalGlobal * multDescuento;
-let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
+            let multDescuento = (1 - descuentoVol) * (1 - (cliente.descuentoGlobal / 100));
+            let subtotalConDescuento = subtotalGlobal * multDescuento;
+            let impuestoTotalFinal = (impuestoProducto + impuestoTecnicas) * multDescuento;
+            let totalFinal = subtotalConDescuento + impuestoTotalFinal;
 
-// 1. Redondeamos primero el subtotal y el impuesto a exactamente 2 decimales
-let subtotalFinalRedondeado = Math.round(subtotalConDescuento * 100) / 100;
-let impuestoFinalRedondeado = Math.round(impuestoTotalFinal * 100) / 100;
-
-// 2. Calculamos el precio unitario base redondeado estrictamente a 2 decimales
-let totalPrevio = subtotalFinalRedondeado + impuestoFinalRedondeado;
-let unitarioRedondeado = cantEfectiva > 0 ? Math.round((totalPrevio / cantEfectiva) * 100) / 100 : 0;
-
-// 3. RECALCULAMOS EL TOTAL FINAL (Unitario Redondeado × Cantidad)
-// Esto garantiza que si el cliente multiplica el unitario por la cantidad en su calculadora,
-// le dará EXACTAMENTE el total que ve impreso, sin perder ni ganar lempiras.
-let totalFinalRedondeado = cantEfectiva > 0 ? Math.round((unitarioRedondeado * cantEfectiva) * 100) / 100 : totalPrevio;
-
-return {
-  subtotalBruto: Math.round(subtotalGlobal * 100) / 100,
-  subtotalDescuento: subtotalFinalRedondeado,
-  impuestos: impuestoFinalRedondeado,
-  total: totalFinalRedondeado, // Total perfecto sin discrepancias
-  unitario: unitarioRedondeado, // Unitario perfecto de 2 decimales
-  minRequerido,
-  tierActivo,
-  valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0,
-  cantEfectiva
-};
+            return { subtotalBruto: subtotalGlobal, subtotalDescuento: subtotalConDescuento, impuestos: impuestoTotalFinal, total: totalFinal, unitario: cantEfectiva > 0 ? totalFinal / cantEfectiva : 0, minRequerido, tierActivo, valido: aplicaciones.every(a => a.tecnicaId && a.subcatId && a.opcionId) || aplicaciones.length === 0, cantEfectiva };
           }, [productoSeleccionado, aplicaciones, cantidad, proveeCliente, margenGanancia, impuestoGlobal, cliente.descuentoGlobal, cliente.modoTest, tecnicas, descuentosVolumen]);
 
           useEffect(() => { 
@@ -636,7 +613,7 @@ return {
             onGuardar({
               id: `ORD-${Math.floor(Math.random() * 10000)}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre,
               proveeCliente, detalles: tecnicasDetalle.map(td => `${td.tecnica} (${td.ubicacion} - ${td.variante})`).join(' + ') || 'Sin Personalizar', tecnicasEstructuradas: tecnicasDetalle, comentario: comentario, cantidad, fecha: new Date().toLocaleDateString(),
-              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, unitario: cotizacion.unitario, estado: 'Cotización enviada', 
+              precioEstimado: !proveeCliente, subtotal: cotizacion.subtotalDescuento, impuestos: cotizacion.impuestos, total: cotizacion.total, estado: 'Cotización enviada', 
             });
           };
 
@@ -867,9 +844,6 @@ return {
         function ModalDetalleOrden({ orden, isClient, clienteInfo, onClose, onActualizarOrden, onCancelar, onEliminarAdmin }) {
             const esCancelada = orden.estado === 'Cancelada';
             const [modalConfirmacion, setModalConfirmacion] = useState(null);
-            
-            // FIX: Forzamos el cálculo de la factura dividiendo rigurosamente el total final entre las unidades pedidas.
-            const precioUnitario = orden.cantidad > 0 ? (orden.total / orden.cantidad) : 0;
 
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
@@ -877,7 +851,6 @@ return {
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] print-area">
                         <div className="hidden print:block p-6 border-b border-slate-200 mb-4 text-center">
                             <h1 className="text-3xl font-bold text-blue-600 mb-2">PrintPro</h1>
-                            <p className="text-xs font-bold text-blue-400 mb-2">Powered By IMPAK Print Lab</p>
                             <p className="text-slate-500 text-sm">Cotización Formal de Servicios</p>
                         </div>
                         <div className="bg-slate-50 print-bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-start">
@@ -906,19 +879,7 @@ return {
                                 ) : <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">{orden.detalles || 'Sin personalizar'}</p>}
                             </div>
                             <div className="border-t border-slate-200 pt-4 mt-6">
-                                <div className="flex justify-end">
-                                    <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
-                                        <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
-                                        <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
-                                        <div className="flex justify-between items-end font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2">
-                                            <span>TOTAL:</span> 
-                                            <div className="text-right">
-                                                <span className="print-text-emerald block">L {orden.total.toFixed(2)}</span>
-                                                <span className="text-xs text-slate-500 font-normal mt-0.5 block">L {precioUnitario.toFixed(2)} c/u</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div className="flex justify-end"><div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600"><div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div><div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div><div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div></div></div>
                             </div>
                             {orden.comentario && <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm"><h4 className="text-sm font-black text-amber-800 mb-2 flex items-center gap-2 uppercase tracking-wide"><MessageSquare size={16}/> Notas para el Taller</h4><p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{orden.comentario}</p></div>}
                         </div>
