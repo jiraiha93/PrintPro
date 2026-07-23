@@ -106,16 +106,16 @@
 
         function MenuBtn({ icon: Icon, label, active, onClick }) {
             return (
-                <button onClick={onClick} className={`w-full flex items-center gap-2 p-2.5 rounded-lg text-sm font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
-                    <Icon size={18} /> <span>{label}</span>
+                <button onClick={onClick} className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-md' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'}`}>
+                    <Icon size={20} /> <span>{label}</span>
                 </button>
             );
         }
 
         function MenuBtnAdmin({ icon: Icon, label, active, onClick }) {
             return (
-                <button onClick={onClick} className={`w-full flex items-center gap-2 p-2.5 rounded-lg text-sm font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-sm shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
-                    <Icon size={18} /> <span>{label}</span>
+                <button onClick={onClick} className={`w-full flex items-center gap-3 p-3.5 rounded-xl font-bold transition-all ${active ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
+                    <Icon size={20} /> <span>{label}</span>
                 </button>
             );
         }
@@ -132,7 +132,7 @@
                 'Cancelada': 'bg-red-100 text-red-700 border-red-200'
             };
             const c = colors[estado] || 'bg-slate-100 text-slate-700 border-slate-200';
-            return <span className={`px-2 py-1 rounded-md text-[10px] font-bold border uppercase tracking-wider ${c}`}>{estado}</span>;
+            return <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border uppercase tracking-wider ${c}`}>{estado}</span>;
         }
 
         function CustomModal({ config, onClose }) {
@@ -154,58 +154,58 @@
 
             return (
                 <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 fade-in">
-                    <div className="bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg border border-slate-600 overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80 sticky top-0 z-10">
-                            <h3 className="text-lg font-bold text-white">{config.titulo}</h3>
-                            <button onClick={onClose} type="button" className="text-slate-400 hover:text-white transition-colors bg-slate-900 p-1 rounded-md border border-slate-700"><X size={18}/></button>
+                    <div className="bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg border border-slate-600 overflow-hidden flex flex-col max-h-[90vh]">
+                        <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/80 sticky top-0 z-10">
+                            <h3 className="text-xl font-bold text-white">{config.titulo}</h3>
+                            <button onClick={onClose} type="button" className="text-slate-400 hover:text-white transition-colors bg-slate-900 p-1.5 rounded-lg border border-slate-700"><X size={20}/></button>
                         </div>
-                        <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+                        <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
                             {config.esConfirmacion ? (
-                                <p className="text-slate-300 text-sm mb-4 text-center py-2">{config.mensaje}</p>
+                                <p className="text-slate-300 text-lg mb-6 text-center py-4">{config.mensaje}</p>
                             ) : (
-                                <form id="modal-form" onSubmit={handleSubmit} className="space-y-3">
+                                <form id="modal-form" onSubmit={handleSubmit} className="space-y-4">
                                     {config.campos.map(c => (
                                         <div key={c.id}>
-                                            <label className="block text-xs font-bold text-slate-400 mb-1">{c.label}</label>
+                                            <label className="block text-sm font-bold text-slate-400 mb-2">{c.label}</label>
                                             {c.type === 'textarea' ? (
-                                                <textarea value={form[c.id] || ''} onChange={e=>handleChange(c.id, e.target.value)} maxLength={c.maxLength} className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none text-sm focus:border-blue-500 resize-none h-20 shadow-inner" />
+                                                <textarea value={form[c.id] || ''} onChange={e=>handleChange(c.id, e.target.value)} maxLength={c.maxLength} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 resize-none h-24 shadow-inner" />
                                             ) : c.type === 'select' ? (
-                                                <select value={form[c.id] || ''} onChange={e=>handleChange(c.id, e.target.value)} className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500 shadow-inner">
+                                                <select value={form[c.id] || ''} onChange={e=>handleChange(c.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 shadow-inner">
                                                     <option value="">-- Seleccionar --</option>
                                                     {c.options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                                 </select>
                                             ) : c.type === 'checkboxGroup' ? (
-                                                <div className="bg-slate-900 border border-slate-700 rounded-lg p-2 max-h-32 overflow-y-auto space-y-1 custom-scrollbar shadow-inner">
+                                                <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2 custom-scrollbar shadow-inner">
                                                     {c.options.map(o => (
-                                                        <label key={o.value} className="flex items-center gap-2 text-xs text-slate-300 hover:bg-slate-800 p-1 rounded cursor-pointer transition-colors">
+                                                        <label key={o.value} className="flex items-center gap-2 text-sm text-slate-300 hover:bg-slate-800 p-1.5 rounded-lg cursor-pointer transition-colors">
                                                             <input type="checkbox" checked={(form[c.id] || []).includes(o.value)} onChange={(e) => {
                                                                 const current = form[c.id] || [];
                                                                 handleChange(c.id, e.target.checked ? [...current, o.value] : current.filter(x => x !== o.value));
-                                                            }} className="accent-blue-500 w-3 h-3 cursor-pointer" />
+                                                            }} className="accent-blue-500 w-4 h-4 cursor-pointer" />
                                                             {o.label}
                                                         </label>
                                                     ))}
-                                                    {c.options.length === 0 && <p className="text-[10px] text-slate-500 italic p-1">No hay opciones disponibles.</p>}
+                                                    {c.options.length === 0 && <p className="text-xs text-slate-500 italic p-2">No hay opciones disponibles.</p>}
                                                 </div>
                                             ) : c.type === 'boolean' ? (
-                                                <label className="flex items-center gap-2 text-xs font-bold text-slate-300 mt-1 bg-slate-900 p-2 rounded-lg border border-slate-700 cursor-pointer">
-                                                    <input type="checkbox" checked={!!form[c.id]} onChange={e=>handleChange(c.id, e.target.checked)} className="accent-blue-500 w-4 h-4 cursor-pointer" />
+                                                <label className="flex items-center gap-3 text-sm font-bold text-slate-300 mt-2 bg-slate-900 p-3 rounded-xl border border-slate-700 cursor-pointer">
+                                                    <input type="checkbox" checked={!!form[c.id]} onChange={e=>handleChange(c.id, e.target.checked)} className="accent-blue-500 w-5 h-5 cursor-pointer" />
                                                     Activar esta opción
                                                 </label>
                                             ) : c.type === 'file' ? (
-                                                <input type="file" onChange={e=>handleFile(c.id, e.target.files[0])} className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-slate-400 text-xs outline-none shadow-inner file:mr-3 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[10px] file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
+                                                <input type="file" onChange={e=>handleFile(c.id, e.target.files[0])} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 outline-none shadow-inner file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
                                             ) : (
-                                                <input type={c.type} step={c.type === 'number' ? 'any' : undefined} value={form[c.id] !== undefined ? form[c.id] : ''} onChange={e=>handleChange(c.id, e.target.value)} className="w-full p-2 rounded-lg bg-slate-900 border border-slate-700 text-white text-sm outline-none focus:border-blue-500 shadow-inner" />
+                                                <input type={c.type} step={c.type === 'number' ? 'any' : undefined} value={form[c.id] !== undefined ? form[c.id] : ''} onChange={e=>handleChange(c.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 shadow-inner" />
                                             )}
                                         </div>
                                     ))}
                                 </form>
                             )}
                         </div>
-                        <div className="p-4 border-t border-slate-700 flex justify-end gap-2 bg-slate-800/80 sticky bottom-0 z-10">
-                            <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg text-sm font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">Cancelar</button>
-                            <button type="submit" form={!config.esConfirmacion ? "modal-form" : undefined} onClick={config.esConfirmacion ? handleSubmit : undefined} className={`px-5 py-2 rounded-lg text-sm font-bold text-white shadow-md transition-colors ${config.esConfirmacion ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'}`}>
-                                {config.submitLabel || 'Guardar'}
+                        <div className="p-6 border-t border-slate-700 flex justify-end gap-3 bg-slate-800/80 sticky bottom-0 z-10">
+                            <button type="button" onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">Cancelar</button>
+                            <button type="submit" form={!config.esConfirmacion ? "modal-form" : undefined} onClick={config.esConfirmacion ? handleSubmit : undefined} className={`px-8 py-3 rounded-xl font-bold text-white shadow-lg transition-colors ${config.esConfirmacion ? 'bg-red-600 hover:bg-red-500' : 'bg-blue-600 hover:bg-blue-500'}`}>
+                                {config.submitLabel || 'Guardar Datos'}
                             </button>
                         </div>
                     </div>
@@ -215,11 +215,11 @@
 
         function ConnectionIndicator({ isConnectedToCloud, darkTheme = false }) {
             return (
-                <div className={`p-2 rounded-lg flex items-center gap-2 text-[10px] font-bold transition-all shadow-sm
+                <div className={`p-3 rounded-xl flex items-center gap-3 text-xs font-bold transition-all shadow-sm
                     ${isConnectedToCloud ? (darkTheme ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-emerald-50 text-emerald-700 border border-emerald-200') : (darkTheme ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-amber-50 text-amber-700 border border-amber-200')}
                 `}>
-                    <div className="relative flex h-2 w-2 shrink-0">{isConnectedToCloud && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}<span className={`relative inline-flex rounded-full h-2 w-2 ${isConnectedToCloud ? 'bg-emerald-500' : 'bg-amber-500'}`}></span></div>
-                    <div><p className="uppercase tracking-wider opacity-80 text-[8px]">Sistema</p><p>{isConnectedToCloud ? 'Online' : 'Local'}</p></div>
+                    <div className="relative flex h-3 w-3 shrink-0">{isConnectedToCloud && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}<span className={`relative inline-flex rounded-full h-3 w-3 ${isConnectedToCloud ? 'bg-emerald-500' : 'bg-amber-500'}`}></span></div>
+                    <div><p className="uppercase tracking-wider opacity-80 text-[10px]">Estado del Sistema</p><p>{isConnectedToCloud ? 'Sincronización (Nube)' : 'Local (Sin Nube)'}</p></div>
                 </div>
             );
         }
@@ -425,15 +425,15 @@
               if (auth && auth.currentUser) try { await signOut(auth); } catch(e) { console.error("Error al salir", e); }
           };
 
-          if (loadingData) return ( <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white font-bold fade-in"><Database size={40} className="text-blue-500 mb-3 animate-bounce" /><p className="text-sm">Conectando al Sistema Seguro...</p></div> );
+          if (loadingData) return ( <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white font-bold fade-in"><Database size={48} className="text-blue-500 mb-4 animate-bounce" /><p>Conectando al Sistema Seguro...</p></div> );
           
           return (
              <>
                  {toastInfo && (
-                    <div className="fixed bottom-4 right-4 z-[9999] slide-up">
-                        <div className={`px-4 py-3 rounded-lg shadow-xl flex items-center gap-2 text-white font-bold max-w-sm ${toastInfo.type === 'error' ? 'bg-red-600' : 'bg-slate-800 border-l-4 border-emerald-500'}`}>
-                            {toastInfo.type === 'error' ? <AlertCircle size={18}/> : <CheckCircle size={18} className="text-emerald-400" />}
-                            <p className="text-xs">{toastInfo.message}</p>
+                    <div className="fixed bottom-6 right-6 z-[9999] slide-up">
+                        <div className={`px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 text-white font-bold max-w-sm ${toastInfo.type === 'error' ? 'bg-red-600' : 'bg-slate-800 border-l-4 border-emerald-500'}`}>
+                            {toastInfo.type === 'error' ? <AlertCircle size={22}/> : <CheckCircle size={22} className="text-emerald-400" />}
+                            <p className="text-sm">{toastInfo.message}</p>
                         </div>
                     </div>
                  )}
@@ -479,23 +479,23 @@
 
           return (
             <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-3xl flex fade-in">
-                <div className="w-1/2 bg-blue-600 p-8 text-white flex-col justify-center hidden md:flex relative">
-                  <Printer size={48} className="mb-4 z-10" />
-                  <h1 className="text-3xl font-bold mb-1 z-10">PrintPro</h1>
-                  <p className="text-[10px] font-bold text-blue-200 uppercase tracking-widest mb-4 z-10">Powered By IMPAK Print Lab</p>
-                  <p className="text-blue-100 text-sm z-10 mb-6">Cotizador VIP de Servicios de Personalización, Estampado e Impresión Profesional, Todo-en-uno.</p>
+              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl flex fade-in">
+                <div className="w-1/2 bg-blue-600 p-12 text-white flex-col justify-center hidden md:flex relative">
+                  <Printer size={64} className="mb-6 z-10" />
+                  <h1 className="text-4xl font-bold mb-1 z-10">PrintPro</h1>
+                  <p className="text-xs font-bold text-blue-200 uppercase tracking-widest mb-6 z-10">Powered By IMPAK Print Lab</p>
+                  <p className="text-blue-100 text-lg z-10 mb-8">Cotizador VIP de Servicios de Personalización, Estampado e Impresión Profesional, Todo-en-uno.</p>
                 </div>
-                <div className="w-full md:w-1/2 p-8 flex flex-col justify-center">
-                  <h2 className="text-xl font-bold text-slate-800 mb-1">Acceso Seguro</h2>
-                  <p className="text-xs text-slate-500 mb-5">Ingresa con el correo proporcionado por tu ejecutivo.</p>
-                  {error && <div className={`mb-3 p-2 rounded-lg text-xs font-semibold bg-red-100 text-red-700`}>{error}</div>}
-                  <form onSubmit={handleAuth} className="space-y-3">
-                    <input required type="email" placeholder="Correo Electrónico" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 outline-none text-sm focus:border-blue-500" />
-                    <input required type="password" placeholder="Contraseña" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-200 outline-none text-sm focus:border-blue-500" />
-                    <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-bold p-3 rounded-lg hover:bg-slate-800 mt-2 transition-colors disabled:opacity-70 text-sm">{loading ? 'Verificando...' : 'Ingresar'}</button>
+                <div className="w-full md:w-1/2 p-12 flex flex-col justify-center">
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2">Acceso Seguro</h2>
+                  <p className="text-sm text-slate-500 mb-6">Ingresa con el correo proporcionado por tu ejecutivo.</p>
+                  {error && <div className={`mb-4 p-3 rounded-xl text-sm font-semibold bg-red-100 text-red-700`}>{error}</div>}
+                  <form onSubmit={handleAuth} className="space-y-4">
+                    <input required type="email" placeholder="Correo Electrónico" value={username} onChange={e=>setUsername(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500" />
+                    <input required type="password" placeholder="Contraseña" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500" />
+                    <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-bold p-4 rounded-xl hover:bg-slate-800 mt-4 transition-colors disabled:opacity-70">{loading ? 'Verificando...' : 'Ingresar'}</button>
                   </form>
-                  <p className="text-slate-500 w-full mt-4 text-[10px] tracking-wide text-center">Acceso exclusivo por invitación. ¿No tienes cuenta? Contacta a tu proveedor de servicios.</p>
+                  <p className="text-slate-500 w-full mt-6 text-sm tracking-wide text-center">Acceso exclusivo por invitación. ¿No tienes cuenta? Contacta a tu proveedor de servicios.</p>
                 </div>
               </div>
             </div>
@@ -507,34 +507,34 @@
           
           return (
             <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row fade-in">
-              <aside className="w-full md:w-60 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10 no-print md:h-screen md:sticky md:top-0">
-                <div className="p-4 overflow-y-auto flex-1 custom-scrollbar">
-                    <div className="flex items-center gap-2 text-blue-600 mb-6"><Printer size={24} /><span className="text-lg font-bold">PrintPro</span></div>
-                    <div className="mb-6 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                    <p className="font-bold text-slate-800 truncate text-sm">{cliente.nombre}</p>
-                    {cliente.descuentoGlobal > 0 && <span className="mt-1 text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded inline-block">{cliente.descuentoGlobal}% OFF VIP</span>}
+              <aside className="w-full md:w-72 bg-white border-r border-slate-200 flex flex-col shadow-sm z-10 no-print md:h-screen md:sticky md:top-0">
+                <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                    <div className="flex items-center gap-3 text-blue-600 mb-8"><Printer size={32} /><span className="text-xl font-bold">PrintPro</span></div>
+                    <div className="mb-8 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                    <p className="font-bold text-slate-800 truncate">{cliente.nombre}</p>
+                    {cliente.descuentoGlobal > 0 && <span className="mt-2 text-xs font-semibold text-emerald-600 bg-emerald-100 px-2 py-1 rounded-md inline-block">{cliente.descuentoGlobal}% OFF VIP</span>}
                     </div>
-                    <nav className="space-y-1.5">
+                    <nav className="space-y-2">
                     <MenuBtn icon={Plus} label="Nueva Cotización" active={vista === 'NUEVA_COTIZACION'} onClick={() => setVista('NUEVA_COTIZACION')} />
                     <MenuBtn icon={FileText} label="Mis Órdenes" active={vista === 'HISTORIAL'} onClick={() => setVista('HISTORIAL')} />
                     <MenuBtn icon={BookOpen} label="Archivos & Guías" active={vista === 'RECURSOS'} onClick={() => setVista('RECURSOS')} />
                     </nav>
                 </div>
-                <div className="p-4 bg-slate-50 border-t border-slate-200 mt-auto">
+                <div className="p-6 bg-slate-50 border-t border-slate-200 mt-auto">
                     <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={false} />
-                    <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 mt-3 p-2 rounded-lg text-sm font-bold transition-colors border border-transparent hover:border-red-200"><LogOut size={16} /> Salir</button>
+                    <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-600 hover:text-red-600 hover:bg-red-50 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-red-200"><LogOut size={18} /> Cerrar Sesión</button>
                 </div>
               </aside>
               
-              <main className="flex-1 p-4 md:p-6 overflow-y-auto bg-slate-50">
+              <main className="flex-1 p-8 overflow-y-auto bg-slate-50">
                 {(mensajesGlobales.bienvenida || mensajesGlobales.promo) && (
-                    <div className="max-w-5xl mx-auto mb-5 bg-white border border-slate-200 p-3 rounded-xl shadow-sm flex items-start gap-3 fade-in hover:shadow-md transition-shadow">
-                        <div className="bg-blue-50 p-2 rounded-lg shrink-0">
-                            <Megaphone size={16} className="text-blue-600" />
+                    <div className="max-w-5xl mx-auto mb-6 bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-start gap-4 fade-in hover:shadow-md transition-shadow">
+                        <div className="bg-blue-50 p-2.5 rounded-lg shrink-0">
+                            <Megaphone size={20} className="text-blue-600" />
                         </div>
                         <div className="flex-1 pt-0.5">
-                            {mensajesGlobales.bienvenida && <h2 className="font-bold text-slate-800 text-xs mb-1 tracking-tight">{mensajesGlobales.bienvenida}</h2>}
-                            {mensajesGlobales.promo && <p className="text-slate-500 text-[11px] leading-relaxed max-w-4xl whitespace-pre-wrap">{mensajesGlobales.promo}</p>}
+                            {mensajesGlobales.bienvenida && <h2 className="font-bold text-slate-800 text-sm mb-1 tracking-tight">{mensajesGlobales.bienvenida}</h2>}
+                            {mensajesGlobales.promo && <p className="text-slate-500 text-xs leading-relaxed max-w-4xl whitespace-pre-wrap">{mensajesGlobales.promo}</p>}
                         </div>
                     </div>
                 )}
@@ -672,7 +672,7 @@
 
           useEffect(() => { 
               if (!cliente.modoTest && cotizacion && Number(cantidad) < cotizacion.minRequerido) {
-                  setErrorValidacion(`Mín. ${cotizacion.minRequerido} pzas.`); 
+                  setErrorValidacion(`Esta personalización exige un mínimo de ${cotizacion.minRequerido} pzas.`); 
               } else { setErrorValidacion(''); }
           }, [cantidad, cotizacion, cliente.modoTest]);
 
@@ -693,76 +693,76 @@
           };
 
           return (
-            <div className="w-full max-w-[1400px] mx-auto px-4 pb-8">
-              <h2 className="text-2xl font-bold text-slate-800 mb-5">Nueva Cotización</h2>
-              <div className="flex gap-3 mb-5">{[1, 2, 3].map(i => <div key={i} className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${paso >= i ? 'bg-blue-600' : 'bg-slate-200'}`} />)}</div>
+            <div className="w-full max-w-[1600px] mx-auto px-6 pb-12">
+              <h2 className="text-3xl font-bold text-slate-800 mb-8">Nueva Cotización</h2>
+              <div className="flex gap-4 mb-8">{[1, 2, 3].map(i => <div key={i} className={`flex-1 h-2 rounded-full transition-all duration-300 ${paso >= i ? 'bg-blue-600' : 'bg-slate-200'}`} />)}</div>
               
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+              <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 {paso === 1 && (
                   <div className="fade-in">
-                    <h3 className="text-lg font-bold mb-3">1. Selección de Artículo</h3>
-                    <div className="bg-blue-50 p-4 rounded-xl mb-5 flex flex-col md:flex-row gap-3">
-                      <button onClick={() => setProveeCliente(true)} className={`flex-1 p-3 rounded-lg border text-sm font-bold transition-colors ${proveeCliente ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:border-blue-300'}`}>Traigo mis artículos</button>
-                      <button onClick={() => setProveeCliente(false)} className={`flex-1 p-3 rounded-lg border text-sm font-bold transition-colors ${!proveeCliente ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:border-blue-300'}`}>Incluir del catálogo</button>
+                    <h3 className="text-xl font-bold mb-4">1. Selección de Artículo</h3>
+                    <div className="bg-blue-50 p-6 rounded-2xl mb-8 flex flex-col md:flex-row gap-4">
+                      <button onClick={() => setProveeCliente(true)} className={`flex-1 p-4 rounded-xl border-2 font-bold transition-colors ${proveeCliente ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:border-blue-300'}`}>Traigo mis artículos</button>
+                      <button onClick={() => setProveeCliente(false)} className={`flex-1 p-4 rounded-xl border-2 font-bold transition-colors ${!proveeCliente ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 hover:border-blue-300'}`}>Incluir artículos del catálogo</button>
                     </div>
 
-                    <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <div className="relative w-full md:w-auto flex-1 max-w-xs">
-                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                            <input type="text" placeholder="Buscar..." value={busqueda} onChange={e=>setBusqueda(e.target.value)} className="w-full pl-8 pr-3 py-1.5 rounded text-sm border border-slate-300 outline-none focus:border-blue-500 bg-white" />
+                    <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div className="relative w-full md:w-auto flex-1 max-w-sm">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <input type="text" placeholder="Buscar por nombre o descripción..." value={busqueda} onChange={e=>setBusqueda(e.target.value)} className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white" />
                         </div>
-                        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
-                            <select value={categoriaFiltro} onChange={e=>setCategoriaFiltro(e.target.value)} className="w-full sm:w-auto p-1.5 border border-slate-300 rounded outline-none bg-white text-xs font-bold text-slate-700">
+                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                            <select value={categoriaFiltro} onChange={e=>setCategoriaFiltro(e.target.value)} className="w-full sm:w-auto p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700">
                                 <option value="">Todas las categorías</option>
                                 {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                             </select>
-                            <div className="flex items-center gap-1.5">
-                                <label className="text-xs text-slate-500 font-semibold whitespace-nowrap">Mostrar:</label>
-                                <select value={itemsPorPagina} onChange={e=>setItemsPorPagina(Number(e.target.value))} className="p-1.5 border border-slate-300 rounded outline-none bg-white text-xs font-bold text-slate-700">
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
+                            <div className="flex items-center gap-2">
+                                <label className="text-sm text-slate-500 font-semibold whitespace-nowrap">Mostrar:</label>
+                                <select value={itemsPorPagina} onChange={e=>setItemsPorPagina(Number(e.target.value))} className="p-2 border border-slate-300 rounded-lg outline-none bg-white text-sm font-bold text-slate-700">
+                                    <option value={10}>10 artículos</option>
+                                    <option value={20}>20 artículos</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                       {catalogoPaginado.map(prod => {
                         const nombresTecnicas = Array.isArray(prod.tecnicasRecomendadas) && prod.tecnicasRecomendadas.length > 0 ? prod.tecnicasRecomendadas.map(id => tecnicas.find(t=>t.id===id)?.nombre).filter(Boolean).join(', ') : ''; 
                         return (
-                        <button key={prod.id} onClick={() => setItemSelect(prod.id)} className={`flex flex-col items-center justify-between p-3 rounded-xl border text-center transition-all h-full ${itemSelect === prod.id ? 'border-blue-600 bg-blue-50 shadow-sm transform scale-[1.02]' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}>
-                          <div className="w-14 h-14 bg-white rounded-lg mb-2 flex items-center justify-center overflow-hidden border border-slate-100 relative">
-                              {prod.imagenUrl ? <img src={prod.imagenUrl} alt={prod.nombre} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-300" size={20} />}
-                              {prod.cobraImpuesto === false && <span className="absolute bottom-0 right-0 bg-amber-400 text-[7px] font-bold px-1 rounded-tl shadow-sm text-amber-900">EX</span>}
+                        <button key={prod.id} onClick={() => setItemSelect(prod.id)} className={`flex flex-col items-center justify-between p-4 rounded-2xl border-2 text-center transition-all h-full ${itemSelect === prod.id ? 'border-blue-600 bg-blue-50 shadow-md transform scale-105' : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50'}`}>
+                          <div className="w-20 h-20 bg-slate-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden border border-slate-200 relative">
+                              {prod.imagenUrl ? <img src={prod.imagenUrl} alt={prod.nombre} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-400" size={32} />}
+                              {prod.cobraImpuesto === false && <span className="absolute bottom-1 right-1 bg-amber-400 text-[9px] font-bold px-1 rounded shadow-sm text-amber-900">EX</span>}
                           </div>
                           <div className="flex-1 flex flex-col justify-between w-full">
-                            <p className="font-bold text-slate-700 text-xs mb-1 line-clamp-2 leading-tight">{prod.nombre}</p>
-                            {nombresTecnicas && <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1 py-0.5 rounded mt-auto line-clamp-1 border border-emerald-200">Acepta: {nombresTecnicas}</span>}
+                            <p className="font-bold text-slate-700 text-sm mb-1">{prod.nombre}</p>
+                            {prod.detalles && <p className="text-[10px] text-slate-500 line-clamp-2 mb-2 leading-tight" title={prod.detalles}>{prod.detalles}</p>}
+                            {nombresTecnicas && <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-1 rounded-md mt-auto line-clamp-1">Acepta: {nombresTecnicas}</span>}
                           </div>
                         </button>
                       )})}
-                      {catalogoPaginado.length === 0 && <div className="col-span-full py-6 text-center text-xs text-slate-400 font-medium">No se encontraron artículos.</div>}
+                      {catalogoPaginado.length === 0 && <div className="col-span-full py-10 text-center text-slate-400 font-medium">No se encontraron artículos que coincidan con tu búsqueda.</div>}
                     </div>
 
                     {totalPaginas > 1 && (
-                        <div className="flex items-center justify-center gap-3 mt-5">
-                            <button disabled={paginaActual === 1} onClick={() => setPaginaActual(p => p - 1)} className="p-1.5 bg-slate-100 rounded-md hover:bg-slate-200 disabled:opacity-50 transition-colors"><ChevronLeft size={16} className="text-slate-600"/></button>
-                            <span className="text-xs font-bold text-slate-600">Pág {paginaActual} de {totalPaginas}</span>
-                            <button disabled={paginaActual === totalPaginas} onClick={() => setPaginaActual(p => p + 1)} className="p-1.5 bg-slate-100 rounded-md hover:bg-slate-200 disabled:opacity-50 transition-colors"><ChevronRight size={16} className="text-slate-600"/></button>
+                        <div className="flex items-center justify-center gap-4 mt-8">
+                            <button disabled={paginaActual === 1} onClick={() => setPaginaActual(p => p - 1)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 disabled:opacity-50 transition-colors"><ChevronLeft size={20} className="text-slate-600"/></button>
+                            <span className="text-sm font-bold text-slate-600">Página {paginaActual} de {totalPaginas}</span>
+                            <button disabled={paginaActual === totalPaginas} onClick={() => setPaginaActual(p => p + 1)} className="p-2 bg-slate-100 rounded-lg hover:bg-slate-200 disabled:opacity-50 transition-colors"><ChevronRight size={20} className="text-slate-600"/></button>
                         </div>
                     )}
 
-                    <div className="mt-5 flex justify-end border-t border-slate-100 pt-4"><button disabled={!itemSelect} onClick={() => setPaso(2)} className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-sm">Siguiente</button></div>
+                    <div className="mt-8 flex justify-end border-t border-slate-100 pt-6"><button disabled={!itemSelect} onClick={() => setPaso(2)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-lg">Siguiente Paso</button></div>
                   </div>
                 )}
 
                 {paso === 2 && (
                   <div className="fade-in">
-                    <h3 className="text-lg font-bold mb-3">2. Aplicaciones</h3>
-                    <div className="flex justify-between items-center mb-4"><p className="text-xs text-slate-500">Añade técnicas para personalizar el artículo.</p>{tecnicasPermitidas.length > 0 && <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] px-2 py-1 rounded font-semibold">💡 Compatibles</span>}</div>
-                    {tecnicasPermitidas.length === 0 && <div className="p-3 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg mb-3 text-xs">Sin técnicas compatibles configuradas. No se puede personalizar.</div>}
-                    <div className="space-y-3 mb-5">
+                    <h3 className="text-xl font-bold mb-4">2. Aplicaciones de Personalización</h3>
+                    <div className="flex justify-between items-center mb-6"><p className="text-sm text-slate-500">Añade una o más técnicas para personalizar tu artículo.</p>{tecnicasPermitidas.length > 0 && <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1">💡 Mostrando compatibles</span>}</div>
+                    {tecnicasPermitidas.length === 0 && <div className="p-4 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl mb-4 text-sm">Este producto no tiene técnicas compatibles configuradas en el catálogo. No se puede personalizar.</div>}
+                    <div className="space-y-4 mb-6">
                       {aplicaciones.map((app, index) => {
                         const tecObj = tecnicas.find(t => t.id === app.tecnicaId); 
                         const subObj = tecObj?.subcategorias.find(s => s.id === app.subcatId);
@@ -773,39 +773,39 @@
                         ) || [];
 
                         return (
-                          <div key={app.id} className="p-3 border border-slate-200 rounded-xl bg-slate-50 relative flex flex-col md:flex-row gap-3 items-center">
-                            <button onClick={() => eliminarAplicacion(app.id)} className="absolute -top-1.5 -right-1.5 bg-red-100 text-red-600 p-1 rounded-full hover:bg-red-200 shadow-sm transition-colors"><X size={12}/></button>
+                          <div key={app.id} className="p-4 border border-slate-200 rounded-2xl bg-slate-50 relative flex flex-col md:flex-row gap-4 items-center">
+                            <button onClick={() => eliminarAplicacion(app.id)} className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 shadow-sm transition-colors"><X size={16}/></button>
                             <div className="flex-1 w-full">
-                              <label className="text-[10px] font-bold text-slate-500 mb-0.5 block">Técnica</label>
-                              <select value={app.tecnicaId} onChange={e => actualizarAplicacion(app.id, 'tecnicaId', e.target.value)} className="w-full p-2 rounded border border-slate-300 text-xs outline-none focus:border-blue-500 bg-white"><option value="">-- Seleccionar --</option>{tecnicasPermitidas.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}</select>
+                              <label className="text-xs font-bold text-slate-500 mb-1 block">Técnica</label>
+                              <select value={app.tecnicaId} onChange={e => actualizarAplicacion(app.id, 'tecnicaId', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white"><option value="">-- Seleccionar --</option>{tecnicasPermitidas.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}</select>
                             </div>
                             <div className="flex-1 w-full">
-                              <label className="text-[10px] font-bold text-slate-500 mb-0.5 block">Ubicación</label>
-                              <select disabled={!tecObj} value={app.subcatId} onChange={e => actualizarAplicacion(app.id, 'subcatId', e.target.value)} className="w-full p-2 rounded border border-slate-300 text-xs outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400">
+                              <label className="text-xs font-bold text-slate-500 mb-1 block">Ubicación</label>
+                              <select disabled={!tecObj} value={app.subcatId} onChange={e => actualizarAplicacion(app.id, 'subcatId', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400">
                                   <option value="">-- Seleccionar --</option>
                                   {subcategoriasPermitidas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
                               </select>
                             </div>
                             <div className="flex-1 w-full">
-                              <label className="text-[10px] font-bold text-slate-500 mb-0.5 block">Variante</label>
-                              <select disabled={!subObj} value={app.opcionId} onChange={e => actualizarAplicacion(app.id, 'opcionId', e.target.value)} className="w-full p-2 rounded border border-slate-300 text-xs outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"><option value="">-- Seleccionar --</option>{subObj?.opciones.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
+                              <label className="text-xs font-bold text-slate-500 mb-1 block">Variante</label>
+                              <select disabled={!subObj} value={app.opcionId} onChange={e => actualizarAplicacion(app.id, 'opcionId', e.target.value)} className="w-full p-2.5 rounded-lg border border-slate-300 outline-none focus:border-blue-500 bg-white disabled:bg-slate-100 disabled:text-slate-400"><option value="">-- Seleccionar --</option>{subObj?.opciones.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}</select>
                             </div>
                           </div>
                         );
                       })}
                     </div>
-                    {tecnicasPermitidas.length > 0 && <button onClick={agregarAplicacion} className="w-full border border-dashed border-blue-300 text-blue-600 text-sm font-bold p-3 rounded-xl hover:bg-blue-50 flex justify-center items-center gap-2 transition-colors"><Plus size={16}/> Añadir Aplicación</button>}
-                    <div className="mt-5 flex justify-between border-t border-slate-100 pt-4"><button onClick={() => setPaso(1)} className="text-slate-500 text-sm font-bold px-4 py-1.5 hover:bg-slate-100 rounded transition-colors">Atrás</button><button disabled={aplicaciones.some(a => !a.tecnicaId || !a.subcatId || !a.opcionId)} onClick={() => setPaso(3)} className="bg-blue-600 text-white px-6 py-2 rounded-lg text-sm font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-sm">Calcular</button></div>
+                    {tecnicasPermitidas.length > 0 && <button onClick={agregarAplicacion} className="w-full border-2 border-dashed border-blue-300 text-blue-600 font-bold p-4 rounded-2xl hover:bg-blue-50 flex justify-center items-center gap-2 transition-colors"><Plus size={20}/> Añadir Aplicación</button>}
+                    <div className="mt-8 flex justify-between border-t border-slate-100 pt-6"><button onClick={() => setPaso(1)} className="text-slate-500 font-bold px-6 py-2 hover:bg-slate-100 rounded-xl transition-colors">Atrás</button><button disabled={aplicaciones.some(a => !a.tecnicaId || !a.subcatId || !a.opcionId)} onClick={() => setPaso(3)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-lg">Calcular Total</button></div>
                   </div>
                 )}
 
                 {paso === 3 && cotizacion && (
                   <div className="fade-in">
-                    <h3 className="text-lg font-bold mb-4">3. Total</h3>
-                    <div className="flex flex-col md:flex-row gap-5">
-                      <div className="flex-1 space-y-4">
+                    <h3 className="text-xl font-bold mb-6">3. Volumen y Total</h3>
+                    <div className="flex flex-col md:flex-row gap-8">
+                      <div className="flex-1 space-y-6">
                         <div>
-                          <label className="block text-xs font-bold text-slate-600 mb-1">Cantidad (Unidades)</label>
+                          <label className="block text-sm font-bold text-slate-600 mb-2">Cantidad de Unidades</label>
                           <input 
                               type="number" 
                               min={cliente.modoTest ? 1 : (cotizacion?.minRequerido || 1)} 
@@ -815,71 +815,74 @@
                                   const val = Number(e.target.value);
                                   if (!cliente.modoTest && val < (cotizacion?.minRequerido || 1)) setCantidad(cotizacion?.minRequerido || 1);
                               }}
-                              className="w-full p-2.5 rounded-lg border-2 border-blue-200 text-lg font-bold focus:border-blue-600 outline-none transition-colors" 
+                              className="w-full p-4 rounded-xl border-2 border-blue-200 text-2xl font-bold focus:border-blue-600 outline-none transition-colors" 
                           />
                           {errorValidacion && (
-                              <p className="text-amber-600 text-[10px] font-bold mt-1 flex items-center gap-1 bg-amber-50 p-1.5 rounded border border-amber-200 fade-in">
-                                  <AlertCircle size={12} className="shrink-0"/> {errorValidacion} (Ajuste auto).
+                              <p className="text-amber-600 text-sm font-bold mt-2 flex items-center gap-1 bg-amber-50 p-2.5 rounded-lg border border-amber-200 fade-in">
+                                  <AlertCircle size={16} className="shrink-0"/> {errorValidacion} (El volumen se ajustará automáticamente).
                               </p>
                           )}
                         </div>
 
                         {productoSeleccionado.cobraImpuesto === false && (
-                            <div className="bg-amber-50 p-2 rounded-lg border border-amber-200 flex items-center gap-2 text-amber-800">
-                                <Info size={14} className="shrink-0" />
-                                <p className="text-[10px] font-bold">Artículo Exento de ISV.</p>
+                            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 flex items-center gap-3 text-amber-800">
+                                <Info size={20} className="shrink-0" />
+                                <p className="text-sm font-bold">Has seleccionado un artículo que está marcado como Exento de ISV.</p>
                             </div>
                         )}
 
-                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                            <label className="block text-xs font-bold text-slate-600 mb-1 flex items-center gap-1"><MessageSquare size={12}/> Notas Taller</label>
-                            <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-2 rounded border border-slate-300 focus:border-blue-500 outline-none resize-none text-xs bg-white" rows="2" placeholder="Ej: Usar logo color azul..."></textarea>
+                        <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <label className="block text-sm font-bold text-slate-600 mb-2 flex items-center gap-2"><MessageSquare size={16}/> Notas para el Taller (Opcional)</label>
+                            <textarea maxLength={250} value={comentario} onChange={e=>setComentario(e.target.value)} className="w-full p-3 rounded-lg border border-slate-300 focus:border-blue-500 outline-none resize-none text-sm bg-white" rows="3" placeholder="Ej: Favor usar logo en color azul marino..."></textarea>
+                            <p className="text-right text-xs text-slate-400 mt-1">{comentario.length}/250</p>
                         </div>
 
-                        <div className="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
-                          <p className="text-xs text-emerald-800 font-bold">Descuentos Dinámicos:</p>
-                          <ul className="text-[10px] text-emerald-600 list-disc pl-4 mt-1 space-y-0.5">
-                            {cliente.descuentoGlobal > 0 && <li>VIP: -{cliente.descuentoGlobal}%</li>}
+                        <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                          <p className="text-sm text-emerald-800 font-bold">Descuentos Dinámicos Activos:</p>
+                          <ul className="text-xs text-emerald-600 list-disc pl-4 mt-1 space-y-1">
+                            {cliente.descuentoGlobal > 0 && <li>Cliente VIP: -{cliente.descuentoGlobal}%</li>}
                             {cotizacion.tiersActivos && cotizacion.tiersActivos.map((t, idx) => (
-                                <li key={idx}>{t.tecnica} - {t.ubicacion} (+{t.min}u): -{t.pct}%</li>
+                                <li key={idx}>
+                                    Volumen en {t.tecnica} - {t.ubicacion} (+{t.min}u): -{t.pct}%
+                                </li>
                             ))}
-                            {cliente.descuentoGlobal === 0 && (!cotizacion.tiersActivos || cotizacion.tiersActivos.length === 0) && <li className="list-none text-slate-500 italic mt-0.5">Sin descuentos aplicables.</li>}
+                            {cliente.descuentoGlobal === 0 && (!cotizacion.tiersActivos || cotizacion.tiersActivos.length === 0) && <li className="list-none text-slate-500 italic mt-1">No hay descuentos aplicables en este volumen.</li>}
                           </ul>
                         </div>
                       </div>
 
-                      <div className="flex-1 bg-slate-900 text-white p-5 rounded-xl flex flex-col justify-between shadow-lg relative overflow-hidden">
+                      <div className="flex-1 bg-slate-900 text-white p-6 rounded-3xl flex flex-col justify-between shadow-lg relative overflow-hidden">
                         <div>
-                          <h4 className="text-sm font-bold mb-3 border-b border-slate-700 pb-1.5">Resumen</h4>
+                          <h4 className="text-lg font-bold mb-4 border-b border-slate-700 pb-2">Resumen Financiero</h4>
                           {cotizacion.cantEfectiva > Number(cantidad) && (
-                              <p className="text-[9px] text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded mb-2 border border-amber-500/20 w-fit">
-                                  Base al mín. ({cotizacion.cantEfectiva} u)
+                              <p className="text-[10px] text-amber-400 font-bold bg-amber-500/10 px-2 py-1 rounded mb-3 border border-amber-500/20 w-fit">
+                                  Proyectando base al mínimo ({cotizacion.cantEfectiva} u.)
                               </p>
                           )}
-                          <div className="space-y-1.5 text-xs text-slate-300">
-                            <div className="flex justify-between"><span>Subtotal:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
-                            {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>C/ Descuentos:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
+                          <div className="space-y-2 text-sm text-slate-300">
+                            <div className="flex justify-between"><span>Subtotal Prod/Servicios:</span> <span>L {cotizacion.subtotalBruto.toFixed(2)}</span></div>
+                            {cotizacion.subtotalDescuento !== cotizacion.subtotalBruto && <div className="flex justify-between text-emerald-400 font-medium"><span>Con Descuentos aplicados:</span> <span>L {cotizacion.subtotalDescuento.toFixed(2)}</span></div>}
                             
                             {cotizacion.subtotalBruto > cotizacion.subtotalDescuento && (
-                                <div className="flex justify-between text-emerald-400 font-bold">
-                                    <span>Ahorro:</span> 
+                                <div className="flex justify-between text-emerald-400 font-medium">
+                                    <span>Su Ahorro:</span> 
                                     <span>- L {(cotizacion.subtotalBruto - cotizacion.subtotalDescuento).toFixed(2)}</span>
                                 </div>
                             )}
 
                             <div className="flex justify-between">
-                                <span>ISV:</span> 
+                                <span>Impuestos:</span> 
                                 <span>L {cotizacion.impuestos.toFixed(2)}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="border-t border-slate-700 mt-4 pt-3">
-                          <div className="flex justify-between items-end"><span className="font-bold text-sm text-slate-400">Total:</span><div className="text-right"><span className="text-xl font-black text-blue-400">L {cotizacion.total.toFixed(2)}</span><p className="text-[10px] text-slate-400 mt-0.5">L {cotizacion.unitario.toFixed(2)} c/u</p></div></div>
+                        <div className="border-t border-slate-700 mt-6 pt-4">
+                          <div className="flex justify-between items-end"><span className="font-bold text-lg text-slate-400">Total Final:</span><div className="text-right"><span className="text-3xl font-black text-blue-400">L {cotizacion.total.toFixed(2)}</span><p className="text-xs text-slate-400 mt-1">L {cotizacion.unitario.toFixed(2)} c/u</p></div></div>
                         </div>
-                        <button onClick={handleGuardar} disabled={!!errorValidacion} className="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold mt-4 hover:bg-blue-500 disabled:opacity-50 transition-colors shadow-sm">Generar Cotización</button>
+                        <button onClick={handleGuardar} disabled={!!errorValidacion} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold mt-6 hover:bg-blue-500 disabled:opacity-50 transition-colors shadow-lg shadow-blue-500/20">Generar Cotización</button>
                       </div>
                     </div>
-                    <div className="mt-5 border-t border-slate-100 pt-4"><button onClick={() => setPaso(2)} className="text-slate-500 text-sm font-bold px-4 py-1.5 hover:bg-slate-100 rounded transition-colors">Atrás</button></div>
+                    <div className="mt-8 border-t border-slate-100 pt-6"><button onClick={() => setPaso(2)} className="text-slate-500 font-bold px-6 py-2 hover:bg-slate-100 rounded-xl transition-colors">Atrás</button></div>
                   </div>
                 )}
               </div>
@@ -889,7 +892,7 @@
 
         function HistorialOrdenes({ ordenes, onActualizarOrden, onEliminarOrden, isClient = false, cliente = null, mensajesGlobales, showToast }) {
           const [ordenSeleccionada, setOrdenSeleccionada] = useState(null);
-          if (ordenes.length === 0) return <div className="text-center py-12 fade-in"><p className="text-sm text-slate-400">No hay cotizaciones registradas.</p></div>;
+          if (ordenes.length === 0) return <div className="text-center py-20 fade-in"><p className="text-slate-400">No hay cotizaciones registradas.</p></div>;
           
           const handleShare = (orden) => {
              let template = mensajesGlobales?.whatsappTemplate || "Hola, te envío los detalles de la orden {ID} por L {TOTAL}";
@@ -901,7 +904,7 @@
           };
 
           return (
-            <div className="max-w-5xl mx-auto space-y-3 fade-in relative">
+            <div className="max-w-5xl mx-auto space-y-4 fade-in relative">
               {ordenSeleccionada && (
                   <ModalDetalleOrden 
                     orden={ordenSeleccionada} isClient={isClient} clienteInfo={cliente} onClose={() => setOrdenSeleccionada(null)}
@@ -910,20 +913,20 @@
                     onEliminarAdmin={() => { onEliminarOrden(ordenSeleccionada.id); setOrdenSeleccionada(null); }}
                   />
               )}
-              <h2 className="text-xl font-bold text-slate-800 mb-4">Gestión de Cotizaciones</h2>
+              <h2 className="text-2xl font-bold text-slate-800 mb-6">Gestión de Cotizaciones</h2>
               {ordenes.map(orden => {
                 const esCancelada = orden.estado === 'Cancelada';
                 return (
-                <div key={orden.id} className={`bg-white rounded-xl shadow-sm border p-4 flex justify-between items-center gap-3 hover:shadow-md transition-shadow ${esCancelada ? 'border-red-200 bg-red-50/30 opacity-75' : 'border-slate-200'}`}>
-                  <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-3 items-center text-sm">
-                    <div><p className="text-[10px] text-slate-400 font-bold">ID</p><p className="font-bold text-slate-700">{orden.id}</p></div>
-                    <div><p className="text-[10px] text-slate-400 font-bold">Detalle</p><p className="font-bold text-slate-700 truncate" title={orden.producto}>{orden.producto} x{orden.cantidad}</p></div>
-                    <div><p className="text-[10px] text-slate-400 font-bold">Total</p><p className={`font-bold ${esCancelada ? 'text-red-500 line-through' : 'text-emerald-600'}`}>L {orden.total.toFixed(2)}</p></div>
-                    <div><p className="text-[10px] text-slate-400 font-bold">Estado</p><EstadoBadge estado={orden.estado}/></div>
-                    <div><button onClick={() => setOrdenSeleccionada(orden)} className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-2.5 py-1.5 rounded transition-colors"><Eye size={14}/> Ver</button></div>
+                <div key={orden.id} className={`bg-white rounded-2xl shadow-sm border p-6 flex justify-between items-center gap-4 hover:shadow-md transition-shadow ${esCancelada ? 'border-red-200 bg-red-50/30 opacity-75' : 'border-slate-200'}`}>
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-5 gap-4 items-center">
+                    <div><p className="text-xs text-slate-400">ID</p><p className="font-bold text-slate-700">{orden.id}</p></div>
+                    <div><p className="text-xs text-slate-400">Detalle</p><p className="font-bold text-slate-700 truncate" title={orden.producto}>{orden.producto} x{orden.cantidad}</p></div>
+                    <div><p className="text-xs text-slate-400">Total</p><p className={`font-bold ${esCancelada ? 'text-red-500 line-through' : 'text-emerald-600'}`}>L {orden.total.toFixed(2)}</p></div>
+                    <div><p className="text-xs text-slate-400">Estado</p><EstadoBadge estado={orden.estado}/></div>
+                    <div><button onClick={() => setOrdenSeleccionada(orden)} className="flex items-center gap-1 text-sm font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"><Eye size={16}/> Detalles</button></div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                     {!esCancelada && <button className="bg-green-500 text-white p-2 rounded-lg hover:bg-green-600 transition-colors shadow-sm" title="Compartir Detalles" onClick={() => handleShare(orden)}><Share2 size={14}/></button>}
+                     {!esCancelada && <button className="bg-green-500 text-white p-2.5 rounded-xl hover:bg-green-600 transition-colors shadow-sm" title="Compartir Detalles" onClick={() => handleShare(orden)}><Share2 size={18}/></button>}
                   </div>
                 </div>
               )})}
@@ -938,54 +941,54 @@
             return (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 fade-in">
                     {modalConfirmacion && ( <CustomModal config={{ titulo: modalConfirmacion.titulo, esConfirmacion: true, mensaje: modalConfirmacion.mensaje, submitLabel: modalConfirmacion.submitLabel, campos: [], onSubmit: modalConfirmacion.onConfirm }} onClose={() => setModalConfirmacion(null)} /> )}
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] print-area">
-                        <div className="hidden print:block p-4 border-b border-slate-200 mb-3 text-center">
-                            <h1 className="text-2xl font-bold text-blue-600 mb-1">PrintPro</h1>
-                            <p className="text-slate-500 text-xs">Cotización Formal</p>
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 flex flex-col max-h-[90vh] print-area">
+                        <div className="hidden print:block p-6 border-b border-slate-200 mb-4 text-center">
+                            <h1 className="text-3xl font-bold text-blue-600 mb-2">PrintPro</h1>
+                            <p className="text-slate-500 text-sm">Cotización Formal de Servicios</p>
                         </div>
-                        <div className="bg-slate-50 print-bg-slate-50 p-4 border-b border-slate-200 flex justify-between items-start">
-                            <div><h3 className="text-lg font-bold text-slate-800 flex items-center gap-2"><FileText size={18} className="text-blue-600"/> Cotización #{orden.id}</h3><p className="text-xs text-slate-500 mt-1">Fecha: {orden.fecha} • Cliente: {orden.clienteNombre}</p></div>
-                            <button onClick={onClose} className="p-1.5 bg-slate-200 hover:bg-slate-300 rounded-md text-slate-600 transition-colors no-print"><X size={14}/></button>
+                        <div className="bg-slate-50 print-bg-slate-50 p-6 border-b border-slate-200 flex justify-between items-start">
+                            <div><h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><FileText size={20} className="text-blue-600"/> Cotización #{orden.id}</h3><p className="text-sm text-slate-500 mt-1">Fecha: {orden.fecha} • Cliente: {orden.clienteNombre}</p></div>
+                            <button onClick={onClose} className="p-2 bg-slate-200 hover:bg-slate-300 rounded-full text-slate-600 transition-colors no-print"><X size={16}/></button>
                         </div>
-                        <div className="p-4 overflow-y-auto flex-1 space-y-4">
-                            {esCancelada && <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg flex items-center gap-2 font-bold text-xs"><AlertCircle size={16}/> Cancelada.</div>}
+                        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+                            {esCancelada && <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center gap-3 font-bold text-sm"><AlertCircle size={20}/> Esta cotización fue cancelada.</div>}
                             {!isClient && !esCancelada && (
-                                <div className="bg-slate-50 p-3 rounded-lg border border-blue-200 no-print">
-                                    <label className="text-[10px] font-bold text-blue-700 mb-1 block uppercase tracking-wide">Estado Producción:</label>
-                                    <select value={orden.estado} onChange={(e) => onActualizarOrden({...orden, estado: e.target.value})} className="w-full p-2 rounded border border-blue-300 outline-none focus:border-blue-600 text-xs font-semibold text-slate-700 bg-white">
+                                <div className="bg-slate-50 p-4 rounded-xl border border-blue-200 no-print">
+                                    <label className="text-xs font-bold text-blue-700 mb-2 block uppercase tracking-wide">Actualizar Estado de Producción:</label>
+                                    <select value={orden.estado} onChange={(e) => onActualizarOrden({...orden, estado: e.target.value})} className="w-full p-2.5 rounded-lg border border-blue-300 outline-none focus:border-blue-600 text-sm font-semibold text-slate-700 bg-white">
                                         {ESTADOS_DISPONIBLES.map(est => <option key={est} value={est}>{est}</option>)}
                                     </select>
                                 </div>
                             )}
-                            <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100"><p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Producto Base</p><p className="font-bold text-slate-700 text-sm">{orden.producto}</p><p className="text-xs text-slate-500">{orden.proveeCliente ? 'Cliente provee' : 'Incluido del catálogo'}</p></div>
-                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-100"><p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Volumen</p><p className="font-bold text-slate-700 text-sm">{orden.cantidad} unidades</p></div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><p className="text-xs text-slate-400 font-bold uppercase mb-1">Producto Base</p><p className="font-bold text-slate-700">{orden.producto}</p><p className="text-sm text-slate-500">{orden.proveeCliente ? 'Cliente provee' : 'Incluido del catálogo'}</p></div>
+                                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100"><p className="text-xs text-slate-400 font-bold uppercase mb-1">Volumen Solicitado</p><p className="font-bold text-slate-700">{orden.cantidad} unidades</p></div>
                             </div>
                             <div>
-                                <h4 className="text-xs font-bold text-slate-700 border-b border-slate-200 pb-1.5 mb-2 flex items-center gap-1.5"><Layers size={14}/> Técnicas</h4>
+                                <h4 className="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2 mb-3 flex items-center gap-2"><Layers size={16}/> Técnicas Solicitadas</h4>
                                 {orden.tecnicasEstructuradas && orden.tecnicasEstructuradas.length > 0 ? (
-                                    <ul className="space-y-1.5">{orden.tecnicasEstructuradas.map((tec, i) => (<li key={i} className="bg-blue-50 text-blue-800 text-xs px-2.5 py-1.5 rounded border border-blue-100"><span className="font-bold">{tec.tecnica}</span> • {tec.ubicacion} • {tec.variante}</li>))}</ul>
-                                ) : <p className="text-xs text-slate-500 bg-slate-50 p-2 rounded">{orden.detalles || 'Sin personalizar'}</p>}
+                                    <ul className="space-y-2">{orden.tecnicasEstructuradas.map((tec, i) => (<li key={i} className="bg-blue-50 text-blue-800 text-sm px-3 py-2 rounded-lg border border-blue-100"><span className="font-bold">{tec.tecnica}</span> • {tec.ubicacion} • {tec.variante}</li>))}</ul>
+                                ) : <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">{orden.detalles || 'Sin personalizar'}</p>}
                             </div>
-                            <div className="border-t border-slate-200 pt-3 mt-4">
+                            <div className="border-t border-slate-200 pt-4 mt-6">
                                 <div className="flex justify-end">
-                                    <div className="w-full md:w-1/2 space-y-1.5 text-xs text-slate-600">
+                                    <div className="w-full md:w-1/2 space-y-2 text-sm text-slate-600">
                                         <div className="flex justify-between"><span>Subtotal:</span> <span>L {orden.subtotal ? orden.subtotal.toFixed(2) : '0.00'}</span></div>
                                         {orden.ahorro > 0 && (
                                             <div className="flex justify-between text-emerald-600 print-text-emerald font-bold"><span>Su Ahorro:</span> <span>- L {orden.ahorro.toFixed(2)}</span></div>
                                         )}
                                         <div className="flex justify-between"><span>Impuestos:</span> <span>L {orden.impuestos ? orden.impuestos.toFixed(2) : '0.00'}</span></div>
-                                        <div className="flex justify-between font-bold text-sm text-slate-800 border-t border-slate-200 pt-1.5 mt-1.5"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div>
+                                        <div className="flex justify-between font-bold text-lg text-slate-800 border-t border-slate-200 pt-2 mt-2"><span>TOTAL:</span> <span className="print-text-emerald">L {orden.total.toFixed(2)}</span></div>
                                     </div>
                                 </div>
                             </div>
-                            {orden.comentario && <div className="bg-amber-50 border-l-2 border-amber-400 p-3 rounded-r-lg shadow-sm"><h4 className="text-[10px] font-black text-amber-800 mb-1 flex items-center gap-1 uppercase tracking-wide"><MessageSquare size={12}/> Notas Taller</h4><p className="text-xs text-amber-900 whitespace-pre-wrap leading-relaxed">{orden.comentario}</p></div>}
+                            {orden.comentario && <div className="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl shadow-sm"><h4 className="text-sm font-black text-amber-800 mb-2 flex items-center gap-2 uppercase tracking-wide"><MessageSquare size={16}/> Notas para el Taller</h4><p className="text-sm text-amber-900 whitespace-pre-wrap leading-relaxed">{orden.comentario}</p></div>}
                         </div>
-                        <div className="bg-slate-50 p-4 border-t border-slate-200 flex flex-wrap justify-end gap-2 no-print">
-                            <button onClick={() => window.print()} className="px-4 py-2 rounded-lg text-xs font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center gap-1.5"><Printer size={14}/> Imprimir</button>
-                            <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cerrar</button>
-                            {isClient && !esCancelada && <button onClick={() => setModalConfirmacion({ titulo: 'Cancelar Orden', mensaje: '¿Cancelar tu orden?', submitLabel: 'Sí, Cancelar', onConfirm: onCancelar })} className="px-4 py-2 rounded-lg text-xs font-bold bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center gap-1.5"><Trash2 size={14}/> Cancelar</button>}
-                            {!isClient && <button onClick={() => setModalConfirmacion({ titulo: 'Eliminar', mensaje: 'Se eliminará permanentemente. ¿Continuar?', submitLabel: 'Eliminar', onConfirm: onEliminarAdmin })} className="px-4 py-2 rounded-lg text-xs font-bold bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-1.5"><Trash2 size={14}/> Eliminar</button>}
+                        <div className="bg-slate-50 p-6 border-t border-slate-200 flex flex-wrap justify-end gap-3 no-print">
+                            <button onClick={() => window.print()} className="px-5 py-2.5 rounded-xl font-bold bg-slate-800 text-white hover:bg-slate-700 transition-colors flex items-center gap-2"><Printer size={18}/> Imprimir</button>
+                            <button onClick={onClose} className="px-5 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition-colors">Cerrar</button>
+                            {isClient && !esCancelada && <button onClick={() => setModalConfirmacion({ titulo: 'Cancelar Orden', mensaje: '¿Seguro que deseas cancelar tu orden de forma permanente?', submitLabel: 'Sí, Cancelar', onConfirm: onCancelar })} className="px-5 py-2.5 rounded-xl font-bold bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center gap-2"><Trash2 size={18}/> Cancelar Orden</button>}
+                            {!isClient && <button onClick={() => setModalConfirmacion({ titulo: 'Eliminar Orden del Sistema', mensaje: 'Se eliminará permanentemente. ¿Continuar?', submitLabel: 'Eliminar', onConfirm: onEliminarAdmin })} className="px-5 py-2.5 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2"><Trash2 size={18}/> Eliminar de BD</button>}
                         </div>
                     </div>
                 </div>
@@ -995,19 +998,19 @@
         function VistaRecursosCliente({ recursos }) {
             return (
                 <div className="max-w-5xl mx-auto space-y-4 fade-in">
-                    <h2 className="text-xl font-bold text-slate-800 mb-4">Archivos y Documentación</h2>
-                    {recursos.length === 0 && <p className="text-sm text-slate-500">No hay documentos disponibles.</p>}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Archivos y Documentación</h2>
+                    {recursos.length === 0 && <p className="text-slate-500">No hay documentos disponibles en este momento.</p>}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                         {recursos.map(r => (
-                            <div key={r.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition-all">
-                                <div className="flex items-start gap-3 mb-3">
-                                    <div className="bg-blue-50 p-2 rounded-lg text-blue-600"><BookOpen size={20}/></div>
+                            <div key={r.id} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-all">
+                                <div className="flex items-start gap-3 mb-4">
+                                    <div className="bg-blue-50 p-3 rounded-xl text-blue-600"><BookOpen size={24}/></div>
                                     <div>
-                                        <h3 className="font-bold text-sm text-slate-700 leading-tight">{r.titulo}</h3>
-                                        {r.descripcion && <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">{r.descripcion}</p>}
+                                        <h3 className="font-bold text-slate-700 leading-tight">{r.titulo}</h3>
+                                        {r.descripcion && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{r.descripcion}</p>}
                                     </div>
                                 </div>
-                                <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-50 text-blue-600 font-bold py-2 rounded-lg border border-slate-200 hover:bg-blue-50 transition-colors text-xs">Descargar / Ver</a>
+                                <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-50 text-blue-600 font-bold py-2.5 rounded-xl border border-slate-200 hover:bg-blue-50 transition-colors text-sm">Descargar / Ver</a>
                             </div>
                         ))}
                     </div>
@@ -1018,38 +1021,53 @@
         function ModalFichaTecnica({ onClose }) {
             return (
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-600 w-full max-w-2xl shadow-2xl text-slate-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <div className="flex justify-between items-start mb-4">
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-3xl shadow-2xl text-slate-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <div className="flex justify-between items-start mb-6">
                             <div>
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2"><Calculator size={20} className="text-blue-400"/> Guía de Fórmulas</h3>
-                                <p className="text-slate-400 text-xs mt-1">Cómo calcula el sistema los precios.</p>
+                                <h3 className="text-2xl font-bold text-white flex items-center gap-2"><Calculator size={24} className="text-blue-400"/> Guía Detallada de Fórmulas</h3>
+                                <p className="text-slate-400 text-sm mt-1">Así es como el cotizador calcula matemáticamente los precios.</p>
                             </div>
                         </div>
                         
-                        <div className="space-y-4 text-xs">
-                            <div className="bg-slate-900 p-4 rounded-lg border border-blue-500/30 shadow-inner">
-                                <h4 className="font-bold text-blue-400 text-sm mb-2">Paso 1: Venta Producto</h4>
-                                <div className="bg-slate-950 p-2 rounded font-mono text-emerald-400 text-[10px] border border-slate-800">
-                                    <p>Costo = Costo Base × Cantidad</p>
-                                    <p>Venta = Costo × (1 + [Margen / 100])</p>
+                        <div className="space-y-6 text-sm">
+                            <div className="bg-slate-900 p-5 rounded-xl border border-blue-500/30 shadow-inner">
+                                <h4 className="font-bold text-blue-400 text-base mb-2 flex items-center gap-2"><span className="bg-blue-500/20 px-2 py-0.5 rounded text-xs">Paso 1</span> Precio de Venta del Producto</h4>
+                                <p className="mb-2">El sistema toma el <strong>Costo Base</strong> de tu catálogo y lo multiplica por la cantidad. Luego, a ese subtotal de costo, le añade el <strong>Margen General (%)</strong> que definiste para darte el precio de venta final de las prendas.</p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800">
+                                    <p>Costo Total = Costo Base × Cantidad</p>
+                                    <p>Precio de Venta Prendas = Costo Total × (1 + [Margen / 100])</p>
+                                </div>
+                                <p className="mt-2 text-xs text-slate-500 italic">* Nota: Si marcas "Traigo mis artículos", el costo base de la prenda pasa a ser 0.</p>
+                            </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-emerald-500/30 shadow-inner">
+                                <h4 className="font-bold text-emerald-400 text-base mb-2 flex items-center gap-2"><span className="bg-emerald-500/20 px-2 py-0.5 rounded text-xs">Paso 2</span> Precio de Personalización (Técnicas)</h4>
+                                <p className="mb-2">Cada técnica tiene Costos Fijos (Setups que se cobran 1 sola vez sin importar cuántas camisas sean, como revelados o matrices) y Costos Variables (que se multiplican por unidad, como tinta). <strong>A la suma de estos costos también se le aplica tu Margen General.</strong></p>
+                                <div className="bg-slate-950 p-3 rounded font-mono text-emerald-400 text-xs border border-slate-800 space-y-1">
+                                    <p>Costo Fijo Total = Suma de todos los Setups</p>
+                                    <p>Costo Variable Total = Suma de variables × Cantidad</p>
+                                    <p>Precio de Venta Técnica = (Costo Fijo Total + Costo Variable Total) × (1 + [Margen / 100])</p>
                                 </div>
                             </div>
-                            <div className="bg-slate-900 p-4 rounded-lg border border-emerald-500/30 shadow-inner">
-                                <h4 className="font-bold text-emerald-400 text-sm mb-2">Paso 2: Venta Técnica</h4>
-                                <div className="bg-slate-950 p-2 rounded font-mono text-emerald-400 text-[10px] border border-slate-800 space-y-1">
-                                    <p>Venta = (Setups + (Variable × Cant)) × (1 + [Margen / 100])</p>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-amber-500/30 shadow-inner">
+                                <h4 className="font-bold text-amber-400 text-base mb-2 flex items-center gap-2"><span className="bg-amber-500/20 px-2 py-0.5 rounded text-xs">Paso 3</span> Cascada de Descuentos (VIP + Volumen)</h4>
+                                <p className="mb-2">El descuento por volumen <strong>se aplica a TODAS las piezas</strong> una vez alcanzado el nivel y si la casilla está activa. Si el cliente compra 300 piezas y el nivel es de 100 (10% OFF), las 300 piezas reciben el descuento. Además, si es VIP (ej. 10% OFF), se aplica un descuento "en cascada" secuencial para proteger tus finanzas.</p>
+                                <div className="bg-slate-950 p-3 rounded text-xs border border-slate-800 text-slate-300">
+                                    <p>Subtotal Bruto = Precio de Venta Prendas + Precio de Venta Técnicas</p>
+                                    <p className="mt-1 font-mono text-amber-400">Total con Descuento = Subtotal Bruto × (1 - % Volumen) × (1 - % VIP)</p>
+                                    <p className="mt-2 text-[10px] text-slate-500">Ejemplo ilustrativo: L 100/u. Pides 300 pzas. Tier: 100u al 10%. Las 300 pzas tienen 10% (Subtotal = 30,000 × 0.90 = 27,000). Luego, descuento VIP del 10% = (27,000 × 0.90) = L 24,300 Finales.</p>
                                 </div>
                             </div>
-                            <div className="bg-slate-900 p-4 rounded-lg border border-amber-500/30 shadow-inner">
-                                <h4 className="font-bold text-amber-400 text-sm mb-2">Paso 3: Descuentos</h4>
-                                <div className="bg-slate-950 p-2 rounded text-[10px] border border-slate-800 text-slate-300 font-mono">
-                                    <p className="text-amber-400">Total = Bruto × (1 - % Vol) × (1 - % VIP)</p>
-                                </div>
+
+                            <div className="bg-slate-900 p-5 rounded-xl border border-purple-500/30 shadow-inner">
+                                <h4 className="font-bold text-purple-400 text-base mb-2 flex items-center gap-2"><span className="bg-purple-500/20 px-2 py-0.5 rounded text-xs">Paso 4</span> Impuestos (ISV)</h4>
+                                <p className="mb-2">El impuesto global (ej. 15%) se calcula <strong>después de aplicar los descuentos</strong> y solo sobre los ítems del catálogo o técnicas que tengan activada la casilla "Suma Impuesto".</p>
                             </div>
                         </div>
 
-                        <div className="flex justify-end mt-6 border-t border-slate-700 pt-3">
-                            <button onClick={onClose} className="px-5 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors">Cerrar</button>
+                        <div className="flex justify-end mt-8 border-t border-slate-700 pt-4">
+                            <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg">Entendido, cerrar guía</button>
                         </div>
                     </div>
                 </div>
@@ -1066,34 +1084,34 @@
             
             return ( 
                 <div className="fixed inset-0 bg-slate-900/80 flex items-center justify-center z-50 fade-in p-4">
-                    <div className="bg-slate-800 p-6 rounded-xl border border-slate-600 w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
-                        <h3 className="text-lg font-bold text-white mb-1">Tarifas: {ubicacion.nombre}</h3>
-                        <p className="text-xs text-slate-400 mb-4">Configura el margen y niveles para esta ubicación.</p>
+                    <div className="bg-slate-800 p-8 rounded-2xl border border-slate-600 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
+                        <h3 className="text-xl font-bold text-white mb-2">Tarifas Específicas: {ubicacion.nombre}</h3>
+                        <p className="text-sm text-slate-400 mb-6">Configura el margen y niveles de descuento aplicables independientemente a esta ubicación.</p>
                         
-                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 shadow-inner"><label className="text-xs font-bold text-emerald-400 block mb-1">Margen Específico (%)</label><input type="number" value={margen} onChange={e=>setMargen(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-2 rounded-md bg-slate-800 text-white text-sm font-bold outline-none border border-slate-600 focus:border-emerald-500" /></div>
+                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 shadow-inner"><label className="text-sm font-bold text-emerald-400 block mb-2">Margen Específico (%)</label><input type="number" value={margen} onChange={e=>setMargen(e.target.value === '' ? '' : Number(e.target.value))} className="w-full p-3 rounded-xl bg-slate-800 text-white font-bold outline-none border border-slate-600 focus:border-emerald-500" /></div>
                         
-                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-700 mb-4 shadow-inner">
-                            <div className="flex justify-between items-center mb-3">
-                                <label className="text-xs font-bold text-blue-400">Descuentos Volumen</label>
-                                <button onClick={addTier} className="text-[10px] bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-500 transition-colors">+ Añadir</button>
+                        <div className="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-6 shadow-inner">
+                            <div className="flex justify-between items-center mb-4">
+                                <label className="text-sm font-bold text-blue-400">Niveles de Descuento por Volumen</label>
+                                <button onClick={addTier} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-500 transition-colors">+ Añadir Nivel</button>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {descuentos.map(d => (
-                                    <div key={d.id} className="flex gap-2 items-center bg-slate-800 p-2 rounded-lg border border-slate-600">
-                                        <div className="px-1 flex items-center">
-                                            <input type="checkbox" checked={d.activo !== false} onChange={e=>updateTier(d.id, 'activo', e.target.checked)} className="accent-blue-500 w-4 h-4 cursor-pointer" />
+                                    <div key={d.id} className="flex gap-2 items-center bg-slate-800 p-3 rounded-xl border border-slate-600">
+                                        <div className="px-2 flex items-center">
+                                            <input type="checkbox" checked={d.activo !== false} onChange={e=>updateTier(d.id, 'activo', e.target.checked)} className="accent-blue-500 w-5 h-5 cursor-pointer" title="Activar/Desactivar" />
                                         </div>
-                                        <div className="flex-1"><label className="text-[9px] text-slate-400 uppercase font-bold block">Mín (Pzas)</label><input type="number" value={d.min} onChange={e=>updateTier(d.id, 'min', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-xs outline-none border border-slate-700" /></div>
-                                        <div className="flex-1"><label className="text-[9px] text-slate-400 uppercase font-bold block">Desc (%)</label><input type="number" value={d.pct} onChange={e=>updateTier(d.id, 'pct', e.target.value)} className="w-full bg-slate-900 p-1.5 rounded text-white text-xs outline-none border border-slate-700" /></div>
-                                        <button onClick={()=>removeTier(d.id)} className="mt-4 text-red-400 p-1.5 hover:bg-red-500/20 rounded transition-colors"><Trash2 size={14}/></button>
+                                        <div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Mínimo (Pzas)</label><input type="number" value={d.min} onChange={e=>updateTier(d.id, 'min', e.target.value)} className="w-full bg-slate-900 p-2 rounded-lg text-white text-sm outline-none border border-slate-700 focus:border-blue-500" /></div>
+                                        <div className="flex-1"><label className="text-[10px] text-slate-400 uppercase font-bold px-1">Descuento (%)</label><input type="number" value={d.pct} onChange={e=>updateTier(d.id, 'pct', e.target.value)} className="w-full bg-slate-900 p-2 rounded-lg text-white text-sm outline-none border border-slate-700 focus:border-blue-500" /></div>
+                                        <button onClick={()=>removeTier(d.id)} className="mt-4 text-red-400 p-2 hover:bg-red-500/20 rounded-lg transition-colors"><Trash2 size={18}/></button>
                                     </div>
                                 ))}
-                                {descuentos.length === 0 && <p className="text-[10px] text-slate-500 italic">No hay descuentos.</p>}
+                                {descuentos.length === 0 && <p className="text-xs text-slate-500 italic">No hay descuentos por volumen configurados para esta ubicación.</p>}
                             </div>
                         </div>
-                        <div className="flex justify-end gap-2 mt-4">
-                            <button onClick={onClose} className="px-4 py-2 rounded-lg text-xs font-bold text-slate-300 hover:bg-slate-700 transition-colors">Cancelar</button>
-                            <button onClick={() => { onSave(margen, descuentos); onClose(); }} className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-sm">Guardar</button>
+                        <div className="flex justify-end gap-3 mt-4">
+                            <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-slate-300 font-bold hover:bg-slate-700 transition-colors">Cancelar</button>
+                            <button onClick={() => { onSave(margen, descuentos); onClose(); }} className="px-6 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-500 transition-colors shadow-lg">Guardar Tarifas</button>
                         </div>
                     </div>
                 </div> 
@@ -1107,10 +1125,14 @@
           const [showFichaTecnica, setShowFichaTecnica] = useState(false);
           const [showTarifasUbicacionModal, setShowTarifasUbicacionModal] = useState(false);
           const [subcatTarifasActiva, setSubcatTarifasActiva] = useState(null);
+          
+          const [openSubcats, setOpenSubcats] = useState({});
           const [tabActivo, setTabActivo] = useState('PRODUCTOS');
           
           const tecActual = tecnicas.find(t => t.id === tecActivaId);
           const updateTecnicaActual = (updatedTecObj) => setTecnicas(tecnicas.map(t => t.id === tecActivaId ? updatedTecObj : t));
+
+          const toggleSubcat = (id) => setOpenSubcats(prev => ({...prev, [id]: !prev[id]}));
 
           const scrollRef = useRef(null);
           const scrollRefCat = useRef(null);
@@ -1136,16 +1158,18 @@
 
           const handleCrearCategoria = () => {
              setModalConfig({
-                 titulo: "Nueva Categoría", campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }],
-                 onSubmit: (d) => { if (d.nombre) { const nueva = { id: `CAT_${Date.now()}`, nombre: d.nombre }; setCategorias([...categorias, nueva]); setCategoriaActivaId(nueva.id); } }
+                 titulo: "Nueva Categoría",
+                 campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
+                 onSubmit: (datos) => { if (datos.nombre) { const nueva = { id: `CAT_${Date.now()}`, nombre: datos.nombre }; setCategorias([...categorias, nueva]); setCategoriaActivaId(nueva.id); } }
              });
           };
 
           const handleEditarCategoria = () => {
              const cat = categorias.find(c => c.id === categoriaActivaId); if (!cat) return;
              setModalConfig({
-                 titulo: "Editar Categoría", valoresIniciales: { nombre: cat.nombre }, campos: [{ id: 'nombre', label: 'Nombre:', type: 'text' }],
-                 onSubmit: (d) => { if (d.nombre) setCategorias(categorias.map(c => c.id === categoriaActivaId ? { ...c, nombre: d.nombre } : c)); }
+                 titulo: "Editar Categoría", valoresIniciales: { nombre: cat.nombre },
+                 campos: [{ id: 'nombre', label: 'Nombre de la Categoría:', type: 'text' }],
+                 onSubmit: (datos) => { if (datos.nombre) setCategorias(categorias.map(c => c.id === categoriaActivaId ? { ...c, nombre: datos.nombre } : c)); }
              });
           };
 
@@ -1154,25 +1178,37 @@
              const prodEnCat = catalogo.filter(p => p.categoriaId === cat.id);
              if (prodEnCat.length > 0) {
                  setModalConfig({
-                     titulo: "Aviso", esConfirmacion: true, mensaje: `Categoría contiene ${prodEnCat.length} productos. Imposible eliminar.`, submitLabel: "Entendido", campos: [], onSubmit: () => {}
+                     titulo: "Acción Protegida", esConfirmacion: true,
+                     mensaje: `No puedes eliminar la categoría "${cat.nombre}" porque contiene ${prodEnCat.length} productos asignados. Por favor, cambia la categoría de esos productos o elimínalos antes de continuar.`,
+                     submitLabel: "Entendido", campos: [], onSubmit: () => {}
                  }); return;
              }
-             setModalConfig({ titulo: "Eliminar Categoría", esConfirmacion: true, mensaje: `¿Eliminar "${cat.nombre}"?`, campos: [], onSubmit: () => { setCategorias(categorias.filter(c => c.id !== categoriaActivaId)); setCategoriaActivaId('todas'); } });
+             setModalConfig({
+                 titulo: "Eliminar Categoría", esConfirmacion: true, mensaje: `¿Seguro que deseas eliminar la categoría "${cat.nombre}" permanentemente?`,
+                 campos: [], onSubmit: () => { setCategorias(categorias.filter(c => c.id !== categoriaActivaId)); setCategoriaActivaId('todas'); }
+             });
           };
 
           const handleCrearProducto = () => {
             setModalConfig({
-              titulo: "Nuevo Producto", valoresIniciales: { costoBase: 0, categoriaId: categoriaActivaId !== 'todas' ? categoriaActivaId : '', cobraImpuesto: true },
+              titulo: "Nuevo Producto Base", 
+              valoresIniciales: { costoBase: 0, detalles: '', tecnicasRecomendadas: [], ubicacionesAceptadas: [], cobraImpuesto: true, categoriaId: categoriaActivaId !== 'todas' ? categoriaActivaId : '' },
               campos: [ 
-                  { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
-                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
+                  { id: 'nombre', label: 'Nombre:', type: 'text' }, 
+                  { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
+                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
+                  { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
                   { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
-                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Aceptadas (Vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
-                  { id: 'cobraImpuesto', label: 'Suma Impuesto (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
+                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Específicas Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
+                  { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
-              onSubmit: (d) => { 
-                  if (d.nombre && !isNaN(parseFloat(d.costoBase))) { 
-                      setCatalogo([...catalogo, { id: `PROD_${Date.now()}`, nombre: d.nombre, detalles: d.detalles || '', categoriaId: d.categoriaId || '', costoBase: parseFloat(d.costoBase), imagenUrl: d.imagenUrl || '', tecnicasRecomendadas: d.tecnicasRecomendadas || [], ubicacionesAceptadas: d.ubicacionesAceptadas || [], cobraImpuesto: !!d.cobraImpuesto }]); 
+              onSubmit: (datos) => { 
+                  if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { 
+                      setCatalogo([...catalogo, { 
+                          id: `PROD_${Date.now()}`, nombre: datos.nombre, detalles: datos.detalles || '', categoriaId: datos.categoriaId || '', 
+                          costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [],
+                          ubicacionesAceptadas: datos.ubicacionesAceptadas || [], cobraImpuesto: !!datos.cobraImpuesto 
+                      }]); 
                   } 
               }
             });
@@ -1181,427 +1217,548 @@
           const handleEditarProducto = (prod) => {
             setModalConfig({
               titulo: "Editar Producto", 
-              valoresIniciales: { nombre: prod.nombre, categoriaId: prod.categoriaId || '', costoBase: prod.costoBase, detalles: prod.detalles || '', tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], ubicacionesAceptadas: Array.isArray(prod.ubicacionesAceptadas) ? prod.ubicacionesAceptadas : [], cobraImpuesto: prod.cobraImpuesto !== false, imagenUrl: prod.imagenUrl || '' },
+              valoresIniciales: { 
+                  nombre: prod.nombre, categoriaId: prod.categoriaId || '', costoBase: prod.costoBase, detalles: prod.detalles || '', 
+                  tecnicasRecomendadas: Array.isArray(prod.tecnicasRecomendadas) ? prod.tecnicasRecomendadas : [], 
+                  ubicacionesAceptadas: Array.isArray(prod.ubicacionesAceptadas) ? prod.ubicacionesAceptadas : [], 
+                  cobraImpuesto: prod.cobraImpuesto !== false,
+                  imagenUrl: prod.imagenUrl || ''
+              },
               campos: [ 
-                  { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
-                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
+                  { id: 'nombre', label: 'Nombre:', type: 'text' }, 
+                  { id: 'categoriaId', label: 'Categoría:', type: 'select', options: categorias.map(c => ({ value: c.id, label: c.nombre })) },
+                  { id: 'costoBase', label: 'Costo Base (L):', type: 'number' }, 
+                  { id: 'detalles', label: 'Detalles:', type: 'textarea', maxLength: 250 }, 
                   { id: 'tecnicasRecomendadas', label: 'Técnicas Aceptadas:', type: 'checkboxGroup', options: tecnicas.map(t => ({ value: t.id, label: t.nombre })) }, 
-                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones (Vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
-                  { id: 'cobraImpuesto', label: 'Suma Impuesto (ISV)', type: 'boolean' }, { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
+                  { id: 'ubicacionesAceptadas', label: 'Ubicaciones Específicas Aceptadas (Dejar vacío = Todas):', type: 'checkboxGroup', options: tecnicas.flatMap(t => t.subcategorias ? t.subcategorias.map(s => ({ value: s.id, label: `${t.nombre} - ${s.nombre}` })) : []) },
+                  { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' }, 
+                  { id: 'imagenUrl', label: 'Imagen:', type: 'file' } 
               ],
-              onSubmit: (d) => { 
-                  if (d.nombre && !isNaN(parseFloat(d.costoBase))) { 
-                      setCatalogo(catalogo.map(p => p.id === prod.id ? { ...p, nombre: d.nombre, detalles: d.detalles || '', categoriaId: d.categoriaId || '', costoBase: parseFloat(d.costoBase), imagenUrl: d.imagenUrl || '', tecnicasRecomendadas: d.tecnicasRecomendadas || [], ubicacionesAceptadas: d.ubicacionesAceptadas || [], cobraImpuesto: !!d.cobraImpuesto } : p)); 
+              onSubmit: (datos) => { 
+                  if (datos.nombre && !isNaN(parseFloat(datos.costoBase))) { 
+                      setCatalogo(catalogo.map(p => p.id === prod.id ? { 
+                          ...p, nombre: datos.nombre, detalles: datos.detalles || '', categoriaId: datos.categoriaId || '', 
+                          costoBase: parseFloat(datos.costoBase), imagenUrl: datos.imagenUrl || '', tecnicasRecomendadas: datos.tecnicasRecomendadas || [],
+                          ubicacionesAceptadas: datos.ubicacionesAceptadas || [], cobraImpuesto: !!datos.cobraImpuesto 
+                      } : p)); 
                   } 
               }
             });
           };
 
-          const handleEliminarProducto = (id) => { setModalConfig({ titulo: "Eliminar Producto", esConfirmacion: true, mensaje: "¿Eliminar permanentemente?", campos: [], onSubmit: () => setCatalogo(catalogo.filter(p => p.id !== id)) }); };
+          const handleEliminarProducto = (id) => {
+              setModalConfig({
+                  titulo: "Eliminar Producto", esConfirmacion: true, mensaje: "¿Seguro que deseas eliminar este producto permanentemente?",
+                  campos: [], onSubmit: () => setCatalogo(catalogo.filter(p => p.id !== id))
+              });
+          };
 
-          const handleCrearTecnica = () => { setModalConfig({ titulo: "Nueva Técnica", campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'minimo', label: 'Mínimo de uds:', type: 'number' }, { id: 'cobraImpuesto', label: 'Suma Impuesto (ISV)', type: 'boolean' } ], onSubmit: (d) => { if (d.nombre) setTecnicas([...tecnicas, { id: `TEC_${Date.now()}`, nombre: d.nombre, minimo: Number(d.minimo) || 1, cobraImpuesto: !!d.cobraImpuesto, subcategorias: [] }]); } }); };
-          const handleEditarTecnica = (tec) => { setModalConfig({ titulo: "Editar Técnica", valoresIniciales: { nombre: tec.nombre, minimo: tec.minimo, cobraImpuesto: tec.cobraImpuesto !== false }, campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'minimo', label: 'Mínimo de uds:', type: 'number' }, { id: 'cobraImpuesto', label: 'Suma Impuesto (ISV)', type: 'boolean' } ], onSubmit: (d) => { if (d.nombre) setTecnicas(tecnicas.map(t => t.id === tec.id ? { ...t, nombre: d.nombre, minimo: Number(d.minimo) || 1, cobraImpuesto: !!d.cobraImpuesto } : t)); } }); };
-          const handleEliminarTecnica = (id) => { setModalConfig({ titulo: "Eliminar Técnica", esConfirmacion: true, mensaje: "¿Eliminar técnica y costos?", campos: [], onSubmit: () => { setTecnicas(tecnicas.filter(t => t.id !== id)); if(tecActivaId === id) setTecActivaId(tecnicas.find(t => t.id !== id)?.id || null); } }); };
+          const handleCrearTecnica = () => {
+              setModalConfig({
+                  titulo: "Nueva Técnica",
+                  campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'minimo', label: 'Mínimo de unidades:', type: 'number' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' } ],
+                  onSubmit: (d) => { if (d.nombre) setTecnicas([...tecnicas, { id: `TEC_${Date.now()}`, nombre: d.nombre, minimo: Number(d.minimo) || 1, cobraImpuesto: !!d.cobraImpuesto, subcategorias: [] }]); }
+              });
+          };
 
-          const handleCrearSubcat = () => { setModalConfig({ titulo: "Nueva Ubicación", campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' } ], onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: [...tecActual.subcategorias, { id: `SUB_${Date.now()}`, nombre: d.nombre, opciones: [] }]}); } }); };
-          const handleEditarSubcat = (sub) => { setModalConfig({ titulo: "Editar Ubicación", valoresIniciales: { nombre: sub.nombre }, campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' } ], onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === sub.id ? {...s, nombre: d.nombre} : s)}); } }); };
-          const handleEliminarSubcat = (id) => { setModalConfig({ titulo: "Eliminar Ubicación", esConfirmacion: true, mensaje: "¿Eliminar permanentemente?", campos: [], onSubmit: () => { if(tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.filter(s => s.id !== id)}); } }); };
+          const handleEditarTecnica = (tec) => {
+              setModalConfig({
+                  titulo: "Editar Técnica", valoresIniciales: { nombre: tec.nombre, minimo: tec.minimo, cobraImpuesto: tec.cobraImpuesto !== false },
+                  campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'minimo', label: 'Mínimo de unidades:', type: 'number' }, { id: 'cobraImpuesto', label: 'Suma el Impuesto Global (ISV)', type: 'boolean' } ],
+                  onSubmit: (d) => { if (d.nombre) setTecnicas(tecnicas.map(t => t.id === tec.id ? { ...t, nombre: d.nombre, minimo: Number(d.minimo) || 1, cobraImpuesto: !!d.cobraImpuesto } : t)); }
+              });
+          };
 
-          const handleCrearOpcion = (subId) => { setModalConfig({ titulo: "Nueva Variante", campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' } ], onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: [...s.opciones, { id: `OPC_${Date.now()}`, nombre: d.nombre, costosFijos: [], costosVariables: [] }]} : s)}); } }); };
-          const handleEditarOpcion = (subId, opc) => { setModalConfig({ titulo: "Editar Variante", valoresIniciales: { nombre: opc.nombre }, campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' } ], onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.map(o => o.id === opc.id ? {...o, nombre: d.nombre} : o)} : s)}); } }); };
-          const handleEliminarOpcion = (subId, opcId) => { setModalConfig({ titulo: "Eliminar Variante", esConfirmacion: true, mensaje: "¿Eliminar variante?", campos: [], onSubmit: () => { if(tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.filter(o => o.id !== opcId)} : s)}); } }); };
+          const handleEliminarTecnica = (id) => {
+              setModalConfig({
+                  titulo: "Eliminar Técnica", esConfirmacion: true, mensaje: "¿Eliminar permanentemente esta técnica y todas sus configuraciones?",
+                  campos: [], onSubmit: () => { setTecnicas(tecnicas.filter(t => t.id !== id)); if(tecActivaId === id) setTecActivaId(tecnicas.find(t => t.id !== id)?.id || null); }
+              });
+          };
 
-          const handleAgregarCosto = (subId, opcId, tipo) => { setModalConfig({ titulo: `Añadir Costo ${tipo === 'fijos' ? 'Fijo (Setup)' : 'Variable (U)'}`, campos: [ { id: 'nombre', label: 'Concepto:', type: 'text' }, { id: 'valor', label: 'Costo (L):', type: 'number' } ], onSubmit: (d) => { if(d.nombre && !isNaN(Number(d.valor)) && tecActual) { const nCosto = { id: `CST_${Date.now()}`, nombre: d.nombre, valor: Number(d.valor) }; updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.map(o => o.id === opcId ? {...o, [tipo === 'fijos' ? 'costosFijos' : 'costosVariables']: [...(tipo === 'fijos' ? o.costosFijos : o.costosVariables), nCosto]} : o)} : s)}); } } }); };
-          const handleEliminarCosto = (subId, opcId, tipo, costoId) => { if(tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.map(o => o.id === opcId ? {...o, [tipo === 'fijos' ? 'costosFijos' : 'costosVariables']: (tipo === 'fijos' ? o.costosFijos : o.costosVariables).filter(c => c.id !== costoId)} : o)} : s)}); };
+          const handleCrearSubcat = () => {
+              setModalConfig({
+                  titulo: "Nueva Ubicación", campos: [ { id: 'nombre', label: 'Nombre (ej: Pecho):', type: 'text' } ],
+                  onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: [...tecActual.subcategorias, { id: `SUB_${Date.now()}`, nombre: d.nombre, opciones: [] }]}); }
+              });
+          };
+          const handleEditarSubcat = (sub) => {
+              setModalConfig({
+                  titulo: "Editar Ubicación", valoresIniciales: { nombre: sub.nombre }, campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' } ],
+                  onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === sub.id ? {...s, nombre: d.nombre} : s)}); }
+              });
+          };
+          const handleEliminarSubcat = (id) => {
+              setModalConfig({
+                  titulo: "Eliminar Ubicación", esConfirmacion: true, mensaje: "¿Eliminar permanentemente esta ubicación?",
+                  campos: [], onSubmit: () => { if(tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.filter(s => s.id !== id)}); }
+              });
+          };
 
-        return (
-            <div className="space-y-4 fade-in max-w-7xl mx-auto">
-                {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-                {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
-                {showTarifasUbicacionModal && subcatTarifasActiva && (
-                     <ModalTarifasUbicacion 
-                         ubicacion={subcatTarifasActiva} margenGlobal={margenGanancia} 
-                         onSave={(margen, desc) => {
-                             if(tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subcatTarifasActiva.id ? {...s, margen, descuentosVolumen: desc} : s)});
-                         }} 
-                         onClose={() => {setShowTarifasUbicacionModal(false); setSubcatTarifasActiva(null);}} 
-                     />
-                )}
-                
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
-                    <h2 className="text-xl font-bold text-slate-800">Catálogo y Técnicas</h2>
-                    <button onClick={() => setShowFichaTecnica(true)} className="text-[10px] bg-blue-100 text-blue-700 font-bold px-2.5 py-1.5 rounded hover:bg-blue-200 flex items-center gap-1"><Calculator size={12}/> Fórmulas</button>
-                </div>
+          const handleCrearOpcion = (subId) => {
+              setModalConfig({
+                  titulo: "Nueva Variante", campos: [ { id: 'nombre', label: 'Nombre (ej: 1 Color):', type: 'text' } ],
+                  onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: [...s.opciones, { id: `OPC_${Date.now()}`, nombre: d.nombre, costosFijos: [], costosVariables: [] }]} : s)}); }
+              });
+          };
+          const handleEditarOpcion = (subId, opc) => {
+              setModalConfig({
+                  titulo: "Editar Variante", valoresIniciales: { nombre: opc.nombre }, campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' } ],
+                  onSubmit: (d) => { if(d.nombre && tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.map(o => o.id === opc.id ? {...o, nombre: d.nombre} : o)} : s)}); }
+              });
+          };
+          const handleEliminarOpcion = (subId, id) => {
+              setModalConfig({
+                  titulo: "Eliminar Variante", esConfirmacion: true, mensaje: "¿Eliminar permanentemente esta variante?",
+                  campos: [], onSubmit: () => { if(tecActual) updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.filter(o => o.id !== id)} : s)}); }
+              });
+          };
+          
+          const handleGestionCosto = (subId, opcId, tipo, costoId = null) => {
+              const sub = tecActual.subcategorias.find(s => s.id === subId); const opc = sub.opciones.find(o => o.id === opcId);
+              const lista = tipo === 'fijos' ? opc.costosFijos : opc.costosVariables;
+              const costo = costoId ? lista.find(c => c.id === costoId) : null;
 
-                <div className="flex gap-1 border-b border-slate-200 mb-3">
-                    <button onClick={() => setTabActivo('PRODUCTOS')} className={`px-4 py-2 font-bold text-xs border-b-2 transition-colors ${tabActivo === 'PRODUCTOS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Productos Base</button>
-                    <button onClick={() => setTabActivo('TECNICAS')} className={`px-4 py-2 font-bold text-xs border-b-2 transition-colors ${tabActivo === 'TECNICAS' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}>Técnicas y Costos</button>
-                </div>
+              setModalConfig({
+                  titulo: costoId ? "Editar Costo" : `Nuevo Costo ${tipo === 'fijos' ? 'Fijo (Setup)' : 'Variable (Por Unidad)'}`,
+                  valoresIniciales: costo ? { nombre: costo.nombre, valor: costo.valor } : { nombre: '', valor: 0 },
+                  campos: [ { id: 'nombre', label: 'Concepto (ej: Revelado, Tinta):', type: 'text' }, { id: 'valor', label: 'Costo Unitario (L):', type: 'number' } ],
+                  onSubmit: (d) => {
+                      if (d.nombre && !isNaN(Number(d.valor))) {
+                          const nuevaLista = costoId ? lista.map(c => c.id === costoId ? { ...c, nombre: d.nombre, valor: Number(d.valor) } : c) : [...lista, { id: `COST_${Date.now()}`, nombre: d.nombre, valor: Number(d.valor) }];
+                          updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.map(o => o.id === opcId ? {...o, [tipo === 'fijos' ? 'costosFijos' : 'costosVariables']: nuevaLista} : o)} : s)});
+                      }
+                  }
+              });
+          };
+          const handleEliminarCosto = (subId, opcId, tipo, id) => {
+              setModalConfig({
+                  titulo: "Eliminar Costo", esConfirmacion: true, mensaje: "¿Eliminar este costo?",
+                  campos: [], onSubmit: () => {
+                      updateTecnicaActual({...tecActual, subcategorias: tecActual.subcategorias.map(s => s.id === subId ? {...s, opciones: s.opciones.map(o => o.id === opcId ? {...o, [tipo === 'fijos' ? 'costosFijos' : 'costosVariables']: o[tipo === 'fijos' ? 'costosFijos' : 'costosVariables'].filter(c => c.id !== id)} : o)} : s)});
+                  }
+              });
+          };
 
-                {tabActivo === 'PRODUCTOS' && (
-                    <div className="space-y-3 fade-in">
-                        <div className="flex items-center gap-1 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200">
-                             <button onClick={() => scrollTabsCat(-200)} className="p-1 text-slate-400 hover:text-slate-600"><ChevronLeft size={14}/></button>
-                             <div ref={scrollRefCat} className="flex-1 flex gap-1.5 overflow-x-auto custom-scrollbar pb-1">
-                                 <button onClick={() => setCategoriaActivaId('todas')} className={`px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap transition-colors ${categoriaActivaId === 'todas' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Todas</button>
-                                 {categorias.map(c => (
-                                     <button key={c.id} onClick={() => setCategoriaActivaId(c.id)} className={`px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap transition-colors ${categoriaActivaId === c.id ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{c.nombre}</button>
-                                 ))}
-                             </div>
-                             <button onClick={() => scrollTabsCat(200)} className="p-1 text-slate-400 hover:text-slate-600"><ChevronRight size={14}/></button>
-                             <div className="h-4 w-px bg-slate-200 mx-1"></div>
-                             <button onClick={handleCrearCategoria} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Nueva Categoría"><Plus size={14}/></button>
-                             {categoriaActivaId !== 'todas' && (
-                                 <>
-                                     <button onClick={handleEditarCategoria} className="p-1 text-amber-600 hover:bg-amber-50 rounded"><Pencil size={14}/></button>
-                                     <button onClick={handleEliminarCategoria} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
-                                 </>
-                             )}
-                        </div>
+          const handleTarifasUbicacion = (sub) => {
+              setSubcatTarifasActiva(sub);
+              setShowTarifasUbicacionModal(true);
+          };
 
-                        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 bg-white p-2 rounded-lg border border-slate-200">
-                            <div className="relative w-full sm:max-w-xs">
-                                <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
-                                <input type="text" placeholder="Buscar producto..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-full pl-7 pr-2 py-1 text-xs rounded border border-slate-300 outline-none focus:border-blue-500" />
+          const handleSaveTarifasUbicacion = (margen, descuentos) => {
+              if(!tecActivaId || !subcatTarifasActiva) return;
+              const t = tecnicas.find(x => x.id === tecActivaId);
+              if(!t) return;
+              const nuevasSubcats = t.subcategorias.map(s => s.id === subcatTarifasActiva.id ? { ...s, margen, descuentosVolumen: descuentos } : s);
+              updateTecnicaActual({ ...t, subcategorias: nuevasSubcats });
+          };
+
+          return (
+              <div className="max-w-[1600px] mx-auto fade-in">
+                  {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+                  {showFichaTecnica && <ModalFichaTecnica onClose={() => setShowFichaTecnica(false)} />}
+                  {showTarifasUbicacionModal && subcatTarifasActiva && <ModalTarifasUbicacion ubicacion={subcatTarifasActiva} margenGlobal={margenGanancia} onSave={handleSaveTarifasUbicacion} onClose={() => {setShowTarifasUbicacionModal(false); setSubcatTarifasActiva(null);}} />}
+                  
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                      <div>
+                          <h2 className="text-2xl font-bold text-white">Catálogo y Configuración</h2>
+                          <p className="text-sm text-slate-400">Administra tus productos, técnicas y parámetros globales.</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-3">
+                          <button onClick={() => setModalConfig({
+                              titulo: "Margen Global %", valoresIniciales: { margenGanancia }, campos: [{ id: 'margenGanancia', label: 'Margen Global (%)', type: 'number' }],
+                              onSubmit: (d) => setConfigGlobal(Number(d.margenGanancia), impuestoGlobal, descuentosVolumen)
+                          })} className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg transition-transform text-sm flex items-center gap-2">Margen Global: {margenGanancia}%</button>
+                          
+                          <button onClick={() => setModalConfig({
+                              titulo: "Impuesto Global %", valoresIniciales: { impuestoGlobal }, campos: [{ id: 'impuestoGlobal', label: 'Impuesto Global (%)', type: 'number' }],
+                              onSubmit: (d) => setConfigGlobal(margenGanancia, Number(d.impuestoGlobal), descuentosVolumen)
+                          })} className="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg transition-transform text-sm flex items-center gap-2">Impuesto Global: {impuestoGlobal}%</button>
+                          
+                          <button onClick={() => setShowFichaTecnica(true)} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg transition-transform flex items-center gap-2 text-sm"><Calculator size={18}/> Ficha Técnica</button>
+                      </div>
+                  </div>
+                  
+                  <div className="flex gap-2 mb-6 bg-slate-950 p-2 rounded-2xl border border-slate-800">
+                      <button onClick={() => setTabActivo('PRODUCTOS')} className={`flex-1 py-3 px-4 rounded-xl font-bold transition-colors ${tabActivo === 'PRODUCTOS' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}>Categorías y Productos</button>
+                      <button onClick={() => setTabActivo('TECNICAS')} className={`flex-1 py-3 px-4 rounded-xl font-bold transition-colors ${tabActivo === 'TECNICAS' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}>Técnicas y Ubicaciones</button>
+                  </div>
+
+                  {tabActivo === 'PRODUCTOS' && (
+                    <div className="fade-in space-y-6">
+                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-white">Categorías</h3>
+                                <button onClick={handleCrearCategoria} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-500 text-sm"><Plus size={16}/> Nueva Categoría</button>
                             </div>
-                            <div className="flex items-center gap-2 w-full sm:w-auto">
-                                <label className="text-[10px] text-slate-500 font-semibold">Mostrar:</label>
-                                <select value={itemsPorPaginaAdmin} onChange={e=>setItemsPorPaginaAdmin(Number(e.target.value))} className="p-1 border border-slate-300 rounded outline-none text-[10px] font-bold text-slate-700">
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
-                                </select>
-                                <button onClick={handleCrearProducto} className="bg-blue-600 text-white px-3 py-1 rounded text-[10px] font-bold hover:bg-blue-500 flex items-center gap-1"><Plus size={12}/> Producto</button>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-                            {catalogoPaginadoAdmin.map(p => (
-                                <div key={p.id} className="bg-white border border-slate-200 rounded-lg p-2.5 flex flex-col relative group">
-                                    <div className="absolute top-1.5 right-1.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => handleEditarProducto(p)} className="p-1 bg-amber-100 text-amber-700 rounded hover:bg-amber-200"><Pencil size={10}/></button>
-                                        <button onClick={() => handleEliminarProducto(p.id)} className="p-1 bg-red-100 text-red-700 rounded hover:bg-red-200"><Trash2 size={10}/></button>
-                                    </div>
-                                    <div className="w-10 h-10 bg-slate-100 rounded mx-auto mb-2 flex items-center justify-center overflow-hidden border border-slate-200 relative">
-                                        {p.imagenUrl ? <img src={p.imagenUrl} className="w-full h-full object-cover"/> : <ImageIcon size={16} className="text-slate-400"/>}
-                                        {p.cobraImpuesto === false && <span className="absolute bottom-0 right-0 bg-amber-400 text-[6px] font-bold px-0.5 rounded-tl shadow-sm text-amber-900">EX</span>}
-                                    </div>
-                                    <h4 className="font-bold text-[10px] text-slate-700 text-center mb-0.5 line-clamp-2 leading-tight">{p.nombre}</h4>
-                                    <p className="text-[8px] text-slate-500 text-center mb-1.5">{categorias.find(c=>c.id===p.categoriaId)?.nombre || 'Sin categoría'}</p>
-                                    <div className="mt-auto flex justify-between items-center bg-slate-50 p-1 rounded text-[9px] font-bold text-slate-600">
-                                        <span>Costo:</span><span className="text-blue-600">L {p.costoBase}</span>
-                                    </div>
+                            <div className="flex items-center gap-2 relative">
+                                <button onClick={() => scrollTabsCat(-200)} className="p-2 bg-slate-700 rounded-lg text-white hover:bg-slate-600 z-10 shrink-0 shadow-lg"><ChevronLeft size={20}/></button>
+                                <div ref={scrollRefCat} className="flex gap-3 overflow-x-auto custom-scrollbar scroll-smooth pb-2 flex-1">
+                                    <button onClick={() => setCategoriaActivaId('todas')} className={`px-5 py-2.5 rounded-xl font-bold whitespace-nowrap transition-colors flex-shrink-0 ${categoriaActivaId === 'todas' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>Todas las categorías</button>
+                                    {categorias.map(c => (
+                                        <button key={c.id} onClick={() => setCategoriaActivaId(c.id)} className={`px-5 py-2.5 rounded-xl font-bold whitespace-nowrap transition-colors flex-shrink-0 ${categoriaActivaId === c.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>{c.nombre}</button>
+                                    ))}
                                 </div>
-                            ))}
-                            {catalogoPaginadoAdmin.length === 0 && <div className="col-span-full py-6 text-center text-xs text-slate-400">No hay productos.</div>}
+                                <button onClick={() => scrollTabsCat(200)} className="p-2 bg-slate-700 rounded-lg text-white hover:bg-slate-600 z-10 shrink-0 shadow-lg"><ChevronRight size={20}/></button>
+                            </div>
+                            {categoriaActivaId !== 'todas' && (
+                                <div className="mt-4 flex gap-2">
+                                    <button onClick={handleEditarCategoria} className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1 font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700"><Edit3 size={14}/> Renombrar Categoría</button>
+                                    <button onClick={handleEliminarCategoria} className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700"><Trash2 size={14}/> Eliminar Categoría</button>
+                                </div>
+                            )}
                         </div>
-                        {totalPaginasAdmin > 1 && (
-                            <div className="flex justify-center items-center gap-2 mt-3">
-                                <button disabled={paginaActualAdmin === 1} onClick={() => setPaginaActualAdmin(p => p - 1)} className="p-1 bg-slate-200 rounded disabled:opacity-50"><ChevronLeft size={14}/></button>
-                                <span className="text-[10px] font-bold text-slate-600">Pág {paginaActualAdmin} de {totalPaginasAdmin}</span>
-                                <button disabled={paginaActualAdmin === totalPaginasAdmin} onClick={() => setPaginaActualAdmin(p => p + 1)} className="p-1 bg-slate-200 rounded disabled:opacity-50"><ChevronRight size={14}/></button>
+
+                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                                <h3 className="text-xl font-bold text-white">Catálogo de Productos</h3>
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        <input type="text" placeholder="Buscar producto..." value={busquedaAdmin} onChange={e=>setBusquedaAdmin(e.target.value)} className="w-64 pl-10 pr-4 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 text-sm" />
+                                    </div>
+                                    <select value={itemsPorPaginaAdmin} onChange={e=>setItemsPorPaginaAdmin(Number(e.target.value))} className="p-2 border border-slate-700 rounded-lg outline-none bg-slate-900 text-white text-sm font-bold">
+                                        <option value={10}>10 items</option>
+                                        <option value={20}>20 items</option>
+                                        <option value={50}>50 items</option>
+                                    </select>
+                                    <button onClick={handleCrearProducto} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-500 text-sm"><Plus size={16}/> Agregar Producto</button>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                {catalogoPaginadoAdmin.map(prod => (
+                                    <div key={prod.id} className="bg-slate-900 rounded-2xl p-4 border border-slate-700 flex flex-col items-center hover:border-slate-600 transition-colors shadow-sm relative group">
+                                        <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                            <button onClick={() => handleEditarProducto(prod)} className="bg-blue-600 text-white p-1.5 rounded-md hover:bg-blue-500 shadow-lg"><Edit3 size={14}/></button>
+                                            <button onClick={() => handleEliminarProducto(prod.id)} className="bg-red-600 text-white p-1.5 rounded-md hover:bg-red-500 shadow-lg"><Trash2 size={14}/></button>
+                                        </div>
+                                        <div className="w-24 h-24 bg-slate-800 rounded-xl mb-3 flex items-center justify-center overflow-hidden border border-slate-700 relative">
+                                            {prod.imagenUrl ? <img src={prod.imagenUrl} alt={prod.nombre} className="w-full h-full object-cover" /> : <ImageIcon className="text-slate-600" size={32} />}
+                                            {prod.cobraImpuesto === false && <span className="absolute bottom-1 right-1 bg-amber-500 text-[9px] font-bold px-1 rounded shadow-sm text-amber-950">EXENTO</span>}
+                                        </div>
+                                        <p className="font-bold text-white text-sm text-center mb-1 leading-tight">{prod.nombre}</p>
+                                        <p className="text-xs text-slate-400 mb-2 line-clamp-1 text-center" title={prod.detalles}>{prod.detalles}</p>
+                                        <div className="mt-auto flex flex-col items-center gap-1 w-full">
+                                            <span className="text-lg font-black text-emerald-400">L {prod.costoBase.toFixed(2)}</span>
+                                            <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Costo Base</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            {catalogoPaginadoAdmin.length === 0 && <div className="text-center py-12 text-slate-500 bg-slate-900/50 rounded-xl border border-dashed border-slate-700 mt-4">No hay productos en esta vista.</div>}
+                            
+                            {totalPaginasAdmin > 1 && (
+                                <div className="flex items-center justify-center gap-4 mt-8 pt-4 border-t border-slate-700">
+                                    <button disabled={paginaActualAdmin === 1} onClick={() => setPaginaActualAdmin(p => p - 1)} className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 disabled:opacity-50 transition-colors text-white"><ChevronLeft size={20}/></button>
+                                    <span className="text-sm font-bold text-slate-400">Página {paginaActualAdmin} de {totalPaginasAdmin}</span>
+                                    <button disabled={paginaActualAdmin === totalPaginasAdmin} onClick={() => setPaginaActualAdmin(p => p + 1)} className="p-2 bg-slate-700 rounded-lg hover:bg-slate-600 disabled:opacity-50 transition-colors text-white"><ChevronRight size={20}/></button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                  )}
+
+                  {tabActivo === 'TECNICAS' && (
+                    <div className="fade-in space-y-6">
+                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-xl font-bold text-white">Técnicas de Personalización</h3>
+                                <button onClick={handleCrearTecnica} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-blue-500 text-sm"><Plus size={16}/> Nueva Técnica</button>
+                            </div>
+                            <div className="flex items-center gap-2 relative">
+                                <button onClick={() => scrollTabs(-200)} className="p-2 bg-slate-700 rounded-lg text-white hover:bg-slate-600 z-10 shrink-0 shadow-lg"><ChevronLeft size={20}/></button>
+                                <div ref={scrollRef} className="flex gap-3 overflow-x-auto custom-scrollbar scroll-smooth pb-2 flex-1">
+                                    {tecnicas.map(t => (
+                                        <button key={t.id} onClick={() => setTecActivaId(t.id)} className={`px-5 py-2.5 rounded-xl font-bold whitespace-nowrap transition-colors flex-shrink-0 ${tecActivaId === t.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>{t.nombre}</button>
+                                    ))}
+                                    {tecnicas.length === 0 && <span className="text-slate-500 italic py-2">No hay técnicas registradas.</span>}
+                                </div>
+                                <button onClick={() => scrollTabs(200)} className="p-2 bg-slate-700 rounded-lg text-white hover:bg-slate-600 z-10 shrink-0 shadow-lg"><ChevronRight size={20}/></button>
+                            </div>
+                            {tecActual && (
+                                <div className="mt-4 flex gap-2">
+                                    <button onClick={() => handleEditarTecnica(tecActual)} className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1 font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700"><Edit3 size={14}/> Editar Config. Técnica</button>
+                                    <button onClick={() => handleEliminarTecnica(tecActual.id)} className="text-red-400 hover:text-red-300 text-sm flex items-center gap-1 font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-700"><Trash2 size={14}/> Eliminar Técnica</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {tecActual && (
+                            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                                <div className="flex justify-between items-center mb-6">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white flex items-center gap-2">Configuración: {tecActual.nombre}</h3>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <p className="text-sm text-slate-400">Mínimo Exigido: <span className="text-emerald-400 font-bold">{tecActual.minimo} u.</span></p>
+                                            <p className="text-sm text-slate-400">Aplica Impuesto (ISV): <span className={tecActual.cobraImpuesto !== false ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}>{tecActual.cobraImpuesto !== false ? 'SÍ' : 'NO'}</span></p>
+                                        </div>
+                                    </div>
+                                    <button onClick={handleCrearSubcat} className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-emerald-500 text-sm"><Plus size={16}/> Añadir Ubicación</button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {tecActual.subcategorias.map(sub => (
+                                        <div key={sub.id} className="bg-slate-900 rounded-xl p-5 border border-slate-700 shadow-sm">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h4 className="text-lg font-bold text-white flex items-center gap-2 cursor-pointer hover:text-blue-400" onClick={() => toggleSubcat(sub.id)}>
+                                                    {openSubcats[sub.id] ? <ChevronUp size={20}/> : <ChevronDown size={20}/>} Ubicación: {sub.nombre}
+                                                </h4>
+                                                <div className="flex items-center gap-2">
+                                                    <button onClick={() => handleTarifasUbicacion(sub)} className="text-emerald-400 hover:text-emerald-300 bg-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-bold border border-slate-700" title="Configurar tarifas exclusivas para esta ubicación"><Calculator size={16}/> Tarifas</button>
+                                                    <button onClick={() => handleEditarSubcat(sub)} className="text-blue-400 hover:text-blue-300 bg-slate-800 p-1.5 rounded-lg border border-slate-700" title="Editar Nombre"><Edit3 size={16}/></button>
+                                                    <button onClick={() => handleEliminarSubcat(sub.id)} className="text-red-400 hover:text-red-300 bg-slate-800 p-1.5 rounded-lg border border-slate-700" title="Eliminar"><Trash2 size={16}/></button>
+                                                </div>
+                                            </div>
+                                            
+                                            {openSubcats[sub.id] && (
+                                                <div className="pl-6 border-l-2 border-slate-800 space-y-4 mt-4 fade-in">
+                                                    {sub.opciones.map(opc => (
+                                                        <div key={opc.id} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+                                                            <div className="flex justify-between items-center mb-4">
+                                                                <h5 className="font-bold text-blue-400">Variante: {opc.nombre}</h5>
+                                                                <div className="flex gap-2">
+                                                                    <button onClick={() => handleEditarOpcion(sub.id, opc)} className="text-slate-400 hover:text-white"><Edit3 size={16}/></button>
+                                                                    <button onClick={() => handleEliminarOpcion(sub.id, opc.id)} className="text-slate-400 hover:text-red-400"><Trash2 size={16}/></button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                                <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                                                                    <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2"><h6 className="text-xs font-bold text-slate-400 uppercase">Costos Fijos (Setups)</h6><button onClick={() => handleGestionCosto(sub.id, opc.id, 'fijos')} className="text-xs bg-slate-800 text-blue-400 px-2 py-1 rounded hover:bg-slate-700">+ Añadir</button></div>
+                                                                    <ul className="space-y-2">
+                                                                        {opc.costosFijos.map(c => (
+                                                                            <li key={c.id} className="flex justify-between items-center text-sm"><span className="text-slate-300">{c.nombre}</span><div className="flex items-center gap-2"><span className="font-mono text-emerald-400">L {c.valor.toFixed(2)}</span><button onClick={()=>handleGestionCosto(sub.id, opc.id, 'fijos', c.id)} className="text-slate-500 hover:text-white"><Edit3 size={12}/></button><button onClick={()=>handleEliminarCosto(sub.id, opc.id, 'fijos', c.id)} className="text-slate-500 hover:text-red-400"><X size={12}/></button></div></li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                                <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
+                                                                    <div className="flex justify-between items-center mb-3 border-b border-slate-800 pb-2"><h6 className="text-xs font-bold text-slate-400 uppercase">Costos Variables (x Unidad)</h6><button onClick={() => handleGestionCosto(sub.id, opc.id, 'variables')} className="text-xs bg-slate-800 text-blue-400 px-2 py-1 rounded hover:bg-slate-700">+ Añadir</button></div>
+                                                                    <ul className="space-y-2">
+                                                                        {opc.costosVariables.map(c => (
+                                                                            <li key={c.id} className="flex justify-between items-center text-sm"><span className="text-slate-300">{c.nombre}</span><div className="flex items-center gap-2"><span className="font-mono text-emerald-400">L {c.valor.toFixed(2)}</span><button onClick={()=>handleGestionCosto(sub.id, opc.id, 'variables', c.id)} className="text-slate-500 hover:text-white"><Edit3 size={12}/></button><button onClick={()=>handleEliminarCosto(sub.id, opc.id, 'variables', c.id)} className="text-slate-500 hover:text-red-400"><X size={12}/></button></div></li>
+                                                                        ))}
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    <button onClick={() => handleCrearOpcion(sub.id)} className="w-full border-2 border-dashed border-slate-700 text-slate-400 font-bold p-3 rounded-xl hover:bg-slate-800 hover:text-white hover:border-slate-600 transition-colors text-sm">+ Añadir Variante a esta Ubicación</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
-                )}
-
-                {tabActivo === 'TECNICAS' && (
-                    <div className="space-y-3 fade-in">
-                        <div className="flex items-center gap-1 bg-white p-1.5 rounded-lg shadow-sm border border-slate-200">
-                             <button onClick={() => scrollTabs(-200)} className="p-1 text-slate-400 hover:text-slate-600"><ChevronLeft size={14}/></button>
-                             <div ref={scrollRef} className="flex-1 flex gap-1.5 overflow-x-auto custom-scrollbar pb-1">
-                                 {tecnicas.map(t => (
-                                     <button key={t.id} onClick={() => setTecActivaId(t.id)} className={`px-3 py-1 rounded text-[10px] font-bold whitespace-nowrap transition-colors ${tecActivaId === t.id ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{t.nombre}</button>
-                                 ))}
-                             </div>
-                             <button onClick={() => scrollTabs(200)} className="p-1 text-slate-400 hover:text-slate-600"><ChevronRight size={14}/></button>
-                             <div className="h-4 w-px bg-slate-200 mx-1"></div>
-                             <button onClick={handleCrearTecnica} className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Nueva Técnica"><Plus size={14}/></button>
-                             {tecActual && (
-                                 <>
-                                     <button onClick={() => handleEditarTecnica(tecActual)} className="p-1 text-amber-600 hover:bg-amber-50 rounded"><Pencil size={14}/></button>
-                                     <button onClick={() => handleEliminarTecnica(tecActual.id)} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
-                                 </>
-                             )}
-                        </div>
-
-                        {tecActual ? (
-                            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                                <div className="flex justify-between items-center mb-3">
-                                    <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2"><Layers size={16}/> Ubicaciones de {tecActual.nombre}</h3>
-                                    <button onClick={handleCrearSubcat} className="text-[10px] bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-500 font-bold flex items-center gap-1"><Plus size={12}/> Nueva Ubicación</button>
-                                </div>
-                                
-                                {/* REUBICACIÓN SOLICITADA: Ubicaciones (Subcategorías) renderizadas como tarjetas en Grid */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                                    {tecActual.subcategorias.map(sub => (
-                                        <div key={sub.id} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col">
-                                            <div className="flex justify-between items-center mb-3 border-b border-slate-100 pb-2">
-                                                <h4 className="font-bold text-xs text-slate-700">{sub.nombre}</h4>
-                                                <div className="flex gap-1">
-                                                    <button onClick={() => { setSubcatTarifasActiva(sub); setShowTarifasUbicacionModal(true); }} className="p-1.5 bg-slate-100 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="Tarifas"><Settings size={12}/></button>
-                                                    <button onClick={() => handleEditarSubcat(sub)} className="p-1.5 bg-slate-100 text-slate-600 hover:text-amber-600 hover:bg-amber-50 rounded-lg"><Pencil size={12}/></button>
-                                                    <button onClick={() => handleEliminarSubcat(sub.id)} className="p-1.5 bg-slate-100 text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg"><Trash2 size={12}/></button>
-                                                </div>
-                                            </div>
-                                            <div className="flex-1 space-y-2 mb-3 max-h-[200px] overflow-y-auto custom-scrollbar pr-1">
-                                                {sub.opciones.map(opc => (
-                                                    <div key={opc.id} className="bg-slate-50 p-2 rounded border border-slate-100 text-xs">
-                                                        <div className="flex justify-between items-center mb-1 font-bold text-slate-700">
-                                                            <span className="text-[10px] uppercase tracking-wide">{opc.nombre}</span>
-                                                            <div className="flex gap-1">
-                                                                <button onClick={() => handleEditarOpcion(sub.id, opc)} className="text-amber-600"><Pencil size={10}/></button>
-                                                                <button onClick={() => handleEliminarOpcion(sub.id, opc.id)} className="text-red-600"><Trash2 size={10}/></button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="grid grid-cols-2 gap-2 mt-1.5">
-                                                            <div>
-                                                                <p className="text-[8px] text-slate-400 uppercase font-bold flex justify-between">Fijos <button onClick={()=>handleAgregarCosto(sub.id, opc.id, 'fijos')} className="text-blue-500">+</button></p>
-                                                                {opc.costosFijos.map(c => <div key={c.id} className="flex justify-between text-[9px]"><span className="truncate pr-1" title={c.nombre}>{c.nombre}</span><span className="flex items-center gap-0.5 font-mono text-slate-600">L{c.valor} <button onClick={()=>handleEliminarCosto(sub.id, opc.id, 'fijos', c.id)} className="text-red-400"><X size={8}/></button></span></div>)}
-                                                            </div>
-                                                            <div>
-                                                                <p className="text-[8px] text-slate-400 uppercase font-bold flex justify-between">Var <button onClick={()=>handleAgregarCosto(sub.id, opc.id, 'variables')} className="text-blue-500">+</button></p>
-                                                                {opc.costosVariables.map(c => <div key={c.id} className="flex justify-between text-[9px]"><span className="truncate pr-1" title={c.nombre}>{c.nombre}</span><span className="flex items-center gap-0.5 font-mono text-slate-600">L{c.valor} <button onClick={()=>handleEliminarCosto(sub.id, opc.id, 'variables', c.id)} className="text-red-400"><X size={8}/></button></span></div>)}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {sub.opciones.length === 0 && <p className="text-[9px] text-slate-400 italic text-center py-2">Sin variantes.</p>}
-                                            </div>
-                                            <button onClick={() => handleCrearOpcion(sub.id)} className="w-full py-1.5 border border-dashed border-blue-300 text-blue-600 text-[10px] font-bold rounded hover:bg-blue-50 transition-colors">+ Añadir Variante</button>
-                                        </div>
-                                    ))}
-                                    {tecActual.subcategorias.length === 0 && <div className="col-span-full text-center py-8 text-xs text-slate-400">No hay ubicaciones configuradas para esta técnica.</div>}
-                                </div>
-                            </div>
-                        ) : <div className="text-center py-8 text-xs text-slate-400">Selecciona o crea una técnica.</div>}
-                    </div>
-                )}
-            </div>
-        );
-        }
-
-        function DashboardAdmin({ ordenes, ingresosTotales }) {
-             const ordenesRecientes = ordenes.slice(0, 5);
-             const completadas = ordenes.filter(o => o.estado === 'Finalizado / Entregado').length;
-             const pendientes = ordenes.filter(o => o.estado === 'Pendiente' || o.estado === 'Cotización enviada').length;
-
-             return (
-                 <div className="space-y-4 fade-in max-w-5xl mx-auto">
-                     <h2 className="text-xl font-bold text-slate-800">Panel de Control (Dashboard)</h2>
-                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                             <div className="flex items-center gap-2 text-blue-600 mb-1"><ShoppingBag size={16}/><h3 className="font-bold text-[10px] uppercase tracking-wide">Órdenes</h3></div>
-                             <p className="text-xl font-black text-slate-800">{ordenes.length}</p>
-                         </div>
-                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                             <div className="flex items-center gap-2 text-emerald-600 mb-1"><TrendingUp size={16}/><h3 className="font-bold text-[10px] uppercase tracking-wide">Ingresos Estimados</h3></div>
-                             <p className="text-xl font-black text-slate-800">L {ingresosTotales.toFixed(2)}</p>
-                         </div>
-                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                             <div className="flex items-center gap-2 text-amber-600 mb-1"><Clock size={16}/><h3 className="font-bold text-[10px] uppercase tracking-wide">Pendientes</h3></div>
-                             <p className="text-xl font-black text-slate-800">{pendientes}</p>
-                         </div>
-                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-                             <div className="flex items-center gap-2 text-purple-600 mb-1"><CheckCircle size={16}/><h3 className="font-bold text-[10px] uppercase tracking-wide">Completadas</h3></div>
-                             <p className="text-xl font-black text-slate-800">{completadas}</p>
-                         </div>
-                     </div>
-                     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4">
-                         <h3 className="font-bold text-sm text-slate-800 mb-3 flex items-center gap-2"><Activity size={16}/> Actividad Reciente</h3>
-                         <div className="space-y-2">
-                             {ordenesRecientes.map(o => (
-                                 <div key={o.id} className="flex justify-between items-center p-2.5 hover:bg-slate-50 rounded-lg border border-slate-100 transition-colors">
-                                     <div>
-                                         <p className="font-bold text-xs text-slate-700">{o.id} - {o.clienteNombre}</p>
-                                         <p className="text-[10px] text-slate-500">{o.fecha}</p>
-                                     </div>
-                                     <div className="text-right flex flex-col items-end gap-1">
-                                         <p className="font-bold text-xs text-emerald-600">L {o.total.toFixed(2)}</p>
-                                         <EstadoBadge estado={o.estado}/>
-                                     </div>
-                                 </div>
-                             ))}
-                             {ordenesRecientes.length === 0 && <p className="text-xs text-slate-500 text-center py-4">Sin actividad.</p>}
-                         </div>
-                     </div>
-                 </div>
-             );
+                  )}
+              </div>
+          );
         }
 
         function GestionUsuarios({ usuarios, onActualizarUsuario, onEliminarUsuario }) {
-            const [modalConfig, setModalConfig] = useState(null);
-            const clientes = usuarios.filter(u => u.rol !== 'ADMIN');
-            
-            const handleNuevoCliente = () => {
-                setModalConfig({
-                    titulo: "Nuevo Cliente VIP",
-                    campos: [ { id: 'nombre', label: 'Nombre/Empresa:', type: 'text' }, { id: 'email', label: 'Correo:', type: 'email' }, { id: 'descuentoGlobal', label: 'Descuento VIP (%):', type: 'number' }, { id: 'modoTest', label: 'Modo Pruebas', type: 'boolean' } ],
-                    onSubmit: (d) => { if(d.nombre && d.email) onActualizarUsuario({ id: d.email, rol: 'CLIENTE', nombre: d.nombre, email: d.email, descuentoGlobal: Number(d.descuentoGlobal)||0, modoTest: !!d.modoTest }); }
+            const [modalUsuario, setModalUsuario] = useState(null);
+            const [modalConfirmacion, setModalConfirmacion] = useState(null);
+
+            const handleCrearPerfil = () => {
+                setModalUsuario({
+                    titulo: `Vincular Nuevo Cliente`,
+                    mensaje: `IMPORTANTE: Primero crea la cuenta en tu consola de Firebase Authentication y copia el "User UID".`,
+                    valoresIniciales: { id: '', nombre: '', telefono: '', descuentoGlobal: 0, modoTest: false },
+                    campos: [
+                        { id: 'id', label: 'Firebase User UID:', type: 'text' },
+                        { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
+                        { id: 'telefono', label: 'Teléfono:', type: 'text' },
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' },
+                        { id: 'modoTest', label: 'Modo Test (Permitir cotizar por debajo del mínimo):', type: 'boolean' }
+                    ],
+                    onSubmit: (datos) => {
+                        onActualizarUsuario({ id: datos.id.trim(), rol: 'CLIENTE', nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal), modoTest: !!datos.modoTest });
+                    }
                 });
             };
 
-            const handleEditarCliente = (u) => {
-                 setModalConfig({
-                    titulo: "Editar Cliente", valoresIniciales: { nombre: u.nombre, descuentoGlobal: u.descuentoGlobal, modoTest: u.modoTest },
-                    campos: [ { id: 'nombre', label: 'Nombre:', type: 'text' }, { id: 'descuentoGlobal', label: 'Descuento VIP (%):', type: 'number' }, { id: 'modoTest', label: 'Modo Pruebas', type: 'boolean' } ],
-                    onSubmit: (d) => { if(d.nombre) onActualizarUsuario({ ...u, nombre: d.nombre, descuentoGlobal: Number(d.descuentoGlobal)||0, modoTest: !!d.modoTest }); }
+            const handleEditar = (user) => {
+                setModalUsuario({
+                    titulo: `Editar Perfil: ${user.nombre}`,
+                    valoresIniciales: { nombre: user.nombre, telefono: user.telefono || '', descuentoGlobal: user.descuentoGlobal || 0, modoTest: !!user.modoTest },
+                    campos: [
+                        { id: 'nombre', label: 'Nombre de Empresa / Contacto:', type: 'text' },
+                        { id: 'telefono', label: 'Teléfono:', type: 'text' },
+                        { id: 'descuentoGlobal', label: 'Descuento VIP Permanente (%):', type: 'number' },
+                        { id: 'modoTest', label: 'Modo Test (Permitir cotizar por debajo del mínimo):', type: 'boolean' }
+                    ],
+                    onSubmit: (datos) => {
+                        onActualizarUsuario({ ...user, nombre: datos.nombre, telefono: datos.telefono, descuentoGlobal: Number(datos.descuentoGlobal), modoTest: !!datos.modoTest });
+                    }
                 });
-            }
+            };
+
+            const handleEliminar = (id, nombre, rol) => {
+                if(rol === 'ADMIN') return alert("No puedes eliminar al administrador principal desde aquí.");
+                setModalConfirmacion({
+                    titulo: 'Eliminar Perfil', mensaje: `¿Eliminar el perfil de "${nombre}"?`, submitLabel: 'Sí, Eliminar Perfil',
+                    onConfirm: () => onEliminarUsuario(id)
+                });
+            };
 
             return (
-                <div className="space-y-4 fade-in max-w-5xl mx-auto">
-                    {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-                    <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-xl font-bold text-slate-800">Clientes VIP</h2>
-                        <button onClick={handleNuevoCliente} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-blue-500"><Plus size={14}/> Nuevo</button>
+                <div className="max-w-6xl mx-auto space-y-4 fade-in">
+                    {modalUsuario && <CustomModal config={modalUsuario} onClose={() => setModalUsuario(null)} />}
+                    {modalConfirmacion && <CustomModal config={{ titulo: modalConfirmacion.titulo, esConfirmacion: true, mensaje: modalConfirmacion.mensaje, submitLabel: modalConfirmacion.submitLabel, campos: [], onSubmit: modalConfirmacion.onConfirm }} onClose={() => setModalConfirmacion(null)} />}
+                    
+                    <div className="flex justify-between items-end mb-6">
+                        <div><h2 className="text-2xl font-bold text-white mb-1">Perfiles de Clientes</h2><p className="text-sm text-slate-400">Vincula los perfiles de los usuarios que ya registraste en Firebase Auth.</p></div>
+                        <button onClick={handleCrearPerfil} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105"><Plus size={20}/> Vincular Cliente</button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {clientes.map(u => (
-                            <div key={u.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div><h3 className="font-bold text-sm text-slate-700">{u.nombre}</h3><p className="text-[10px] text-slate-500">{u.id}</p></div>
-                                    <div className="flex gap-1">
-                                        <button onClick={() => handleEditarCliente(u)} className="p-1 text-amber-600 hover:bg-amber-50 rounded"><Pencil size={12}/></button>
-                                        <button onClick={() => setModalConfig({titulo:"Eliminar", esConfirmacion:true, mensaje:"¿Eliminar permanentemente?", campos:[], onSubmit:()=>onEliminarUsuario(u.id)})} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={12}/></button>
-                                    </div>
-                                </div>
-                                <div className="flex flex-wrap gap-1.5 mt-2">
-                                    <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold">VIP {u.descuentoGlobal || 0}% OFF</span>
-                                    {u.modoTest && <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-bold">Pruebas</span>}
+                    
+                    <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 overflow-x-auto">
+                        <table className="w-full text-left text-sm min-w-full">
+                            <thead><tr className="border-b border-slate-700 text-slate-400"><th className="pb-3 font-semibold">Cliente</th><th className="pb-3 font-semibold">Firebase UID</th><th className="pb-3 font-semibold">Rol & VIP</th><th className="pb-3 font-semibold text-right">Acciones</th></tr></thead>
+                            <tbody className="divide-y divide-slate-700/50">
+                                {usuarios.map(u => (
+                                    <tr key={u.id} className="hover:bg-slate-700/30 transition-colors">
+                                        <td className="py-4"><p className="text-white font-bold">{u.nombre}</p><p className="text-slate-400 text-xs mt-1">Tel: {u.telefono || 'N/D'}</p></td>
+                                        <td className="py-4"><div className="bg-slate-900 inline-block p-2 rounded-lg border border-slate-700 text-xs font-mono text-slate-400">{u.id}</div></td>
+                                        <td className="py-4">
+                                            {u.rol === 'ADMIN' ? (<span className="bg-purple-500/20 text-purple-400 border border-purple-500/30 px-2 py-1 rounded text-xs font-bold">ADMINISTRADOR</span>) : (
+                                                <div>
+                                                    <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded text-xs font-bold">CLIENTE</span>
+                                                    {u.descuentoGlobal > 0 && <span className="ml-2 text-emerald-400 text-xs font-bold">VIP: -{u.descuentoGlobal}% OFF</span>}
+                                                    {u.modoTest && <span className="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-1 rounded text-[10px] font-bold mt-2 block w-max">MODO TEST</span>}
+                                                </div>
+                                            )}
+                                        </td>
+                                        <td className="py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button onClick={() => handleEditar(u)} className="text-blue-400 hover:text-blue-300 p-2 rounded bg-slate-900 hover:bg-slate-700 transition" title="Editar Perfil"><Edit3 size={16}/></button>
+                                                <button onClick={() => handleEliminar(u.id, u.nombre, u.rol)} className="text-red-400 hover:text-red-300 p-2 rounded bg-slate-900 hover:bg-slate-700 transition" title="Eliminar Perfil"><Trash2 size={16}/></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        function GestionMensajes({ mensajesGlobales, adminSetMensajes }) {
+            const [form, setForm] = useState(mensajesGlobales);
+            const handleSave = (e) => { e.preventDefault(); adminSetMensajes(form); }
+
+            return (
+                <div className="max-w-4xl mx-auto space-y-4 fade-in">
+                    <div><h2 className="text-2xl font-bold text-white mb-2">Avisos y Plantillas</h2></div>
+                    <form onSubmit={handleSave} className="bg-slate-800 rounded-2xl p-6 border border-slate-700 space-y-6 shadow-lg">
+                        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700">
+                            <h3 className="text-lg font-bold text-blue-400 flex items-center gap-2 mb-4"><Megaphone size={20}/> Mensajes en Panel Cliente</h3>
+                            <div className="space-y-4">
+                                <div><label className="block text-sm font-bold text-slate-400 mb-2">Mensaje Principal (Bienvenida)</label><input type="text" value={form.bienvenida || ''} onChange={(e) => setForm({...form, bienvenida: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-blue-500" /></div>
+                                <div>
+                                    <label className="block text-sm font-bold text-slate-400 mb-2">Aviso General / Texto Promocional</label>
+                                    <p className="text-xs text-slate-500 mb-2">Usa este espacio para informar modificaciones de precios, actualizaciones de productos o promociones vigentes.</p>
+                                    <textarea value={form.promo || ''} onChange={(e) => setForm({...form, promo: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-blue-500 resize-none h-24"></textarea>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        </div>
+                        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700">
+                            <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2 mb-4"><Share2 size={20}/> Plantilla de WhatsApp</h3>
+                            <div className="space-y-4">
+                                <div><label className="block text-sm font-bold text-slate-400 mb-2">Número de WhatsApp de la Empresa (Opcional)</label><input type="text" value={form.whatsappNumero || ''} onChange={(e) => setForm({...form, whatsappNumero: e.target.value.replace(/[^0-9]/g, '')})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500" /></div>
+                                <div><label className="block text-sm font-bold text-slate-400 mb-2">Plantilla al Compartir Cotización</label><textarea value={form.whatsappTemplate || ''} onChange={(e) => setForm({...form, whatsappTemplate: e.target.value})} className="w-full p-3 rounded-xl bg-slate-800 border border-slate-600 text-white outline-none focus:border-emerald-500 resize-none h-24"></textarea></div>
+                            </div>
+                        </div>
+                        <div className="flex justify-end pt-4"><button type="submit" className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-500">Guardar Configuración</button></div>
+                    </form>
                 </div>
             )
         }
 
         function GestionRecursos({ recursos, onActualizarRecurso, onEliminarRecurso }) {
-             const [modalConfig, setModalConfig] = useState(null);
-             const handleNuevo = () => {
-                 setModalConfig({
-                     titulo: "Subir Archivo", campos: [ { id: 'titulo', label: 'Título:', type: 'text' }, { id: 'descripcion', label: 'Descripción:', type: 'textarea' }, { id: 'archivo', label: 'Archivo:', type: 'file' } ],
-                     onSubmit: (d) => { if(d.titulo && d.archivo) onActualizarRecurso({ id: `REC_${Date.now()}`, titulo: d.titulo, descripcion: d.descripcion, archivoBase64: d.archivo, fecha: new Date().toLocaleDateString() }); }
-                 });
-             };
-             return (
-                 <div className="space-y-4 fade-in max-w-5xl mx-auto">
-                     {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
-                     <div className="flex justify-between items-center mb-2">
-                        <h2 className="text-xl font-bold text-slate-800">Recursos y Documentos</h2>
-                        <button onClick={handleNuevo} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1 hover:bg-blue-500"><Upload size={14}/> Subir</button>
+            const [modalConfig, setModalConfig] = useState(null);
+            
+            const handleCrear = () => {
+                setModalConfig({
+                    titulo: "Subir Nuevo Archivo/Guía",
+                    campos: [ { id: 'titulo', label: 'Título del documento:', type: 'text' }, { id: 'descripcion', label: 'Descripción breve:', type: 'text' }, { id: 'archivo', label: 'Archivo (PDF, PNG, JPG):', type: 'file' } ],
+                    onSubmit: (datos) => { if (datos.titulo && datos.archivo) { onActualizarRecurso({ id: `REC_${Date.now()}`, titulo: datos.titulo, descripcion: datos.descripcion || '', archivoBase64: datos.archivo }); } }
+                });
+            };
+
+            return (
+                <div className="max-w-6xl mx-auto space-y-4 fade-in">
+                    {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+                    <div className="flex justify-between items-end mb-6">
+                        <div><h2 className="text-2xl font-bold text-white mb-1">Gestión de Archivos Compartidos</h2><p className="text-sm text-slate-400">Sube PDFs o imágenes (guías de tallas, manuales) para que tus clientes las descarguen.</p></div>
+                        <button onClick={handleCrear} className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-lg transition-transform hover:scale-105"><Upload size={20}/> Subir Archivo</button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {recursos.map(r => (
-                             <div key={r.id} className="bg-white p-3 rounded-xl shadow-sm border border-slate-200 flex justify-between items-start">
-                                 <div className="flex gap-2">
-                                     <div className="bg-blue-50 p-2 rounded text-blue-600"><BookOpen size={16}/></div>
-                                     <div><h3 className="font-bold text-xs text-slate-700">{r.titulo}</h3><p className="text-[9px] text-slate-500 line-clamp-1">{r.descripcion}</p></div>
-                                 </div>
-                                 <button onClick={() => setModalConfig({titulo:"Eliminar", esConfirmacion:true, mensaje:"¿Eliminar permanentemente?", campos:[], onSubmit:()=>onEliminarRecurso(r.id)})} className="p-1 text-red-600 hover:bg-red-50 rounded"><Trash2 size={14}/></button>
-                             </div>
+                            <div key={r.id} className="bg-slate-800 rounded-2xl p-5 border border-slate-700 flex flex-col hover:border-slate-600 transition-colors shadow-sm">
+                                <div className="flex justify-between items-start mb-3"><div className="bg-slate-900 p-3 rounded-xl text-blue-400"><BookOpen size={24}/></div><button onClick={() => onEliminarRecurso(r.id)} className="text-red-400 hover:text-red-300 p-2 bg-slate-900 rounded-lg transition-colors" title="Eliminar"><Trash2 size={16}/></button></div>
+                                <h3 className="text-white font-bold text-lg mb-1">{r.titulo}</h3><p className="text-slate-400 text-sm mb-4 flex-1 line-clamp-2">{r.descripcion}</p>
+                                <a href={r.archivoBase64} download={r.titulo} className="w-full block text-center bg-slate-700 text-white font-bold py-2.5 rounded-xl hover:bg-slate-600 transition-colors text-sm">Previsualizar / Descargar</a>
+                            </div>
                         ))}
+                        {recursos.length === 0 && <div className="col-span-full py-10 text-center text-slate-500 font-medium bg-slate-800/50 rounded-2xl border border-dashed border-slate-700">No hay recursos subidos actualmente.</div>}
                     </div>
-                 </div>
-             )
-        }
-
-        function AjustesGlobales({ margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, mensajesGlobales, adminSetMensajes }) {
-             const [margen, setMargen] = useState(margenGanancia);
-             const [impuesto, setImpuesto] = useState(impuestoGlobal);
-             const [descuentos, setDescuentos] = useState(descuentosVolumen || []);
-             const [mensajes, setMensajes] = useState(mensajesGlobales);
-
-             const addTier = () => setDescuentos([...descuentos, { id: `desc_${Date.now()}`, min: 100, pct: 5, activo: true }]);
-             const updateTier = (id, field, value) => setDescuentos(descuentos.map(d => d.id === id ? { ...d, [field]: field === 'activo' ? value : (value === '' ? '' : Number(value)) } : d));
-             const removeTier = (id) => setDescuentos(descuentos.filter(d => d.id !== id));
-             const handleSave = () => { setConfigGlobal(Number(margen), Number(impuesto), descuentos); adminSetMensajes(mensajes); };
-
-             return (
-                 <div className="space-y-4 fade-in max-w-4xl mx-auto">
-                     <h2 className="text-xl font-bold text-slate-800">Ajustes Globales</h2>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                             <h3 className="font-bold text-xs text-blue-700 border-b border-slate-100 pb-1.5">Márgenes e Impuestos</h3>
-                             <div><label className="text-[10px] font-bold text-slate-500 block mb-1">Margen Global (%)</label><input type="number" value={margen} onChange={e=>setMargen(e.target.value)} className="w-full p-2 rounded border border-slate-300 outline-none text-xs"/></div>
-                             <div><label className="text-[10px] font-bold text-slate-500 block mb-1">Impuesto (ISV) (%)</label><input type="number" value={impuesto} onChange={e=>setImpuesto(e.target.value)} className="w-full p-2 rounded border border-slate-300 outline-none text-xs"/></div>
-                         </div>
-                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                             <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
-                                 <h3 className="font-bold text-xs text-blue-700">Descuentos Volumen Globales</h3>
-                                 <button onClick={addTier} className="text-[10px] bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 font-bold">+ Nivel</button>
-                             </div>
-                             <div className="space-y-1.5 max-h-[120px] overflow-y-auto custom-scrollbar">
-                                 {descuentos.map(d => (
-                                     <div key={d.id} className="flex gap-1.5 items-center text-xs">
-                                         <input type="checkbox" checked={d.activo!==false} onChange={e=>updateTier(d.id, 'activo', e.target.checked)} className="w-3 h-3"/>
-                                         <input type="number" placeholder="Min" value={d.min} onChange={e=>updateTier(d.id, 'min', e.target.value)} className="w-full p-1.5 rounded border border-slate-300 text-[10px]"/>
-                                         <input type="number" placeholder="% OFF" value={d.pct} onChange={e=>updateTier(d.id, 'pct', e.target.value)} className="w-full p-1.5 rounded border border-slate-300 text-[10px]"/>
-                                         <button onClick={()=>removeTier(d.id)} className="text-red-500 p-1"><Trash2 size={12}/></button>
-                                     </div>
-                                 ))}
-                                 {descuentos.length===0 && <p className="text-[10px] text-slate-500">Sin descuentos.</p>}
-                             </div>
-                         </div>
-                     </div>
-                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                         <h3 className="font-bold text-xs text-blue-700 border-b border-slate-100 pb-1.5">Comunicaciones</h3>
-                         <div><label className="text-[10px] font-bold text-slate-500 block mb-1">Aviso Portal Cliente</label><input type="text" value={mensajes.bienvenida||''} onChange={e=>setMensajes({...mensajes, bienvenida: e.target.value})} className="w-full p-2 rounded border border-slate-300 outline-none text-xs"/></div>
-                         <div><label className="text-[10px] font-bold text-slate-500 block mb-1">Mensaje Promocional</label><textarea value={mensajes.promo||''} onChange={e=>setMensajes({...mensajes, promo: e.target.value})} className="w-full p-2 rounded border border-slate-300 outline-none text-xs h-12 resize-none"/></div>
-                         <div className="grid grid-cols-2 gap-3">
-                             <div><label className="text-[10px] font-bold text-slate-500 block mb-1">WhatsApp Empresa</label><input type="text" placeholder="Ej: 50499999999" value={mensajes.whatsappNumero||''} onChange={e=>setMensajes({...mensajes, whatsappNumero: e.target.value})} className="w-full p-2 rounded border border-slate-300 outline-none text-xs"/></div>
-                             <div><label className="text-[10px] font-bold text-slate-500 block mb-1">Plantilla WhatsApp</label><textarea placeholder="{ID} y {TOTAL}" value={mensajes.whatsappTemplate||''} onChange={e=>setMensajes({...mensajes, whatsappTemplate: e.target.value})} className="w-full p-2 rounded border border-slate-300 outline-none text-xs h-12 resize-none"/></div>
-                         </div>
-                     </div>
-                     <div className="flex justify-end"><button onClick={handleSave} className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-500 flex items-center gap-1.5"><Save size={14}/> Guardar Todo</button></div>
-                 </div>
-             )
+                </div>
+            );
         }
 
         function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, mensajesGlobales, adminSetMensajes, usuarios, onActualizarUsuario, onEliminarUsuario, recursos, onActualizarRecurso, onEliminarRecurso, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud, showToast }) {
-            const [vista, setVista] = useState('DASHBOARD');
-            const ingresosTotales = ordenes.filter(o => o.estado !== 'Cancelada').reduce((acc, o) => acc + (o.total || 0), 0);
+            const [vistaAdmin, setVistaAdmin] = useState('CATALOGO');
 
             return (
-                <div className="min-h-screen bg-slate-100 flex flex-col md:flex-row fade-in">
-                    <aside className="w-full md:w-56 bg-slate-900 text-slate-300 flex flex-col shadow-xl z-20 md:h-screen md:sticky md:top-0">
-                        <div className="p-4 border-b border-slate-800 flex items-center gap-2 text-white">
-                            <div className="bg-blue-600 p-1.5 rounded"><Printer size={18} /></div>
-                            <div>
-                                <span className="text-sm font-bold leading-none block">PrintPro</span>
-                                <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Admin</span>
-                            </div>
+                <div className="min-h-screen bg-slate-900 flex flex-col md:flex-row fade-in">
+                    <aside className="w-full md:w-72 bg-slate-950 border-r border-slate-800 flex flex-col z-10 no-print md:h-screen md:sticky md:top-0">
+                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
+                            <div className="flex items-center gap-3 text-blue-500 mb-8"><Printer size={32} /><span className="text-xl font-bold text-white">PrintPro Admin</span></div>
+                            <nav className="space-y-2">
+                                <MenuBtnAdmin icon={Layers} label="Catálogo y Técnicas" active={vistaAdmin === 'CATALOGO'} onClick={() => setVistaAdmin('CATALOGO')} />
+                                <MenuBtnAdmin icon={FileText} label="Gestión de Cotizaciones" active={vistaAdmin === 'COTIZACIONES'} onClick={() => setVistaAdmin('COTIZACIONES')} />
+                                <MenuBtnAdmin icon={Users} label="Perfiles de Clientes" active={vistaAdmin === 'USUARIOS'} onClick={() => setVistaAdmin('USUARIOS')} />
+                                <MenuBtnAdmin icon={Megaphone} label="Avisos y WhatsApp" active={vistaAdmin === 'MENSAJES'} onClick={() => setVistaAdmin('MENSAJES')} />
+                                <MenuBtnAdmin icon={BookOpen} label="Archivos y Recursos" active={vistaAdmin === 'RECURSOS'} onClick={() => setVistaAdmin('RECURSOS')} />
+                            </nav>
                         </div>
-                        <nav className="p-3 space-y-1 flex-1 overflow-y-auto custom-scrollbar">
-                            <MenuBtnAdmin icon={LayoutDashboard} label="Dashboard" active={vista === 'DASHBOARD'} onClick={() => setVista('DASHBOARD')} />
-                            <MenuBtnAdmin icon={ShoppingBag} label="Órdenes" active={vista === 'ORDENES'} onClick={() => setVista('ORDENES')} />
-                            <MenuBtnAdmin icon={Layers} label="Catálogo/Costos" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} />
-                            <MenuBtnAdmin icon={Users} label="Clientes" active={vista === 'USUARIOS'} onClick={() => setVista('USUARIOS')} />
-                            <MenuBtnAdmin icon={BookOpen} label="Archivos" active={vista === 'RECURSOS'} onClick={() => setVista('RECURSOS')} />
-                            <MenuBtnAdmin icon={Settings} label="Ajustes Globales" active={vista === 'AJUSTES'} onClick={() => setVista('AJUSTES')} />
-                        </nav>
-                        <div className="p-3 border-t border-slate-800 bg-slate-900/50">
+                        <div className="p-6 bg-slate-950 border-t border-slate-800 mt-auto">
                             <ConnectionIndicator isConnectedToCloud={isConnectedToCloud} darkTheme={true} />
-                            <button onClick={onLogout} className="w-full flex items-center justify-center gap-1.5 text-slate-400 hover:text-white hover:bg-red-600 mt-2 p-2 rounded-lg font-bold transition-colors text-xs"><LogOut size={14} /> Salir</button>
+                            <button onClick={onLogout} className="w-full flex items-center justify-center gap-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 mt-4 p-3 rounded-xl font-bold transition-colors border border-transparent hover:border-red-500/20"><LogOut size={18} /> Salir del Panel</button>
                         </div>
                     </aside>
-                    <main className="flex-1 p-4 md:p-6 overflow-y-auto w-full">
-                        {vista === 'DASHBOARD' && <DashboardAdmin ordenes={ordenes} ingresosTotales={ingresosTotales} />}
-                        {vista === 'ORDENES' && <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} mensajesGlobales={mensajesGlobales} showToast={showToast} />}
-                        {vista === 'CATALOGO' && <GestionJerarquica categorias={categorias} setCategorias={setCategorias} catalogo={catalogo} setCatalogo={setCatalogo} tecnicas={tecnicas} setTecnicas={setTecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} />}
-                        {vista === 'USUARIOS' && <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />}
-                        {vista === 'RECURSOS' && <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />}
-                        {vista === 'AJUSTES' && <AjustesGlobales margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal} mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />}
+
+                    <main className="flex-1 p-8 overflow-y-auto bg-slate-900 text-slate-300">
+                        {vistaAdmin === 'CATALOGO' && (
+                            <GestionJerarquica 
+                                categorias={categorias} setCategorias={setCategorias}
+                                catalogo={catalogo} setCatalogo={setCatalogo}
+                                tecnicas={tecnicas} setTecnicas={setTecnicas}
+                                margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} 
+                                descuentosVolumen={descuentosVolumen} setConfigGlobal={setConfigGlobal}
+                            />
+                        )}
+                        {vistaAdmin === 'COTIZACIONES' && (
+                            <HistorialOrdenes ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} isClient={false} cliente={null} mensajesGlobales={mensajesGlobales} showToast={showToast} />
+                        )}
+                        {vistaAdmin === 'USUARIOS' && (
+                            <GestionUsuarios usuarios={usuarios} onActualizarUsuario={onActualizarUsuario} onEliminarUsuario={onEliminarUsuario} />
+                        )}
+                        {vistaAdmin === 'MENSAJES' && (
+                            <GestionMensajes mensajesGlobales={mensajesGlobales} adminSetMensajes={adminSetMensajes} />
+                        )}
+                        {vistaAdmin === 'RECURSOS' && (
+                            <GestionRecursos recursos={recursos} onActualizarRecurso={onActualizarRecurso} onEliminarRecurso={onEliminarRecurso} />
+                        )}
                     </main>
                 </div>
             );
         }
 
-        const rootElement = document.getElementById('root');
-        const root = ReactDOM.createRoot(rootElement);
+        const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
 </body>
 </html>
-```eof
