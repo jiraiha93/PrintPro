@@ -49,14 +49,14 @@
         import { 
           LayoutDashboard, ShoppingBag, FileText, Settings, Users, Plus, CheckCircle, 
           Clock, Printer, LogOut, AlertCircle, Share2, Package, Edit3, Trash2, Save, X, 
-          Pencil, Layers, Image as ImageIcon, Upload, MessageSquare, Eye, TrendingUp, Activity, Info, Cloud, Database, Lock, Megaphone, Bell, Calculator, BookOpen, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, MapPin, DollarSign, Percent
+          Pencil, Layers, Image as ImageIcon, Upload, MessageSquare, Eye, TrendingUp, Activity, Info, Cloud, Database, Lock, Megaphone, Bell, Calculator, BookOpen, Search, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, MapPin, DollarSign, Percent, List
         } from 'https://esm.sh/lucide-react@0.292.0';
         
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
         import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
         import { getFirestore, collection, doc, setDoc, onSnapshot, query, deleteDoc, where } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-        // Configuración Firebase (Producción y Fallback)
+        // Configuración Firebase
         const FIREBASE_PROD_CONFIG = {
           apiKey: "AIzaSyA_Xhl948W9g8vpxLdWzCFacnya8AURoXc",
           authDomain: "cotizador-pro-9ec69.firebaseapp.com",
@@ -67,15 +67,12 @@
           measurementId: "G-WGB6N9F8TC"
         };
         
-        const envFirebaseConfig = typeof __firebase_config !== 'undefined' && __firebase_config ? JSON.parse(__firebase_config) : null;
-        const activeConfig = FIREBASE_PROD_CONFIG || envFirebaseConfig;
-        
         let app, auth, db;
-        let appId = FIREBASE_PROD_CONFIG ? 'printpro-produccion' : (typeof __app_id !== 'undefined' ? __app_id : 'default-app-id');
+        let appId = 'printpro-produccion';
 
-        if (activeConfig) {
+        if (FIREBASE_PROD_CONFIG) {
             try {
-                app = initializeApp(activeConfig);
+                app = initializeApp(FIREBASE_PROD_CONFIG);
                 auth = getAuth(app);
                 db = getFirestore(app);
             } catch (error) { console.error("Error inicializando Firebase:", error); }
@@ -88,9 +85,9 @@
 
         // Bases de datos iniciales
         const USUARIOS_BASE = [{ id: 'ADMIN_1', rol: 'ADMIN', username: 'admin', password: '123456', nombre: 'Administrador Principal' }];
-        const CATEGORIAS_BASE = [];
-        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: '', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], ubicacionesAceptadas: [], cobraImpuesto: true }];
-        const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
+        const CATEGORIAS_BASE = [{ id: 'cat1', nombre: 'Textiles' }, { id: 'cat2', nombre: 'Promocionales' }];
+        const CATALOGO_BASE = [{ id: 'p1', nombre: 'Camiseta Algodón Premium', detalles: '100% algodón, pre-encogido, peso completo 200g.', categoriaId: 'cat1', tipo: 'Textil', costoBase: 80, imagenUrl: '', tecnicasRecomendadas: ['T_SERIGRAFIA'], ubicacionesAceptadas: [], cobraImpuesto: true }];
+        const TECNICAS_BASE = [{ id: 'T_SERIGRAFIA', nombre: 'Serigrafía', cobraImpuesto: true, minimo: 12, subcategorias: [{ id: 'SUB_PECHO', nombre: 'Pecho', margen: 40, descuentosVolumen: [], opciones: [ { id: 'OP_1C', nombre: '1 Color', costosFijos: [{ id: 'cf1', nombre: 'Revelado', valor: 250 }], costosVariables: [{ id: 'cv1', nombre: 'Impresión', valor: 15 }] } ] }] }];
         const DESCUENTOS_VOL_BASE = [{ id: 'd1', min: 500, pct: 15, activo: true }, { id: 'd2', min: 100, pct: 8, activo: true }, { id: 'd3', min: 50, pct: 4, activo: true }];
         const ESTADOS_DISPONIBLES = ['Cotización enviada', 'Pendiente', 'Aprobado / En producción', 'Control de calidad', 'Listo para envío', 'Entrega parcial', 'Finalizado / Entregado', 'Cancelada'];
         const MENSAJES_BASE = { bienvenida: '¡Bienvenido a tu portal VIP de cotizaciones!', promo: 'Aviso importante: Aprovecha nuestras tarifas preferenciales automatizadas.', whatsappTemplate: '¡Hola! Te comparto los detalles, orden #{ID} por un total de L {TOTAL}. Quedamos a disposición.', whatsappNumero: '' };
@@ -183,10 +180,8 @@
                                                     <input type="checkbox" checked={!!form[c.id]} onChange={e=>handleChange(c.id, e.target.checked)} className="accent-blue-500 w-5 h-5 cursor-pointer" />
                                                     Activar
                                                 </label>
-                                            ) : c.type === 'file' ? (
-                                                <input type="file" onChange={e=>handleFile(c.id, e.target.files[0])} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-slate-400 outline-none shadow-inner file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer" />
                                             ) : (
-                                                <input type={c.type} step={c.type === 'number' ? 'any' : undefined} value={form[c.id] !== undefined ? form[c.id] : ''} onChange={e=>handleChange(c.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 shadow-inner" />
+                                                <input type={c.type} step={c.type === 'number' ? 'any' : undefined} value={form[c.id] !== undefined ? form[c.id] : ''} onChange={e=>handleChange(c.id, e.target.value)} className="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white outline-none focus:border-blue-500 shadow-inner" required={c.required} />
                                             )}
                                         </div>
                                     ))}
@@ -216,7 +211,6 @@
         }
 
         function App() {
-          // Estados Globales de la App
           const [userDb, setUserDb] = useState(null); 
           const [usuarios, setUsuarios] = useState(() => loadLocal('usuarios', USUARIOS_BASE));
           const [usuarioActual, setUsuarioActual] = useState(() => loadSession('sesionActiva', null)); 
@@ -350,17 +344,7 @@
             else { setTecnicas(nuevasTecnicas); saveLocal('tecnicas', nuevasTecnicas); }
             showToast('Configuración de técnicas guardada');
           };
-          const adminSetConfiguracionGlobal = (nuevoMargen, nuevoImpuesto, nuevosDescuentos) => {
-            if(isConnectedToCloud) dbGuardar('config', 'general', { margenGanancia: nuevoMargen, impuestoGlobal: nuevoImpuesto, descuentosVolumen: nuevosDescuentos });
-            else { 
-                setMargenGanancia(nuevoMargen); saveLocal('margenGanancia', nuevoMargen); 
-                setImpuestoGlobal(nuevoImpuesto); saveLocal('impuestoGlobal', nuevoImpuesto); 
-                setDescuentosVolumen(nuevosDescuentos); saveLocal('descuentosVol', nuevosDescuentos); 
-            }
-            showToast('Configuración global guardada exitosamente');
-          };
 
-          // Global Handlers
           const handleActualizarOrden = (ordenAct) => {
             if(isConnectedToCloud) dbGuardar('ordenes', ordenAct.id, ordenAct); else { const newOrders = ordenes.map(o => o.id === ordenAct.id ? ordenAct : o); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
             showToast('Orden actualizada');
@@ -369,6 +353,11 @@
             if(isConnectedToCloud) dbGuardar('ordenes', nuevaOrden.id, nuevaOrden); else { const newOrders = [nuevaOrden, ...ordenes]; setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
             showToast('Cotización generada con éxito');
           };
+          const handleEliminarOrden = (id) => {
+              if(isConnectedToCloud) dbEliminar('ordenes', id); else { const newOrders = ordenes.filter(o => o.id !== id); setOrdenes(newOrders); saveLocal('ordenes', newOrders); }
+              showToast('Orden eliminada');
+          };
+          
           const handleLogout = async () => {
               setUsuarioActual(null);
               if (auth && auth.currentUser) try { await signOut(auth); } catch(e) { console.error("Error al salir", e); }
@@ -395,11 +384,7 @@
                         categorias={categorias} setCategorias={adminSetCategorias}
                         catalogo={catalogo} setCatalogo={adminSetCatalogo} 
                         tecnicas={tecnicas} setTecnicas={adminSetTecnicas}
-                        margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} setConfigGlobal={adminSetConfiguracionGlobal}
-                        mensajesGlobales={mensajesGlobales} adminSetMensajes={()=>{}}
-                        usuarios={usuarios} onActualizarUsuario={()=>{}} onEliminarUsuario={()=>{}}
-                        recursos={recursos} onActualizarRecurso={()=>{}} onEliminarRecurso={()=>{}}
-                        onActualizarOrden={handleActualizarOrden} onEliminarOrden={()=>{}} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
+                        onActualizarOrden={handleActualizarOrden} onEliminarOrden={handleEliminarOrden} onLogout={handleLogout} isConnectedToCloud={isConnectedToCloud} showToast={showToast}
                     />
                  ) : (
                     <PortalClienteVIP 
@@ -445,15 +430,14 @@
                     <input required type="password" placeholder="Contraseña" value={password} onChange={e=>setPassword(e.target.value)} className="w-full p-3 rounded-xl border border-slate-200 outline-none focus:border-blue-500" />
                     <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white font-bold p-4 rounded-xl hover:bg-slate-800 mt-4 transition-colors disabled:opacity-70">{loading ? 'Verificando...' : 'Ingresar'}</button>
                   </form>
-                  <p className="text-slate-500 w-full mt-6 text-sm tracking-wide text-center">Acceso exclusivo por invitación. ¿No tienes cuenta? Contacta a tu proveedor.</p>
                 </div>
               </div>
             </div>
           );
         }
 
-        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, setConfigGlobal, onActualizarOrden, onLogout, isConnectedToCloud, showToast }) {
-            const [vista, setVista] = useState('DASHBOARD'); // Dashboard fusionado con Cotizaciones
+        function PanelAdmin({ ordenes, categorias, setCategorias, catalogo, setCatalogo, tecnicas, setTecnicas, onActualizarOrden, onEliminarOrden, onLogout, isConnectedToCloud, showToast }) {
+            const [vista, setVista] = useState('DASHBOARD'); 
 
             return (
                 <div className="min-h-screen bg-slate-900 flex flex-col md:flex-row fade-in text-white">
@@ -464,7 +448,7 @@
                         <nav className="p-4 space-y-1 overflow-y-auto flex-1 custom-scrollbar">
                             <p className="text-xs font-bold text-slate-600 mb-3 px-2 mt-2 uppercase tracking-wider">Gestión Principal</p>
                             <MenuBtnAdmin icon={LayoutDashboard} label="Dashboard & Cotiz." active={vista === 'DASHBOARD'} onClick={() => setVista('DASHBOARD')} />
-                            <MenuBtnAdmin icon={Layers} label="Catálogo Base" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} />
+                            <MenuBtnAdmin icon={ShoppingBag} label="Catálogo Base" active={vista === 'CATALOGO'} onClick={() => setVista('CATALOGO')} />
                             <MenuBtnAdmin icon={Settings} label="Técnicas y Ubicaciones" active={vista === 'TECNICAS'} onClick={() => setVista('TECNICAS')} />
                         </nav>
                         <div className="p-4 border-t border-slate-800 bg-slate-950/50">
@@ -474,15 +458,15 @@
                     </aside>
 
                     <main className="flex-1 p-4 md:p-8 overflow-y-auto custom-scrollbar relative">
-                        {vista === 'DASHBOARD' && <AdminDashboardCotizaciones ordenes={ordenes} onActualizarOrden={onActualizarOrden} />}
+                        {vista === 'DASHBOARD' && <AdminDashboardCotizaciones ordenes={ordenes} onActualizarOrden={onActualizarOrden} onEliminarOrden={onEliminarOrden} />}
+                        {vista === 'CATALOGO' && <AdminCatalogo catalogo={catalogo} setCatalogo={setCatalogo} categorias={categorias} tecnicas={tecnicas} showToast={showToast} />}
                         {vista === 'TECNICAS' && <AdminTecnicas tecnicas={tecnicas} setTecnicas={setTecnicas} showToast={showToast} />}
-                        {vista === 'CATALOGO' && <div className="text-slate-400 text-center py-20">Vista de Catálogo (Manteniendo el alcance del requerimiento).</div>}
                     </main>
                 </div>
             );
         }
 
-        function AdminDashboardCotizaciones({ ordenes, onActualizarOrden }) {
+        function AdminDashboardCotizaciones({ ordenes, onActualizarOrden, onEliminarOrden }) {
             const ingresosTotales = ordenes.reduce((acc, ord) => acc + ord.total, 0);
             const pendientes = ordenes.filter(o => ['Pendiente', 'Cotización enviada'].includes(o.estado)).length;
 
@@ -490,7 +474,6 @@
                 <div className="max-w-7xl mx-auto fade-in">
                     <h2 className="text-3xl font-bold mb-6">Dashboard y Gestión de Cotizaciones</h2>
                     
-                    {/* Tarjetas de Métricas (Dashboard Recuperado) */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                         <div className="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex items-center gap-4">
                             <div className="p-3 bg-blue-500/20 text-blue-400 rounded-xl"><FileText size={24} /></div>
@@ -506,7 +489,6 @@
                         </div>
                     </div>
 
-                    {/* Tabla de Cotizaciones Unificada */}
                     <div className="bg-slate-800 border border-slate-700 rounded-2xl overflow-hidden shadow-lg">
                         <div className="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/80">
                             <h3 className="font-bold text-lg flex items-center gap-2"><List size={20} className="text-blue-400" /> Historial de Cotizaciones</h3>
@@ -520,7 +502,7 @@
                                         <th className="p-4 font-bold">Cantidad</th>
                                         <th className="p-4 font-bold">Total</th>
                                         <th className="p-4 font-bold">Estado</th>
-                                        <th className="p-4 font-bold">Acción</th>
+                                        <th className="p-4 font-bold text-right">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -534,10 +516,11 @@
                                                 <td className="p-4 font-bold">{ord.cantidad}</td>
                                                 <td className="p-4 font-bold text-emerald-400">L {ord.total.toFixed(2)}</td>
                                                 <td className="p-4"><EstadoBadge estado={ord.estado} /></td>
-                                                <td className="p-4">
+                                                <td className="p-4 text-right flex justify-end gap-2">
                                                     <select value={ord.estado} onChange={(e) => onActualizarOrden({...ord, estado: e.target.value})} className="bg-slate-900 border border-slate-600 rounded-lg p-2 text-xs outline-none text-slate-300 focus:border-blue-500">
                                                         {ESTADOS_DISPONIBLES.map(est => <option key={est} value={est}>{est}</option>)}
                                                     </select>
+                                                    <button onClick={() => { if(confirm('¿Eliminar esta orden?')) onEliminarOrden(ord.id); }} className="p-2 bg-slate-900 border border-red-900/30 text-red-400 rounded-lg hover:bg-red-900 hover:text-white transition-colors"><Trash2 size={16}/></button>
                                                 </td>
                                             </tr>
                                         ))
@@ -549,17 +532,78 @@
                 </div>
             );
         }
-        
-        const { List } = window.LucideReact || { List: FileText };
+
+        function AdminCatalogo({ catalogo, setCatalogo, categorias, tecnicas, showToast }) {
+            const [modalConfig, setModalConfig] = useState(null);
+
+            const handleEditar = (prod = null) => {
+                setModalConfig({
+                    titulo: prod ? 'Editar Producto' : 'Nuevo Producto',
+                    valoresIniciales: prod || { cobraImpuesto: true, tecnicasRecomendadas: [] },
+                    campos: [
+                        { id: 'nombre', label: 'Nombre del Producto', type: 'text', required: true },
+                        { id: 'categoriaId', label: 'Categoría', type: 'select', options: categorias.map(c => ({value: c.id, label: c.nombre})) },
+                        { id: 'tipo', label: 'Tipo', type: 'select', options: [{value: 'Textil', label: 'Textil'}, {value: 'Promocional', label: 'Promocional'}] },
+                        { id: 'costoBase', label: 'Costo Base (L)', type: 'number', required: true },
+                        { id: 'detalles', label: 'Detalles / Descripción', type: 'textarea' },
+                        { id: 'tecnicasRecomendadas', label: 'Técnicas Permitidas', type: 'checkboxGroup', options: tecnicas.map(t => ({value: t.id, label: t.nombre})) },
+                        { id: 'cobraImpuesto', label: '¿Aplica Impuesto (ISV)?', type: 'boolean' }
+                    ],
+                    onSubmit: (form) => {
+                        const nuevoProd = { ...form, id: prod ? prod.id : `PROD_${Date.now()}`, costoBase: Number(form.costoBase) };
+                        if (prod) setCatalogo(catalogo.map(c => c.id === prod.id ? nuevoProd : c));
+                        else setCatalogo([...catalogo, nuevoProd]);
+                        showToast(`Producto ${prod ? 'actualizado' : 'creado'} exitosamente.`);
+                    }
+                });
+            };
+
+            const handleEliminar = (id) => {
+                if(confirm('¿Estás seguro de eliminar este producto del catálogo?')) {
+                    setCatalogo(catalogo.filter(c => c.id !== id));
+                    showToast('Producto eliminado');
+                }
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto fade-in">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-3xl font-bold">Catálogo de Productos</h2>
+                        <button onClick={() => handleEditar()} className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"><Plus size={18}/> Nuevo Producto</button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {catalogo.map(prod => (
+                            <div key={prod.id} className="bg-slate-800 border border-slate-700 rounded-2xl p-5 hover:border-slate-500 transition-colors flex flex-col h-full shadow-md">
+                                <div className="flex justify-between items-start mb-2">
+                                    <span className="text-xs font-bold text-blue-400 bg-blue-900/30 px-2 py-1 rounded-md">{prod.tipo}</span>
+                                    <div className="flex gap-1">
+                                        <button onClick={() => handleEditar(prod)} className="p-1.5 text-slate-400 hover:text-white bg-slate-700/50 rounded hover:bg-blue-600 transition-colors"><Pencil size={14}/></button>
+                                        <button onClick={() => handleEliminar(prod.id)} className="p-1.5 text-slate-400 hover:text-white bg-slate-700/50 rounded hover:bg-red-600 transition-colors"><Trash2 size={14}/></button>
+                                    </div>
+                                </div>
+                                <h3 className="font-bold text-lg mb-1">{prod.nombre}</h3>
+                                <p className="text-slate-400 text-xs mb-4 line-clamp-2">{prod.detalles}</p>
+                                <div className="mt-auto pt-4 border-t border-slate-700 flex justify-between items-center">
+                                    <span className="text-sm text-slate-500">Costo Base:</span>
+                                    <span className="text-lg font-bold text-emerald-400">L {Number(prod.costoBase).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        ))}
+                        {catalogo.length === 0 && <div className="col-span-full p-12 text-center text-slate-500 bg-slate-800 rounded-2xl border border-slate-700">El catálogo está vacío.</div>}
+                    </div>
+
+                    {modalConfig && <CustomModal config={modalConfig} onClose={() => setModalConfig(null)} />}
+                </div>
+            );
+        }
 
         function AdminTecnicas({ tecnicas, setTecnicas, showToast }) {
-            // Requisitos: Barra de búsqueda, paginación, y reubicación de tarifas globales a ubicaciones.
             const [busqueda, setBusqueda] = useState('');
             const [itemsPorPagina, setItemsPorPagina] = useState(5);
             const [paginaActual, setPaginaActual] = useState(1);
             const [modalConfig, setModalConfig] = useState(null);
 
-            // Filtrado y Paginación
             const tecnicasFiltradas = useMemo(() => {
                 return tecnicas.filter(t => t.nombre.toLowerCase().includes(busqueda.toLowerCase()));
             }, [tecnicas, busqueda]);
@@ -572,17 +616,16 @@
             useEffect(() => { setPaginaActual(1); }, [busqueda, itemsPorPagina]);
 
             const handleEditarSubcategoria = (tecnica, subcategoria) => {
-                // Configuración Modal Quirúrgica para la Subcategoría (Reubicación de Tarifas a Ubicación)
                 setModalConfig({
                     titulo: `Configurar Ubicación: ${subcategoria.nombre} (${tecnica.nombre})`,
                     valoresIniciales: { 
                         nombre: subcategoria.nombre,
-                        margen: subcategoria.margen !== undefined ? subcategoria.margen : 40, // Tarifas por Ubicación
+                        margen: subcategoria.margen !== undefined ? subcategoria.margen : 40,
                         descVolActivo: subcategoria.descuentosVolumen && subcategoria.descuentosVolumen.length > 0 
                     },
                     campos: [
-                        { id: 'nombre', label: 'Nombre de la Ubicación (Ej. Pecho, Espalda)', type: 'text' },
-                        { id: 'margen', label: 'Margen de Ganancia Específico (%) - Reubicado a Ubicación', type: 'number' },
+                        { id: 'nombre', label: 'Nombre de la Ubicación (Ej. Pecho, Espalda)', type: 'text', required: true },
+                        { id: 'margen', label: 'Margen de Ganancia Específico (%)', type: 'number', required: true },
                         { id: 'descVolActivo', label: 'Habilitar Descuentos por Volumen para esta ubicación', type: 'boolean' }
                     ],
                     onSubmit: (form) => {
@@ -605,10 +648,8 @@
                 <div className="max-w-7xl mx-auto fade-in">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-3xl font-bold">Técnicas y Ubicaciones</h2>
-                        <button className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2"><Plus size={18}/> Nueva Técnica</button>
                     </div>
 
-                    {/* Controles de Búsqueda y Paginación Superior (Captura 1 adaptada) */}
                     <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 shadow-sm">
                         <div className="relative w-full sm:w-96">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
@@ -624,7 +665,6 @@
                         </div>
                     </div>
 
-                    {/* Lista de Técnicas */}
                     <div className="space-y-4 mb-6">
                         {tecnicasPaginadas.length === 0 ? (
                             <div className="p-8 text-center bg-slate-800 border border-slate-700 rounded-xl text-slate-500">No se encontraron técnicas.</div>
@@ -636,7 +676,6 @@
                                             <h3 className="font-bold text-lg text-white flex items-center gap-2"><Layers size={18} className="text-blue-400" /> {tec.nombre}</h3>
                                             <p className="text-xs text-slate-400 mt-1">Mínimo: {tec.minimo} pzas | Impuesto: {tec.cobraImpuesto ? 'Sí' : 'No'}</p>
                                         </div>
-                                        <button className="text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-600 transition-colors"><Pencil size={16}/></button>
                                     </div>
                                     <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {tec.subcategorias.map(sub => (
@@ -666,7 +705,6 @@
                         )}
                     </div>
 
-                    {/* Controles de Paginación Inferior (Captura 2 adaptada) */}
                     {totalPaginas > 1 && (
                         <div className="flex items-center justify-between bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
                             <span className="text-sm font-bold text-slate-400">Mostrando {tecnicasPaginadas.length} de {tecnicasFiltradas.length} resultados</span>
@@ -719,87 +757,283 @@
                     </div>
                 )}
                 
-                {vista === 'NUEVA_COTIZACION' && <CotizadorWizard cliente={cliente} catalogo={catalogo} categorias={categorias} tecnicas={tecnicas} margenGanancia={margenGanancia} impuestoGlobal={impuestoGlobal} descuentosVolumen={descuentosVolumen} onGuardar={(o) => { onCrearOrden(o); setVista('HISTORIAL'); }} />}
-                {vista === 'HISTORIAL' && <div className="text-center p-20 text-slate-500">Historial de Órdenes Cliente (Mantenido intacto conceptualmente).</div>}
+                {vista === 'NUEVA_COTIZACION' && <CotizadorWizard cliente={cliente} catalogo={catalogo} tecnicas={tecnicas} margenGlobal={margenGanancia} impuestoGlobal={impuestoGlobal} onGuardar={(o) => { onCrearOrden(o); setVista('HISTORIAL'); }} />}
+                {vista === 'HISTORIAL' && <HistorialOrdenes ordenes={ordenes} />}
               </main>
             </div>
           );
         }
 
-        function CotizadorWizard({ cliente, catalogo, categorias, tecnicas, margenGanancia, impuestoGlobal, descuentosVolumen, onGuardar }) {
+        function HistorialOrdenes({ ordenes }) {
+            return (
+                <div className="max-w-5xl mx-auto fade-in bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                        <h3 className="font-bold text-xl text-slate-800 flex items-center gap-2"><List size={20} className="text-blue-600" /> Mi Historial de Órdenes</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 text-xs uppercase">
+                                <tr>
+                                    <th className="p-4 font-bold">ID / Fecha</th>
+                                    <th className="p-4 font-bold">Producto</th>
+                                    <th className="p-4 font-bold">Cantidad</th>
+                                    <th className="p-4 font-bold">Total</th>
+                                    <th className="p-4 font-bold">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ordenes.length === 0 ? (
+                                    <tr><td colSpan="5" className="p-8 text-center text-slate-500 font-medium">Aún no tienes cotizaciones u órdenes registradas.</td></tr>
+                                ) : (
+                                    ordenes.map(ord => (
+                                        <tr key={ord.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                            <td className="p-4"><p className="font-bold text-blue-600">{ord.id}</p><p className="text-xs text-slate-400">{ord.fecha}</p></td>
+                                            <td className="p-4 font-medium text-slate-700">{ord.producto}</td>
+                                            <td className="p-4 text-slate-600">{ord.cantidad} pzas</td>
+                                            <td className="p-4 font-bold text-emerald-600">L {ord.total.toFixed(2)}</td>
+                                            <td className="p-4"><EstadoBadge estado={ord.estado} /></td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        }
+
+        function CotizadorWizard({ cliente, catalogo, tecnicas, margenGlobal, impuestoGlobal, onGuardar }) {
           const [paso, setPaso] = useState(1);
-          const [proveeCliente, setProveeCliente] = useState(false); 
           const [itemSelect, setItemSelect] = useState(null);
-          const [aplicaciones, setAplicaciones] = useState([]);
           const [cantidad, setCantidad] = useState(50);
-          const [comentario, setComentario] = useState(''); 
-          const [errorValidacion, setErrorValidacion] = useState('');
+          const [aplicaciones, setAplicaciones] = useState([]);
 
           const productoSeleccionado = catalogo.find(c => c.id === itemSelect);
-          const tecnicasPermitidas = tecnicas; // Simplificado por espacio
+          
+          // Técnicas permitidas por el producto
+          const tecnicasPermitidas = useMemo(() => {
+              if(!productoSeleccionado) return [];
+              return tecnicas.filter(t => productoSeleccionado.tecnicasRecomendadas?.includes(t.id));
+          }, [productoSeleccionado, tecnicas]);
 
           const agregarAplicacion = () => setAplicaciones([...aplicaciones, { id: Date.now(), tecnicaId: '', subcatId: '', opcionId: '' }]);
-          const actualizarAplicacion = (id, campo, valor) => { setAplicaciones(aplicaciones.map(app => { if (app.id === id) { const updated = { ...app, [campo]: valor }; if (campo === 'tecnicaId') { updated.subcatId = ''; updated.opcionId = ''; } if (campo === 'subcatId') { updated.opcionId = ''; } return updated; } return app; })); };
+          
+          const actualizarAplicacion = (id, campo, valor) => { 
+              setAplicaciones(aplicaciones.map(app => { 
+                  if (app.id === id) { 
+                      const updated = { ...app, [campo]: valor }; 
+                      if (campo === 'tecnicaId') { updated.subcatId = ''; updated.opcionId = ''; } 
+                      if (campo === 'subcatId') { updated.opcionId = ''; } 
+                      return updated; 
+                  } 
+                  return app; 
+              })); 
+          };
+          
           const eliminarAplicacion = (id) => setAplicaciones(aplicaciones.filter(a => a.id !== id));
 
+          // Motor de Cálculo Reconstruido
           const cotizacion = useMemo(() => {
-              if(!productoSeleccionado) return {valido: false};
-              return { subtotalDescuento: 100, impuestos: 15, total: 115, unitario: 2.3, valido: true, cantEfectiva: cantidad, minRequerido: 12 };
-          }, [productoSeleccionado, aplicaciones, cantidad]); // Simulador rápido de cotización
+              if(!productoSeleccionado || cantidad < 1) return { valido: false };
+              
+              let costoBaseTotal = Number(productoSeleccionado.costoBase) * cantidad;
+              let costoAplicacionesTotal = 0;
+              let minRequerido = 1; // Base
+
+              for(const app of aplicaciones) {
+                  if(!app.tecnicaId || !app.subcatId || !app.opcionId) continue;
+                  
+                  const tec = tecnicas.find(t => t.id === app.tecnicaId);
+                  if(!tec) continue;
+                  if(tec.minimo > minRequerido) minRequerido = tec.minimo;
+
+                  const sub = tec.subcategorias.find(s => s.id === app.subcatId);
+                  const op = sub?.opciones.find(o => o.id === app.opcionId);
+                  
+                  if(sub && op) {
+                      const totalFijos = op.costosFijos.reduce((sum, c) => sum + Number(c.valor), 0);
+                      const totalVariables = op.costosVariables.reduce((sum, c) => sum + Number(c.valor), 0);
+                      
+                      let costoAppBase = totalFijos + (totalVariables * cantidad);
+                      
+                      // Aplicar margen de la ubicación (o global si no tiene)
+                      const margenApp = sub.margen !== undefined ? sub.margen : margenGlobal;
+                      const precioVentaApp = costoAppBase / (1 - (margenApp / 100));
+                      
+                      // Descuentos por volumen específicos de la ubicación
+                      let descuentoPct = 0;
+                      if(sub.descuentosVolumen && sub.descuentosVolumen.length > 0) {
+                          const descAplicable = [...sub.descuentosVolumen].sort((a,b)=>b.min-a.min).find(d => d.activo && cantidad >= d.min);
+                          if(descAplicable) descuentoPct = descAplicable.pct;
+                      }
+
+                      costoAplicacionesTotal += precioVentaApp * (1 - (descuentoPct / 100));
+                  }
+              }
+
+              // Margen para el producto base (asume global)
+              let precioVentaProductoBase = costoBaseTotal / (1 - (margenGlobal / 100));
+              let subtotal = precioVentaProductoBase + costoAplicacionesTotal;
+
+              // Descuento VIP Cliente
+              if(cliente.descuentoGlobal > 0) {
+                  subtotal = subtotal * (1 - (cliente.descuentoGlobal / 100));
+              }
+
+              let impuestos = 0;
+              // Simplificación: si el producto cobra impuesto, cobramos al total para agilizar.
+              if(productoSeleccionado.cobraImpuesto) {
+                  impuestos = subtotal * (impuestoGlobal / 100);
+              }
+
+              const total = subtotal + impuestos;
+
+              return { 
+                  valido: cantidad >= minRequerido, 
+                  subtotal, 
+                  impuestos, 
+                  total, 
+                  unitario: total / cantidad, 
+                  minRequerido 
+              };
+          }, [productoSeleccionado, aplicaciones, cantidad, tecnicas, margenGlobal, impuestoGlobal, cliente]);
 
           const handleGuardar = () => {
-              onGuardar({ id: `ORD-${Date.now()}`, clienteId: cliente.id, clienteNombre: cliente.nombre, producto: productoSeleccionado.nombre, total: cotizacion.total, estado: 'Cotización enviada', cantidad, fecha: new Date().toLocaleDateString() });
+              if(!cotizacion.valido) return;
+              onGuardar({ 
+                  id: `ORD-${Date.now()}`, 
+                  clienteId: cliente.id, 
+                  clienteNombre: cliente.nombre, 
+                  producto: productoSeleccionado.nombre, 
+                  cantidad,
+                  aplicaciones: aplicaciones, // Guardamos la conf
+                  total: cotizacion.total, 
+                  estado: 'Cotización enviada', 
+                  fecha: new Date().toLocaleDateString() 
+              });
           };
 
           return (
-            <div className="w-full max-w-[1600px] mx-auto px-6 pb-12">
+            <div className="w-full max-w-[1200px] mx-auto pb-12">
               <h2 className="text-3xl font-bold text-slate-800 mb-8">Nueva Cotización</h2>
               <div className="flex gap-4 mb-8">{[1, 2, 3].map(i => <div key={i} className={`flex-1 h-2 rounded-full transition-all duration-300 ${paso >= i ? 'bg-blue-600' : 'bg-slate-200'}`} />)}</div>
               
               <div className="bg-white rounded-3xl shadow-sm border border-slate-200 p-8">
                 {paso === 1 && (
                   <div className="fade-in">
-                    <h3 className="text-xl font-bold mb-4">1. Selección de Artículo</h3>
+                    <h3 className="text-xl font-bold mb-4 text-slate-800">1. Selección de Artículo y Cantidad</h3>
+                    
+                    <div className="mb-8 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Cantidad Total a Cotizar</label>
+                        <input type="number" min="1" value={cantidad} onChange={e=>setCantidad(Number(e.target.value))} className="w-full md:w-64 p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500 font-bold text-lg" />
+                    </div>
+
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {catalogo.map(prod => (
                             <button key={prod.id} onClick={() => setItemSelect(prod.id)} className={`flex flex-col items-center justify-between p-4 rounded-2xl border-2 text-center transition-all h-full ${itemSelect === prod.id ? 'border-blue-600 bg-blue-50 shadow-md transform scale-105' : 'border-slate-100 hover:border-blue-200 hover:bg-slate-50'}`}>
+                                <span className="text-xs font-bold text-slate-400 mb-2 uppercase">{prod.tipo}</span>
                                 <p className="font-bold text-slate-700 text-sm mb-1">{prod.nombre}</p>
                             </button>
                         ))}
                     </div>
-                    <div className="mt-8 flex justify-end border-t border-slate-100 pt-6"><button disabled={!itemSelect} onClick={() => setPaso(2)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-lg">Siguiente Paso</button></div>
+                    <div className="mt-8 flex justify-end border-t border-slate-100 pt-6"><button disabled={!itemSelect || cantidad < 1} onClick={() => setPaso(2)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-lg">Siguiente Paso</button></div>
                   </div>
                 )}
 
                 {paso === 2 && (
                   <div className="fade-in">
-                    <h3 className="text-xl font-bold mb-4">2. Aplicaciones de Personalización</h3>
+                    <div className="mb-6 pb-4 border-b border-slate-100">
+                        <h3 className="text-xl font-bold text-slate-800">2. Áreas de Impresión / Técnicas</h3>
+                        <p className="text-slate-500 text-sm mt-1">Configura dónde y cómo quieres estampar el producto seleccionado ({productoSeleccionado?.nombre}).</p>
+                    </div>
+                    
                     <div className="space-y-4 mb-6">
-                      {aplicaciones.map((app, index) => (
-                          <div key={app.id} className="p-4 border border-slate-200 rounded-2xl bg-slate-50 relative flex flex-col md:flex-row gap-4 items-center">
+                      {aplicaciones.map((app) => {
+                          const tecSeleccionada = tecnicasPermitidas.find(t => t.id === app.tecnicaId);
+                          const subSeleccionada = tecSeleccionada?.subcategorias.find(s => s.id === app.subcatId);
+
+                          return (
+                          <div key={app.id} className="p-4 border border-slate-200 rounded-2xl bg-slate-50 relative flex flex-col md:flex-row gap-4 items-start md:items-center">
                             <button onClick={() => eliminarAplicacion(app.id)} className="absolute -top-3 -right-3 bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 p-1.5 rounded-full shadow-sm transition-colors z-10"><X size={16} /></button>
-                            <select value={app.tecnicaId} onChange={e=>actualizarAplicacion(app.id, 'tecnicaId', e.target.value)} className="w-full p-3 rounded-xl border border-slate-300 outline-none focus:border-blue-500 bg-white shadow-inner font-semibold text-slate-700">
-                                <option value="">Seleccionar Técnica...</option>
-                                {tecnicasPermitidas.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
-                            </select>
+                            
+                            <div className="w-full">
+                                <label className="text-xs font-bold text-slate-500 mb-1 block">Técnica</label>
+                                <select value={app.tecnicaId} onChange={e=>actualizarAplicacion(app.id, 'tecnicaId', e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 outline-none focus:border-blue-500 bg-white font-semibold text-slate-700">
+                                    <option value="">Seleccionar...</option>
+                                    {tecnicasPermitidas.map(t => <option key={t.id} value={t.id}>{t.nombre}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="w-full">
+                                <label className="text-xs font-bold text-slate-500 mb-1 block">Ubicación</label>
+                                <select disabled={!tecSeleccionada} value={app.subcatId} onChange={e=>actualizarAplicacion(app.id, 'subcatId', e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 outline-none focus:border-blue-500 bg-white font-semibold text-slate-700 disabled:bg-slate-100">
+                                    <option value="">Seleccionar...</option>
+                                    {tecSeleccionada?.subcategorias.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="w-full">
+                                <label className="text-xs font-bold text-slate-500 mb-1 block">Detalle / Opción</label>
+                                <select disabled={!subSeleccionada} value={app.opcionId} onChange={e=>actualizarAplicacion(app.id, 'opcionId', e.target.value)} className="w-full p-2.5 rounded-xl border border-slate-300 outline-none focus:border-blue-500 bg-white font-semibold text-slate-700 disabled:bg-slate-100">
+                                    <option value="">Seleccionar...</option>
+                                    {subSeleccionada?.opciones.map(o => <option key={o.id} value={o.id}>{o.nombre}</option>)}
+                                </select>
+                            </div>
                           </div>
-                      ))}
+                      )})}
+                      {aplicaciones.length === 0 && <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">No has agregado áreas de impresión. El producto se cotizará liso.</div>}
                     </div>
                     <button onClick={agregarAplicacion} className="w-full py-4 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 hover:border-blue-400 hover:text-blue-600 font-bold flex items-center justify-center gap-2 transition-colors bg-white"><Plus size={20} /> Añadir área de impresión</button>
+                    
+                    {!cotizacion.valido && aplicaciones.length > 0 && (
+                        <div className="mt-4 p-4 bg-amber-50 text-amber-700 rounded-xl flex items-center gap-2 text-sm font-bold border border-amber-200">
+                            <AlertCircle size={18}/> La cantidad ingresada ({cantidad}) no cumple el mínimo requerido ({cotizacion.minRequerido}) para las técnicas seleccionadas.
+                        </div>
+                    )}
+
                     <div className="mt-8 flex justify-between border-t border-slate-100 pt-6">
                         <button onClick={() => setPaso(1)} className="text-slate-500 px-6 py-3 rounded-xl font-bold hover:bg-slate-100 transition-colors">Volver</button>
-                        <button onClick={() => setPaso(3)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg">Finalizar Cotización</button>
+                        <button disabled={!cotizacion.valido} onClick={() => setPaso(3)} className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-700 transition-colors shadow-lg">Calcular Totales</button>
                     </div>
                   </div>
                 )}
                 
                 {paso === 3 && (
-                    <div className="fade-in text-center py-10">
-                        <h3 className="text-2xl font-bold text-slate-800 mb-4">Resumen Listo</h3>
-                        <p className="text-slate-500 mb-8">Tu cotización está calculada y lista para enviarse.</p>
+                    <div className="fade-in">
+                        <h3 className="text-2xl font-bold text-slate-800 mb-6 text-center">Resumen de Cotización</h3>
+                        
+                        <div className="max-w-2xl mx-auto bg-slate-50 p-8 rounded-3xl border border-slate-200 mb-8">
+                            <div className="flex justify-between items-end border-b border-slate-200 pb-4 mb-4">
+                                <div>
+                                    <p className="text-sm font-bold text-slate-500">Producto</p>
+                                    <p className="text-lg font-bold text-slate-800">{productoSeleccionado?.nombre}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm font-bold text-slate-500">Cantidad</p>
+                                    <p className="text-lg font-bold text-slate-800">{cantidad} unid.</p>
+                                </div>
+                            </div>
+                            
+                            <div className="space-y-3 mb-6">
+                                <div className="flex justify-between text-slate-600"><span className="font-medium">Subtotal</span><span>L {cotizacion.subtotal?.toFixed(2)}</span></div>
+                                <div className="flex justify-between text-slate-600"><span className="font-medium">Impuestos (ISV)</span><span>L {cotizacion.impuestos?.toFixed(2)}</span></div>
+                                {cliente.descuentoGlobal > 0 && (
+                                    <div className="flex justify-between text-emerald-600"><span className="font-medium">Descuento VIP Cliente ({cliente.descuentoGlobal}%)</span><span>Aplicado en subtotal</span></div>
+                                )}
+                            </div>
+
+                            <div className="flex justify-between items-center border-t border-slate-200 pt-4">
+                                <span className="text-xl font-bold text-slate-800">Total a Pagar</span>
+                                <div className="text-right">
+                                    <span className="text-3xl font-black text-blue-600">L {cotizacion.total?.toFixed(2)}</span>
+                                    <p className="text-xs text-slate-500 font-bold mt-1">Unitario: L {cotizacion.unitario?.toFixed(2)} / pza</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="flex justify-center gap-4">
-                            <button onClick={() => setPaso(2)} className="text-slate-500 px-6 py-3 rounded-xl font-bold hover:bg-slate-100 transition-colors">Atrás</button>
-                            <button onClick={handleGuardar} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-lg flex items-center gap-2"><CheckCircle size={20}/> Guardar y Enviar</button>
+                            <button onClick={() => setPaso(2)} className="text-slate-500 px-6 py-3 rounded-xl font-bold hover:bg-slate-100 transition-colors">Modificar</button>
+                            <button onClick={handleGuardar} className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-500 transition-colors shadow-lg flex items-center gap-2"><CheckCircle size={20}/> Aprobar y Enviar Orden</button>
                         </div>
                     </div>
                 )}
@@ -808,7 +1042,6 @@
           );
         }
 
-        // Montaje
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
